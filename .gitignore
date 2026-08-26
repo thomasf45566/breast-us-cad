@@ -1,0 +1,9 @@
+.venv/
+data/*
+!data/README.md
+models/*.pt
+models/*.pth
+wandb/
+__pycache__/
+.DS_Store
+*.ipynb_checkpoints
