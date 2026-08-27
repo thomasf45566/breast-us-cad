@@ -80,32 +80,37 @@ def predict(model: nn.Module, loader, device: str) -> tuple[np.ndarray, np.ndarr
     return np.concatenate(probs), np.concatenate(labels)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/baseline.yaml")
-    parser.add_argument("--epochs", type=int, help="override config epochs (smoke tests)")
-    parser.add_argument("--run-name", help="override wandb run name")
-    parser.add_argument("--ckpt-out", help="override checkpoint output path")
-    args = parser.parse_args()
+def train_one_fold(
+    cfg: dict,
+    *,
+    train_folds: list[int],
+    val_folds: list[int],
+    epochs: int,
+    run_name: str,
+    ckpt_path: str | Path,
+    group: str | None = None,
+) -> dict:
+    """Train on `train_folds`, select best checkpoint by AUC on `val_folds`.
 
-    cfg = yaml.safe_load(Path(args.config).read_text())
-    epochs = args.epochs or cfg["train"]["epochs"]
-    ckpt_path = Path(args.ckpt_out or cfg["paths"]["ckpt"])
+    One wandb run per call (optionally grouped). Returns
+    {"best_auc", "best_epoch", "ckpt_path"}.
+    """
+    ckpt_path = Path(ckpt_path)
     device = cfg["train"]["device"]
     set_seed(cfg["train"]["seed"])
 
     df = build_master_df(cfg["data"]["root"])
     train_loader, val_loader = make_dataloaders(
         df,
-        train_folds=cfg["data"]["train_folds"],
-        val_folds=cfg["data"]["val_folds"],
+        train_folds=train_folds,
+        val_folds=val_folds,
         batch_size=cfg["data"]["batch_size"],
         img_size=cfg["data"]["img_size"],
         num_workers=cfg["data"]["num_workers"],
     )
 
     # pos_weight from train-fold class frequencies only (val stays untouched)
-    train_labels = df[df["fold"].isin(cfg["data"]["train_folds"])]["label"]
+    train_labels = df[df["fold"].isin(train_folds)]["label"]
     pos_weight = resolve_pos_weight(cfg, train_labels)
 
     model = build_model(cfg).to(device)
@@ -115,15 +120,22 @@ def main() -> None:
 
     run = wandb.init(
         project=cfg["wandb"]["project"],
-        name=args.run_name or cfg["wandb"]["run_name"],
-        config={**cfg, "epochs": epochs, "pos_weight": float(pos_weight)},
+        name=run_name,
+        group=group,
+        config={
+            **cfg,
+            "epochs": epochs,
+            "pos_weight": float(pos_weight),
+            "train_folds": train_folds,
+            "val_folds": val_folds,
+        },
     )
     print(
         f"train: {len(train_loader.dataset)} images | val: {len(val_loader.dataset)} "
         f"images | pos_weight: {pos_weight:.3f} | device: {device} | epochs: {epochs}"
     )
 
-    best_auc = 0.0
+    best_auc, best_epoch = 0.0, 0
     ckpt_path.parent.mkdir(parents=True, exist_ok=True)
     for epoch in range(1, epochs + 1):
         model.train()
@@ -152,7 +164,7 @@ def main() -> None:
         )
         marker = ""
         if val_auc > best_auc:
-            best_auc = val_auc
+            best_auc, best_epoch = val_auc, epoch
             torch.save(
                 {
                     "model_state": model.state_dict(),
@@ -168,9 +180,29 @@ def main() -> None:
             f"val_auc {val_auc:.4f}{marker}"
         )
 
-    wandb.summary["best_val_auc"] = best_auc
+    run.summary["best_val_auc"] = best_auc
     run.finish()
     print(f"best val AUC: {best_auc:.4f} | checkpoint: {ckpt_path}")
+    return {"best_auc": best_auc, "best_epoch": best_epoch, "ckpt_path": str(ckpt_path)}
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default="configs/baseline.yaml")
+    parser.add_argument("--epochs", type=int, help="override config epochs (smoke tests)")
+    parser.add_argument("--run-name", help="override wandb run name")
+    parser.add_argument("--ckpt-out", help="override checkpoint output path")
+    args = parser.parse_args()
+
+    cfg = yaml.safe_load(Path(args.config).read_text())
+    train_one_fold(
+        cfg,
+        train_folds=cfg["data"]["train_folds"],
+        val_folds=cfg["data"]["val_folds"],
+        epochs=args.epochs or cfg["train"]["epochs"],
+        run_name=args.run_name or cfg["wandb"]["run_name"],
+        ckpt_path=args.ckpt_out or cfg["paths"]["ckpt"],
+    )
 
 
 if __name__ == "__main__":

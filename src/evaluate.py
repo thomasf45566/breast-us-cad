@@ -31,6 +31,22 @@ def youden_threshold(labels: np.ndarray, probs: np.ndarray) -> float:
     return float(thresholds[np.argmax(tpr - fpr)])
 
 
+def compute_metrics(labels: np.ndarray, probs: np.ndarray) -> dict:
+    """AUC plus sensitivity/specificity/confusion matrix at the Youden threshold."""
+    auc = roc_auc_score(labels, probs)
+    thr = youden_threshold(labels, probs)
+    preds = (probs >= thr).astype(int)
+    cm = confusion_matrix(labels, preds)  # rows: true benign, malignant
+    tn, fp, fn, tp = cm.ravel()
+    return {
+        "auc": float(auc),
+        "threshold": thr,
+        "sensitivity": tp / (tp + fn),
+        "specificity": tn / (tn + fp),
+        "cm": cm,
+    }
+
+
 def save_roc(labels, probs, auc, path: Path) -> None:
     fpr, tpr, _ = roc_curve(labels, probs)
     fig, ax = plt.subplots(figsize=(5, 5))
@@ -90,13 +106,8 @@ def main() -> None:
 
     probs, labels = predict(model, loader, device)
     run_name = cfg["wandb"]["run_name"]
-    auc = roc_auc_score(labels, probs)
-    thr = youden_threshold(labels, probs)
-    preds = (probs >= thr).astype(int)
-    cm = confusion_matrix(labels, preds)  # rows: true benign, malignant
-    tn, fp, fn, tp = cm.ravel()
-    sensitivity = tp / (tp + fn)
-    specificity = tn / (tn + fp)
+    m = compute_metrics(labels, probs)
+    auc, thr, cm = m["auc"], m["threshold"], m["cm"]
 
     reports_dir = Path(cfg["paths"]["reports_dir"])
     reports_dir.mkdir(parents=True, exist_ok=True)
@@ -119,8 +130,8 @@ def main() -> None:
           f"| n = {len(labels)}")
     print(f"AUC:         {auc:.4f}")
     print(f"Youden thr:  {thr:.4f}")
-    print(f"Sensitivity: {sensitivity:.4f}")
-    print(f"Specificity: {specificity:.4f}")
+    print(f"Sensitivity: {m['sensitivity']:.4f}")
+    print(f"Specificity: {m['specificity']:.4f}")
     print(f"saved: {roc_path}, {cm_path}, {preds_path}")
 
 
