@@ -1,0 +1,30 @@
+data:
+  root: data/raw/busbra
+  img_size: 224
+  batch_size: 32   # drop to 16 if MPS runs out of memory
+  num_workers: 4
+  train_folds: [1, 2, 3, 4]
+  val_folds: [5]
+
+model:
+  name: convnext_small
+  pretrained: true
+
+train:
+  epochs: 30
+  optimizer: adamw
+  scheduler: cosine
+  loss: bce_with_logits
+  pos_weight: auto
+  lr: 1.0e-4       # larger model -> smaller lr than effb0 baseline
+  weight_decay: 1.0e-4
+  seed: 42
+  device: mps
+
+wandb:
+  project: breast-us-cad
+  run_name: convnext_small_fold5
+
+paths:
+  ckpt: models/convnext_small_fold5.pt
+  reports_dir: reports

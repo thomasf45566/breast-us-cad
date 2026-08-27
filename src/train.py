@@ -7,6 +7,7 @@ Usage: python src/train.py --config configs/baseline.yaml [--epochs N]
 
 import argparse
 import random
+import time
 from pathlib import Path
 
 import numpy as np
@@ -65,7 +66,18 @@ def build_scheduler(cfg: dict, optimizer: torch.optim.Optimizer, epochs: int):
     name = cfg["train"]["scheduler"]
     if name != "cosine":
         raise ValueError(f"Unknown train.scheduler: {name!r}")
-    return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
+    warmup = cfg["train"].get("warmup_epochs", 0)
+    cosine = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, T_max=max(epochs - warmup, 1)
+    )
+    if warmup <= 0:
+        return cosine
+    linear = torch.optim.lr_scheduler.LinearLR(
+        optimizer, start_factor=0.1, end_factor=1.0, total_iters=warmup
+    )
+    return torch.optim.lr_scheduler.SequentialLR(
+        optimizer, [linear, cosine], milestones=[warmup]
+    )
 
 
 @torch.no_grad()
@@ -138,6 +150,7 @@ def train_one_fold(
     best_auc, best_epoch = 0.0, 0
     ckpt_path.parent.mkdir(parents=True, exist_ok=True)
     for epoch in range(1, epochs + 1):
+        epoch_start = time.monotonic()
         model.train()
         running_loss, n_seen = 0.0, 0
         for images, targets in train_loader:
@@ -177,7 +190,7 @@ def train_one_fold(
             marker = f" -> saved {ckpt_path}"
         print(
             f"epoch {epoch:3d}/{epochs} | train_loss {train_loss:.4f} | "
-            f"val_auc {val_auc:.4f}{marker}"
+            f"val_auc {val_auc:.4f} | {time.monotonic() - epoch_start:.1f}s{marker}"
         )
 
     run.summary["best_val_auc"] = best_auc
