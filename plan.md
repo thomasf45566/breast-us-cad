@@ -11,10 +11,13 @@ Read this at session start. Update the checkboxes when a task completes.
 - [x] Backbone screening fold-5: convnext_small 0.9257, vit_b16 0.9293
 - [x] 5-fold CV convnext_small: AUC 0.930 ± 0.017 (summary in reports/cv_convnext_summary.csv)
 - [x] 5-fold CV vit_b16: AUC 0.931 ± 0.016 (comparison table in RESULTS.md)
+- [x] Backbone comparison table + interpretability audit (RESULTS.md)
+- [x] Backbone decision: vit_base_patch16_224 (see standing decisions)
 
 ## Next (strict order)
-1. Backbone comparison table → USER decides winner (not Claude)
-2. TTA (hflip only) on winner's CV checkpoints, pooled OOF AUC
+1. Pre-registered CoarseDropout ViT CV (see standing decisions for the
+   adoption rule, frozen before results)
+2. TTA (hflip only) on winning ViT's CV checkpoints, pooled OOF AUC
 3. calibrate.py: pooled OOF preds → temperature scaling
 4. pick_threshold.py: sens ≥ 0.90 operating point on calibrated OOF
 5. FREEZE: tag frozen-v1 (5 ckpts + TTA setting + calibration.json +
@@ -32,3 +35,14 @@ Read this at session start. Update the checkboxes when a task completes.
 - BrEaST + BUSI are external-only, single-shot evaluation
 - AUC is the primary metric; operating point from pooled OOF, frozen
 - Numbers live in RESULTS.md; every result maps to a commit
+- Winner backbone: vit_base_patch16_224 (AUC tied with convnext, 9x faster CPU
+  inference, saliency usable at blocks[-2].norm1)
+- Saliency method for demo/slides: Grad-CAM at blocks[-2].norm1. Attention
+  rollout is analysis-only, never in the demo.
+- Caliper/text inpainting: rejected for this project scope → future work
+  (NTUH data collection will export annotation-free images)
+- ONE pre-registered robustness experiment before TTA: CoarseDropout ViT CV.
+  Adoption rule, decided BEFORE seeing results: adopt only if pooled OOF AUC
+  >= (current ViT OOF AUC - 0.01) AND the saliency check shows visibly reduced
+  caliper-adjacent heat on malignant TPs. Otherwise discard, no iteration,
+  no second variant. Either way, next step is TTA on whichever ViT wins.
