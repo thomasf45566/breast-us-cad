@@ -34,3 +34,21 @@ interpret sens/spec too literally before calibration + pooled-OOF threshold.
 ViT is ~9× faster than ConvNeXt on CPU despite more params: its dense matmuls
 vectorize well, while 7×7 depthwise convs are slow in PyTorch's CPU path.
 Winner decision: USER (per plan.md).
+
+## Interpretability audit (fold-5 CV ckpts, 2026-08-28)
+
+Grids: reports/gradcam_check{,2}_*.png · probe: reports/occlusion_border15.csv
+· script: src/backbone_diagnostic.py
+
+- ConvNeXt Grad-CAM localizes benign TNs tightly on the lesion, but its
+  malignant-TP heat sits on lesion margins and coincides with the burned-in
+  caliper marks that bracket lesions (calipers appear in both classes, so
+  presence isn't class-discriminative — but they are a spatial shortcut).
+- ViT attention rollout concentrates on the bottom text/measurement band and
+  occasionally directly on a caliper (rollout is class-agnostic attention, not
+  malignancy evidence; ViT Grad-CAM at blocks[-2] is lesion-informative, and
+  check-1's blank TP maps were a saturated-last-block method artifact).
+- Masking the outer 15% border (image-mean fill) drops mean malignant prob by
+  0.121 (convnext) / 0.073 (vit), driven by a ~16% tail of images with drop
+  > 0.2 (19 vs 20 of 121) — partly confounded by lesions that extend into the
+  masked border, so it overstates pure artifact dependence.
