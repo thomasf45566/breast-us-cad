@@ -10,7 +10,7 @@ Read this at session start. Update the checkboxes when a task completes.
 - [x] 5-fold CV effb0: AUC 0.891 ± 0.027 (tag: cv-v1)
 - [x] Backbone screening fold-5: convnext_small 0.9257, vit_b16 0.9293
 - [x] 5-fold CV convnext_small
-- [ ] 5-fold CV vit_b16  ← in progress today
+- [x] 5-fold CV vit_b16: AUC 0.931 ± 0.016 (comparison table in RESULTS.md)
 
 ## Next (strict order)
 1. Backbone comparison table → USER decides winner (not Claude)
