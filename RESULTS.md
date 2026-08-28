@@ -11,21 +11,26 @@
 
 ## Backbone comparison (5-fold CV, BUS-BRA official folds)
 
-| Fold | effnet_b0 | convnext_small | vit_b16 |
+| | effnet_b0 | convnext_small | vit_b16 |
 |---|---|---|---|
-| 1 | — | 0.9541 | 0.9526 |
-| 2 | — | 0.9404 | 0.9411 |
-| 3 | — | 0.9221 | 0.9193 |
-| 4 | — | 0.9093 | 0.9132 |
-| 5 | — | 0.9263 | 0.9272 |
+| Fold 1 AUC | 0.9388 | 0.9541 | 0.9526 |
+| Fold 2 AUC | 0.8711 | 0.9404 | 0.9411 |
+| Fold 3 AUC | 0.8817 | 0.9221 | 0.9193 |
+| Fold 4 AUC | 0.8839 | 0.9093 | 0.9132 |
+| Fold 5 AUC | 0.8794 | 0.9263 | 0.9272 |
 | **AUC mean ± sd** | 0.891 ± 0.027 | 0.9304 ± 0.0173 | 0.9307 ± 0.0161 |
+| Per-fold AUC range | 0.8711–0.9388 | 0.9093–0.9541 | 0.9132–0.9526 |
 | Sens mean ± sd | 0.769 ± 0.080 | 0.852 ± 0.028 | 0.881 ± 0.025 |
 | Spec mean ± sd | 0.864 ± 0.064 | 0.886 ± 0.047 | 0.868 ± 0.047 |
+| Params (M) | 4.0 | 49.5 | 85.8 |
 | Ckpt size | 16 MB | 189 MB | 327 MB |
 | Epoch time (MPS) | fastest | ~145 s | ~180 s |
+| CPU inference (1×224×224, median of 20) | 79 ms | 376 ms | 40 ms |
 
 convnext_small and vit_b16 are statistically indistinguishable on AUC (Δmean
-0.0003, per-fold |Δ| ≤ 0.004); both clearly beat effb0. Per-fold Youden
-thresholds are unstable (e.g. 0.015–0.92 across convnext folds) — do not
+0.0002, well below both models' fold SD); both clearly beat effb0. Per-fold
+Youden thresholds are unstable (e.g. 0.015–0.92 across convnext folds) — do not
 interpret sens/spec too literally before calibration + pooled-OOF threshold.
-Winner decision: USER (per plan.md). effb0 per-fold AUCs in reports/cv_summary.csv.
+ViT is ~9× faster than ConvNeXt on CPU despite more params: its dense matmuls
+vectorize well, while 7×7 depthwise convs are slow in PyTorch's CPU path.
+Winner decision: USER (per plan.md).
