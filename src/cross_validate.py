@@ -92,7 +92,7 @@ def main() -> None:
 
     reports_dir = Path(cfg["paths"]["reports_dir"])
     reports_dir.mkdir(parents=True, exist_ok=True)
-    out_path = reports_dir / "cv_summary.csv"
+    out_path = reports_dir / f"{args.prefix}_summary.csv"
     out.to_csv(out_path, index=False)
 
     print("\n" + summary.to_string(index=False, float_format=lambda x: f"{x:.4f}"))

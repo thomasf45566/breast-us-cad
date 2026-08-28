@@ -4,6 +4,7 @@ data/*
 models/*.pt
 models/*.pth
 wandb/
+logs/
 __pycache__/
 .DS_Store
 *.ipynb_checkpoints

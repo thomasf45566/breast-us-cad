@@ -21,6 +21,8 @@ in code, comments, or UI text.
    and show me the actual output (metrics, file paths, screenshots).
 5. Keep functions small; config in configs/*.yaml; no hardcoded paths.
 6. Grayscale ultrasound → replicate to 3 channels for ImageNet backbones.
+7. At session start, read plan.md. When a task in plan.md completes,
+   update its checkbox in the same commit as the work itself.
 
 ## Commands
 - Train: python src/train.py --config configs/baseline.yaml
