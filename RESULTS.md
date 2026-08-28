@@ -37,18 +37,17 @@ Winner decision: USER (per plan.md).
 
 ## Interpretability audit (fold-5 CV ckpts, 2026-08-28)
 
-Grids: reports/gradcam_check{,2}_*.png · probe: reports/occlusion_border15.csv
-· script: src/backbone_diagnostic.py
+Grids: reports/gradcam_check{,2}_*.png · raw-image audit: reports/artifact_audit_raw.png
+· probe: reports/occlusion_border15.csv · script: src/backbone_diagnostic.py
 
-- ConvNeXt Grad-CAM localizes benign TNs tightly on the lesion, but its
-  malignant-TP heat sits on lesion margins and coincides with the burned-in
-  caliper marks that bracket lesions (calipers appear in both classes, so
-  presence isn't class-discriminative — but they are a spatial shortcut).
-- ViT attention rollout concentrates on the bottom text/measurement band and
-  occasionally directly on a caliper (rollout is class-agnostic attention, not
-  malignancy evidence; ViT Grad-CAM at blocks[-2] is lesion-informative, and
-  check-1's blank TP maps were a saturated-last-block method artifact).
-- Masking the outer 15% border (image-mean fill) drops mean malignant prob by
-  0.121 (convnext) / 0.073 (vit), driven by a ~16% tail of images with drop
-  > 0.2 (19 vs 20 of 121) — partly confounded by lesions that extend into the
-  masked border, so it overstates pure artifact dependence.
+- Both models show caliper-adjacent heat on malignant TPs (ConvNeXt most
+  visibly); calipers bracket lesions in both classes, so they are a spatial
+  shortcut rather than a class-discriminative cue.
+- ViT attention rollout concentrates on the bottom burned-in-text band, but
+  rollout is class-agnostic — treat as secondary evidence only.
+- Border-occlusion probe (outer 15%, image-mean fill): median prob drop < 0.01
+  for both models, with a heavy tail (~16% of images with drop > 0.2) for both
+  — confounded by lesions extending to the border.
+
+Method note: ViT's blank TP CAMs in check 1 were a method artifact (saturated
+last-block target), resolved at blocks[-2].norm1.
