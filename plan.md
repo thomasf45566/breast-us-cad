@@ -9,7 +9,7 @@ Read this at session start. Update the checkboxes when a task completes.
 - [x] Baseline effb0 fold-5: AUC 0.8823 (tag: baseline-v1)
 - [x] 5-fold CV effb0: AUC 0.891 ± 0.027 (tag: cv-v1)
 - [x] Backbone screening fold-5: convnext_small 0.9257, vit_b16 0.9293
-- [x] 5-fold CV convnext_small
+- [x] 5-fold CV convnext_small: AUC 0.930 ± 0.017 (summary in reports/cv_convnext_summary.csv)
 - [x] 5-fold CV vit_b16: AUC 0.931 ± 0.016 (comparison table in RESULTS.md)
 
 ## Next (strict order)
