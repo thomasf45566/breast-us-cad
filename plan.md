@@ -65,11 +65,19 @@ Read this at session start. Update the checkboxes when a task completes.
       0.9931/0.1315 (κ 0.22). src/birads_comparison.py, figures + table in
       RESULTS.md. Stray-'c' exclusion vacuous (row already dedup-dropped).
 
+- [x] Grad-CAM gallery (2026-08-29, src/explain.py, fold-5 ckpt @
+      blocks[-2].norm1, predicted-class target): internal 4×4 TP/TN/FP/FN
+      from fold-5 OOF at the frozen threshold (moderate-confidence
+      preferred) + external benign-FP study (top-4 SYSUCC/GDPH by
+      calibrated prob). Reading: TP heat on lesion+margins; TN/FN diffuse
+      and non-lesional; external FPs appearance-driven (heat on the
+      lesion body in 7/8), not text/caliper driven. Figures in reports/,
+      note in RESULTS.md "Grad-CAM gallery".
+
 ## Next (strict order)
-1. Grad-CAM gallery (TP/TN/FP/FN × 4)
-2. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
-3. Gradio app → HF Spaces
-4. README / slides / one-pager / rehearsal
+1. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
+2. Gradio app → HF Spaces
+3. README / slides / one-pager / rehearsal
 
 ## Standing decisions (do not relitigate)
 - TTA ADOPTED (2026-08-29): hflip TTA + 5-model ensemble is the frozen

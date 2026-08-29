@@ -268,3 +268,43 @@ ROC curve.
 Reader1 vs reader2 agreement 0.7887, Cohen's κ 0.2152. On SYSUCC the model
 operating point lies between the two readers, who themselves diverge widely
 (reader2 calls 87% of benigns ≥ 4a; κ 0.22).
+
+## Grad-CAM gallery (frozen-v1, 2026-08-29)
+
+Script: src/explain.py · figures: reports/gradcam_gallery_internal.png,
+reports/gradcam_external_fp.png. CAMs use the fold-5 checkpoint only
+(Grad-CAM at blocks[-2].norm1, the frozen saliency method), targeting the
+predicted class — single-model visualizations, while decisions come from
+the 5-ckpt hflip-TTA ensemble. Internal picks are drawn from the pooled
+OOF calibrated preds at the frozen threshold but restricted to fold-5
+images, so the CAM checkpoint is held-out for everything shown; within
+each cell, calibrated probs in 0.3–0.9 are preferred over saturated ones.
+External FPs are the 4 highest-calibrated-prob benign false positives
+from SYSUCC and GDPH each.
+
+Where the heat lands (qualitative, single-model):
+
+- **TP:** heat sits on the lesion body and its margins in all 4; the
+  moderate-confidence TPs (p 0.49–0.63) are the tightest, a compact blob
+  on the hypoechoic mass with little spill.
+- **TN / FN** (benign-target CAMs): diffuse and non-lesional — heat
+  spreads over superficial parenchyma bands, posterior/deep regions, and
+  in two TNs partly over burned-in annotation text. "Benign evidence" is
+  apparently the absence of a suspicious focus rather than a localized
+  structure, so these maps are the least informative of the four cells.
+- **FP:** 3/4 fixate on genuinely suspicious-looking structure (irregular
+  hypoechoic regions with posterior shadowing); the lowest-prob FP
+  (bus_0625-l, p 0.35) instead lights a small echogenic focus adjacent to
+  a caliper mark — residual annotation sensitivity consistent with the
+  earlier interpretability audit.
+- **External FPs (domain shift):** heat lands squarely on the lesion body
+  in 7/8 — all 4 SYSUCC cases are markedly hypoechoic, lobulated benign
+  masses the model reads as malignant on appearance, not artifact. GDPH
+  is messier: 2/4 show heat spilling across broad superficial bands, and
+  benign(755) adds heat over a column of reverberation-like bright dots.
+  Net: the external specificity collapse looks appearance-driven
+  (atypical benign morphology + acquisition style), not text/caliper
+  driven.
+
+Caveat: CAMs are qualitative, single-checkpoint, original-orientation
+only; they support the domain-shift reading but do not quantify it.
