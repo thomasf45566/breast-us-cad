@@ -103,5 +103,28 @@ cv_vit row above (pipeline sanity check).
 TTA improves 3/5 folds and the pooled OOF AUC (+0.0023) at 2× inference
 cost. Pooled OOF predictions for both settings are saved to
 reports/oof_vit_preds.csv (input to the calibration step); pooled ROC +
-confusion matrices in reports/{roc,cm}_oof_vit_{plain,tta}.png. The TTA
-on/off choice is part of the freeze decision (plan.md step: FREEZE).
+confusion matrices in reports/{roc,cm}_oof_vit_{plain,tta}.png.
+**Decision (USER, 2026-08-29): TTA ADOPTED** — hflip TTA + 5-model ensemble
+is the frozen inference pipeline for all downstream steps (plan.md standing
+decisions).
+
+## Calibration — temperature scaling (pooled OOF, hflip TTA, 2026-08-29)
+
+Single scalar T fit by LBFGS on NLL over the 1875 pooled OOF TTA
+probabilities (reports/oof_vit_preds.csv, y_prob_tta). Logit convention:
+logit of the TTA-averaged prob, log(p/(1-p)) with p clipped to
+[1e-6, 1-1e-6] — not the average of per-flip logits. Script:
+src/calibrate.py · params: models/calibration.json · diagram:
+reports/reliability_oof_vit_tta.png
+
+| | Before | After (T = 2.3644) |
+|---|---|---|
+| ECE (15 equal-width bins) | 0.0716 | 0.0401 |
+| NLL | 0.4411 | 0.3237 |
+| AUC | 0.9254 | 0.9254 (unchanged — monotone, asserted) |
+
+T ≈ 2.36 means the ensemble's raw probabilities were substantially
+overconfident. Residual miscalibration after scaling is mild
+overconfidence in the mid-probability bins (see diagram); a single
+temperature cannot fix bin-shape effects, which is acceptable for the
+sens ≥ 0.90 thresholding step that follows.
