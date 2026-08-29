@@ -38,12 +38,24 @@ Read this at session start. Update the checkboxes when a task completes.
       frozen pipeline self-check PASSED (fold-5 TTA AUC 0.9234 reproduced
       digit-for-digit, reports/external_selfcheck.txt). Run needs --confirm.
 
+- [x] Protocol AMENDMENT 1 (2026-08-29, verified before any external
+      inference): GDPH + SYSUCC added as two separate cohorts (keep-lists
+      after pHash dedup: 846→810, 1559→1013 — SYSUCC ~35% dups incl. 39
+      label-conflicts); BUSI_WHU EXCLUDED (label mapping unverifiable:
+      on-disk 756/171 vs published 560/367, no metadata, DSATNet loader is
+      segmentation-only, HF re-release unmappable); full cross-set pHash
+      sweep clean (2 d=8 candidates both visually refuted — NO BUS-BRA
+      contamination); secondary BI-RADS reader comparison pre-registered
+      (≥4a positive, run only after primary). Self-check re-passed after
+      registry changes. Details: data/external_protocol.md Amendment 1.
+
 ## Next (strict order)
 1. External validation — THE RUN (ONE run only):
-   `python src/external_val.py --dataset all --confirm` on BrEaST (252 imgs,
-   4 normals excluded) + cleaned BUSI (379 imgs). Frozen ensemble +
-   threshold. Results go to RESULTS.md regardless of outcome. Never
-   re-tune after.
+   `python src/external_val.py --dataset all --confirm` on BrEaST (252),
+   BUSI-clean (379), GDPH-clean (810), SYSUCC-clean (1013). Frozen
+   ensemble + threshold. Results go to RESULTS.md regardless of outcome.
+   Never re-tune after. THEN the pre-registered secondary BI-RADS reader
+   comparison (protocol (h)) from the saved predictions.
 2. Grad-CAM gallery (TP/TN/FP/FN × 4)
 3. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
 4. Gradio app → HF Spaces

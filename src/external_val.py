@@ -13,9 +13,11 @@ accident. --self-check exercises the same code path on BUS-BRA fold-5 with
 only the fold-5 checkpoint and must reproduce the recorded TTA AUC
 digit-for-digit (reports/tta_vit_summary.csv) before any external run.
 
+Cohorts (see DATASETS registry): breast, busi, gdph, sysucc — GDPH and
+SYSUCC always reported separately; busi_whu EXCLUDED (amendment 1(f)).
+
 Usage: python src/external_val.py --self-check
-       python src/external_val.py --dataset breast --confirm
-       python src/external_val.py --dataset busi --confirm
+       python src/external_val.py --dataset all --confirm
 """
 
 import argparse
@@ -87,10 +89,11 @@ def build_breast_df() -> pd.DataFrame:
     return df
 
 
-def build_busi_df() -> pd.DataFrame:
-    """BUSI per protocol: frozen dedup keep-list; NO patient IDs exist, so
-    patient_id = filename and the bootstrap is image-level."""
-    keep = pd.read_csv(BUSI_CLEAN_CSV)
+def build_keeplist_df(csv_path: str | Path) -> pd.DataFrame:
+    """Cohorts defined by a frozen dedup keep-list (BUSI, GDPH, SYSUCC).
+    None of them publish patient IDs, so patient_id = filename and the
+    bootstrap is image-level (stated in the report)."""
+    keep = pd.read_csv(csv_path)
     return pd.DataFrame(
         {
             "image_path": keep["image_path"],
@@ -98,6 +101,16 @@ def build_busi_df() -> pd.DataFrame:
             "label": keep["label"],
         }
     )
+
+
+# registry: name -> (df builder, patient-level bootstrap available).
+# busi_whu is deliberately absent — EXCLUDED per protocol amendment 1(f).
+DATASETS = {
+    "breast": (build_breast_df, True),
+    "busi": (lambda: build_keeplist_df(BUSI_CLEAN_CSV), False),
+    "gdph": (lambda: build_keeplist_df("data/splits/gdph_clean.csv"), False),
+    "sysucc": (lambda: build_keeplist_df("data/splits/sysucc_clean.csv"), False),
+}
 
 
 def patient_bootstrap(df, probs, thr, n_boot=N_BOOT, seed=BOOT_SEED) -> dict:
@@ -203,7 +216,7 @@ def self_check(cfg: dict) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", choices=["breast", "busi", "all"])
+    parser.add_argument("--dataset", choices=[*DATASETS, "all"])
     parser.add_argument("--self-check", action="store_true", dest="self_check")
     parser.add_argument(
         "--confirm",
@@ -223,10 +236,9 @@ def main() -> None:
             "external validation is SINGLE-SHOT (data/external_protocol.md); "
             "re-run with --confirm only when the one real run is intended"
         )
-    if args.dataset in ("breast", "all"):
-        run_external("breast", build_breast_df(), cfg, patient_level=True)
-    if args.dataset in ("busi", "all"):
-        run_external("busi", build_busi_df(), cfg, patient_level=False)
+    for name, (builder, patient_level) in DATASETS.items():
+        if args.dataset in (name, "all"):
+            run_external(name, builder(), cfg, patient_level=patient_level)
 
 
 if __name__ == "__main__":
