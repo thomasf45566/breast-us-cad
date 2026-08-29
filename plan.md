@@ -74,10 +74,16 @@ Read this at session start. Update the checkboxes when a task completes.
       lesion body in 7/8), not text/caliper driven. Figures in reports/,
       note in RESULTS.md "Grad-CAM gallery".
 
+- [x] Segmentation demo (2026-08-30, src/train_seg.py + src/eval_seg.py,
+      configs/seg.yaml): smp U-Net effb0-encoder, Dice+BCE, 40 epochs,
+      BUS-BRA folds 1-4 → fold 5: mean Dice 0.9016 / IoU 0.8326
+      (median 0.9325 / 0.8736, n=383). Single run, no CV/ensemble/
+      external eval by design. models/seg_unet_effb0.pt, wandb
+      seg_unet_effb0, reports/seg_examples.png, section in RESULTS.md.
+
 ## Next (strict order)
-1. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
-2. Gradio app → HF Spaces
-3. README / slides / one-pager / rehearsal
+1. Gradio app → HF Spaces
+2. README / slides / one-pager / rehearsal
 
 ## Standing decisions (do not relitigate)
 - TTA ADOPTED (2026-08-29): hflip TTA + 5-model ensemble is the frozen

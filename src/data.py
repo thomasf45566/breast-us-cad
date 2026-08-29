@@ -130,6 +130,23 @@ class BusDataset(Dataset):
         return img, torch.tensor(row["label"], dtype=torch.long)
 
 
+class BusSegDataset(BusDataset):
+    """Image + binary lesion mask pairs (BUS-BRA masks are {0, 255} uint8)."""
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        row = self.df.iloc[idx]
+        img = cv2.imread(row["image_path"], cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            raise FileNotFoundError(row["image_path"])
+        mask = cv2.imread(row["mask_path"], cv2.IMREAD_GRAYSCALE)
+        if mask is None:
+            raise FileNotFoundError(row["mask_path"])
+        img = np.repeat(img[:, :, None], 3, axis=2)
+        out = self.transforms(image=img, mask=mask)
+        mask_t = (out["mask"] > 127).float().unsqueeze(0)
+        return out["image"], mask_t
+
+
 def make_dataloaders(
     df: pd.DataFrame,
     train_folds: list[int],
@@ -156,6 +173,38 @@ def make_dataloaders(
     )
     val_loader = DataLoader(
         BusDataset(val_df, get_transforms("val", img_size)),
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+    )
+    return train_loader, val_loader
+
+
+def make_seg_dataloaders(
+    df: pd.DataFrame,
+    train_folds: list[int],
+    val_folds: list[int],
+    batch_size: int = 16,
+    img_size: int = 224,
+    num_workers: int = 0,
+) -> tuple[DataLoader, DataLoader]:
+    """Segmentation train/val loaders from official fold indices (patient-level)."""
+    overlap = set(train_folds) & set(val_folds)
+    if overlap:
+        raise ValueError(f"Folds appear in both train and val: {sorted(overlap)}")
+
+    train_df = df[df["fold"].isin(train_folds)]
+    val_df = df[df["fold"].isin(val_folds)]
+
+    train_loader = DataLoader(
+        BusSegDataset(train_df, get_transforms("train", img_size)),
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        drop_last=True,
+    )
+    val_loader = DataLoader(
+        BusSegDataset(val_df, get_transforms("val", img_size)),
         batch_size=batch_size,
         shuffle=False,
         num_workers=num_workers,

@@ -308,3 +308,34 @@ Where the heat lands (qualitative, single-model):
 
 Caveat: CAMs are qualitative, single-checkpoint, original-orientation
 only; they support the domain-shift reading but do not quantify it.
+
+## Segmentation — U-Net effb0 (demo feature, 2026-08-30)
+
+Script: src/train_seg.py, src/eval_seg.py · figure:
+reports/seg_examples.png · per-image metrics:
+reports/seg_metrics_seg_unet_effb0.csv · wandb run seg_unet_effb0
+(ybo2j891) · checkpoint models/seg_unet_effb0.pt.
+
+Deliberately minimal scope (bundled demo feature for the app): ONE
+model, ONE training run, no CV, no ensemble, no external evaluation.
+smp U-Net with efficientnet-b0 encoder (imagenet init), input 224,
+Dice + BCE loss (equal weight), AdamW lr 3e-4, cosine, 40 epochs,
+batch 16, mps. Trained on BUS-BRA official folds 1-4 (1492 images,
+all with masks), validated on fold 5 (383 images); best checkpoint
+by mean per-image val Dice at threshold 0.5 (epoch 37).
+
+| Split | n | Mean Dice | Median Dice | Mean IoU | Median IoU |
+|---|---|---|---|---|---|
+| BUS-BRA fold 5 | 383 | **0.9016** | 0.9325 | **0.8326** | 0.8736 |
+
+Distribution: 280/383 images (73%) above Dice 0.9; only 5/383 below
+Dice 0.5. The example grid (4 good / 4 median / 4 worst) shows the
+failure modes are the expected ones: heavily shadowed lesions, low
+contrast fields where the model fragments the mask or grabs a
+different hypoechoic region, and one case where a large ill-defined
+GT lesion is only partially covered. Median cases (~Dice 0.93) are
+already visually tight.
+
+Metric note: Dice/IoU computed per image at 224×224 (masks resized
+with nearest interpolation), thresholding sigmoid probs at 0.5;
+mean is over images, not pixels pooled.

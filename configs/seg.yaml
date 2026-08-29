@@ -1,0 +1,30 @@
+data:
+  root: data/raw/busbra
+  img_size: 224
+  batch_size: 16
+  num_workers: 4
+  train_folds: [1, 2, 3, 4]
+  val_folds: [5]
+
+model:
+  arch: unet
+  encoder: efficientnet-b0   # smp encoder name (hyphenated, unlike timm)
+  encoder_weights: imagenet
+
+train:
+  epochs: 40
+  optimizer: adamw
+  scheduler: cosine
+  loss: dice_bce   # DiceLoss + BCEWithLogitsLoss, equal weight
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  seed: 42
+  device: mps
+
+wandb:
+  project: breast-us-cad
+  run_name: seg_unet_effb0
+
+paths:
+  ckpt: models/seg_unet_effb0.pt
+  reports_dir: reports
