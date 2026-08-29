@@ -128,3 +128,44 @@ overconfident. Residual miscalibration after scaling is mild
 overconfidence in the mid-probability bins (see diagram); a single
 temperature cannot fix bin-shape effects, which is acceptable for the
 sens ≥ 0.90 thresholding step that follows.
+
+## Operating point — sens ≥ 0.90, max spec (calibrated OOF, 2026-08-29)
+
+Chosen on the calibrated pooled OOF probabilities (n = 1875 images, 1064
+patients). Script: src/pick_threshold.py · params:
+models/operating_point.json · slide asset: reports/roc_oof_operating_point.png
+· 95% CIs: patient-level bootstrap (resample patient_ids, 2000 iterations,
+seed 42).
+
+| | Value | 95% CI |
+|---|---|---|
+| Threshold (calibrated prob) | 0.2683 | — |
+| Sensitivity | 0.9028 | 0.874–0.928 |
+| Specificity | 0.7713 | 0.745–0.798 |
+| PPV | 0.6539 | — |
+| NPV | 0.9431 | — |
+| Confusion (tp/fp/fn/tn) | 548 / 290 / 59 / 978 | — |
+
+PPV reflects BUS-BRA's ~32% malignancy prevalence; at screening prevalence
+it would be far lower — a talking point, not a deployment claim.
+
+## FROZEN MODEL (frozen-v1, 2026-08-29)
+
+No model, calibration, or threshold changes after this tag. External
+validation runs against exactly this artifact set, once.
+
+- **Checkpoints:** models/cv_vit_fold{1-5}.pt — vit_base_patch16_224,
+  one per official BUS-BRA CV fold (30 ep, lr 1e-4, warmup 3, seed 42)
+- **Inference:** 5-model ensemble + hflip TTA — mean of the 10 sigmoid
+  probs (5 ckpts × {original, hflipped}); vertical flip excluded
+- **Calibration:** models/calibration.json — temperature T = 2.3644 applied
+  to the logit of the ensemble-averaged prob (p clipped to [1e-6, 1-1e-6])
+- **Operating point:** models/operating_point.json — threshold 0.2683 on
+  calibrated prob (rule: sens ≥ 0.90 with max spec on pooled OOF)
+- **Final internal metrics (BUS-BRA):** mean-of-folds AUC 0.9307 ± 0.0161
+  (headline) · pooled OOF AUC 0.9254 with TTA · ECE (15 bins) 0.0401 after
+  calibration · sens 0.9028 / spec 0.7713 at the frozen threshold
+
+Note: per-fold CV numbers above use each fold's single checkpoint; the
+frozen ensemble itself has no unbiased internal estimate (every image is
+in-fold for 4 of 5 members) — its honest test is the external validation.

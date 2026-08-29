@@ -23,18 +23,22 @@ Read this at session start. Update the checkboxes when a task completes.
 - [x] calibrate.py: temperature scaling on pooled OOF TTA preds. T = 2.3644,
       ECE 0.0716 → 0.0401 (15 bins), NLL 0.4411 → 0.3237, AUC unchanged
       0.9254. models/calibration.json, reports/reliability_oof_vit_tta.png.
+- [x] pick_threshold.py: threshold 0.2683 on calibrated OOF (sens ≥ 0.90,
+      max spec). Sens 0.9028 (CI 0.874–0.928), spec 0.7713 (CI 0.745–0.798),
+      PPV 0.654, NPV 0.943; patient-level bootstrap ×2000.
+      models/operating_point.json, reports/roc_oof_operating_point.png.
+- [x] FREEZE: tag frozen-v1 — 5 ckpts + hflip TTA + calibration.json
+      (T=2.3644) + operating_point.json. NO model changes after this tag.
+      Artifact list in RESULTS.md "FROZEN MODEL" section.
 
 ## Next (strict order)
-1. pick_threshold.py: sens ≥ 0.90 operating point on calibrated OOF
-2. FREEZE: tag frozen-v1 (5 ckpts + TTA setting + calibration.json +
-   operating_point.json). After this tag, NO model changes.
-3. External validation (ONE run only): dedup_busi.py → external_val.py
+1. External validation (ONE run only): dedup_busi.py → external_val.py
    on BrEaST + cleaned BUSI, ensemble of 5 ckpts, frozen threshold.
    Results go to RESULTS.md regardless of outcome. Never re-tune after.
-4. Grad-CAM gallery (TP/TN/FP/FN × 4)
-5. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
-6. Gradio app → HF Spaces
-7. README / slides / one-pager / rehearsal
+2. Grad-CAM gallery (TP/TN/FP/FN × 4)
+3. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
+4. Gradio app → HF Spaces
+5. README / slides / one-pager / rehearsal
 
 ## Standing decisions (do not relitigate)
 - TTA ADOPTED (2026-08-29): hflip TTA + 5-model ensemble is the frozen
