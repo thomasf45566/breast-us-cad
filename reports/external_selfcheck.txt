@@ -1,0 +1,5 @@
+self-check: fold-5 val, fold-5 ckpt only, n = 383
+  expected (reports/tta_vit_summary.csv): 0.9234433158791244
+  reproduced by external_val code path:   0.9234433158791243
+  calibration (T=2.3644) + threshold (0.2683) applied: 156/383 flagged malignant
+  SELF-CHECK PASSED — AUC reproduced digit-for-digit.

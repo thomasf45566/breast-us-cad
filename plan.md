@@ -30,11 +30,20 @@ Read this at session start. Update the checkboxes when a task completes.
 - [x] FREEZE: tag frozen-v1 — 5 ckpts + hflip TTA + calibration.json
       (T=2.3644) + operating_point.json. NO model changes after this tag.
       Artifact list in RESULTS.md "FROZEN MODEL" section.
+- [x] External validation PRE-FLIGHT (no external inference run):
+      data/external_protocol.md (labels, exclusions, preprocessing, metrics
+      — written before any scoring); dedup_busi.py → busi_clean.csv
+      (386 → 379: 7 near-dups dropped, pHash d ≤ 8, histogram + pair grid
+      in reports/, no BUSI↔BrEaST cross-dups, min d = 10); external_val.py
+      frozen pipeline self-check PASSED (fold-5 TTA AUC 0.9234 reproduced
+      digit-for-digit, reports/external_selfcheck.txt). Run needs --confirm.
 
 ## Next (strict order)
-1. External validation (ONE run only): dedup_busi.py → external_val.py
-   on BrEaST + cleaned BUSI, ensemble of 5 ckpts, frozen threshold.
-   Results go to RESULTS.md regardless of outcome. Never re-tune after.
+1. External validation — THE RUN (ONE run only):
+   `python src/external_val.py --dataset all --confirm` on BrEaST (252 imgs,
+   4 normals excluded) + cleaned BUSI (379 imgs). Frozen ensemble +
+   threshold. Results go to RESULTS.md regardless of outcome. Never
+   re-tune after.
 2. Grad-CAM gallery (TP/TN/FP/FN × 4)
 3. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
 4. Gradio app → HF Spaces

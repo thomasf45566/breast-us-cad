@@ -1,6 +1,10 @@
 .venv/
 data/*
 !data/README.md
+!data/external_protocol.md
+!data/splits/
+data/splits/*
+!data/splits/*.csv
 models/*.pt
 models/*.pth
 wandb/
