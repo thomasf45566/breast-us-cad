@@ -9,6 +9,7 @@
 | 2026-08-28 | cv_convnext (5-fold) | convnext_small | official 5-fold CV | 0.930 ± 0.017 | 0.852 ± 0.028 | 0.886 ± 0.047 | per-fold Youden | cv_convnext_fold{1-5}.pt | 30 ep/fold, lr 1e-4, wandb group cv_convnext, per-fold AUC 0.954/0.940/0.922/0.909/0.926, details in reports/cv_convnext_summary.csv |
 | 2026-08-28 | cv_vit (5-fold) | vit_base_patch16_224 | official 5-fold CV | 0.931 ± 0.016 | 0.881 ± 0.025 | 0.868 ± 0.047 | per-fold Youden | cv_vit_fold{1-5}.pt | 30 ep/fold, lr 1e-4, warmup 3, wandb group cv_vit, per-fold AUC 0.953/0.941/0.919/0.913/0.927, details in reports/cv_vit_summary.csv |
 | 2026-08-29 | cv_vit_cdrop (5-fold) | vit_base_patch16_224 | official 5-fold CV | 0.933 ± 0.020 | 0.853 ± 0.025 | 0.874 ± 0.036 | per-fold Youden | cv_vit_cdrop_fold{1-5}.pt | pre-registered CoarseDropout experiment (configs/vit_cdrop.yaml), per-fold AUC 0.956/0.943/0.930/0.902/0.934, DISCARDED per adoption rule (below), kept as audit trail |
+| 2026-08-29 | tta_vit (hflip TTA) | vit_base_patch16_224 | official 5-fold CV, eval-only | 0.932 ± 0.016 | 0.844 ± 0.020 | 0.895 ± 0.024 | per-fold Youden | cv_vit_fold{1-5}.pt (unchanged) | no retraining; sigmoid probs averaged over original + hflip; src/tta_eval.py, details in reports/tta_vit_summary.csv, TTA section below |
 
 ## Backbone comparison (5-fold CV, BUS-BRA official folds)
 
@@ -79,3 +80,28 @@ Metric note: pooled OOF AUC (0.9231) sits below mean-of-folds (0.9307)
 because pooling concatenates five uncalibrated per-fold probability scales.
 The headline internal metric is mean-of-folds 0.9307 ± 0.0161; pooled OOF is
 the operational basis for calibration and thresholding.
+
+## TTA — horizontal flip only (eval-time, 2026-08-29)
+
+Sigmoid probabilities averaged over the original and horizontally flipped
+image; no retraining, checkpoints unchanged (models/cv_vit_fold{1-5}.pt).
+Vertical flip deliberately excluded (would break ultrasound depth
+orientation). Script: src/tta_eval.py; the same TTA is available as
+`--tta` on src/evaluate.py. Per-fold plain AUCs exactly reproduce the
+cv_vit row above (pipeline sanity check).
+
+| Held-out fold | n | AUC plain | AUC + hflip TTA |
+|---|---|---|---|
+| 1 | 376 | 0.9526 | 0.9571 |
+| 2 | 385 | 0.9411 | 0.9397 |
+| 3 | 366 | 0.9193 | 0.9238 |
+| 4 | 365 | 0.9132 | 0.9174 |
+| 5 | 383 | 0.9272 | 0.9234 |
+| **Mean ± sd** | — | 0.9307 ± 0.0161 | 0.9323 ± 0.0162 |
+| **Pooled OOF** | 1875 | 0.9231 | 0.9254 |
+
+TTA improves 3/5 folds and the pooled OOF AUC (+0.0023) at 2× inference
+cost. Pooled OOF predictions for both settings are saved to
+reports/oof_vit_preds.csv (input to the calibration step); pooled ROC +
+confusion matrices in reports/{roc,cm}_oof_vit_{plain,tta}.png. The TTA
+on/off choice is part of the freeze decision (plan.md step: FREEZE).

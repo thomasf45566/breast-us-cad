@@ -26,6 +26,24 @@ from data import BusDataset, build_master_df, get_transforms
 from train import build_model, predict
 
 
+@torch.no_grad()
+def predict_hflip_pair(model, loader, device: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """One pass over the loader; returns (probs_orig, probs_hflip, labels).
+
+    TTA = mean of the two prob arrays. Horizontal flip only — vertical would
+    break ultrasound depth orientation.
+    """
+    model.eval()
+    p_orig, p_flip, labels = [], [], []
+    for images, targets in loader:
+        images = images.to(device)
+        p_orig.append(torch.sigmoid(model(images).squeeze(1)).cpu().numpy())
+        flipped = torch.flip(images, dims=[3])
+        p_flip.append(torch.sigmoid(model(flipped).squeeze(1)).cpu().numpy())
+        labels.append(targets.numpy())
+    return np.concatenate(p_orig), np.concatenate(p_flip), np.concatenate(labels)
+
+
 def youden_threshold(labels: np.ndarray, probs: np.ndarray) -> float:
     fpr, tpr, thresholds = roc_curve(labels, probs)
     return float(thresholds[np.argmax(tpr - fpr)])
@@ -84,12 +102,19 @@ def main() -> None:
     parser.add_argument("--ckpt", default="models/best.pt")
     parser.add_argument("--split", default="val", choices=["val"])
     parser.add_argument("--tag", help="suffix for report filenames (default: ckpt stem)")
+    parser.add_argument(
+        "--tta",
+        action="store_true",
+        help="average sigmoid probs over original + horizontally flipped image",
+    )
     args = parser.parse_args()
 
     ckpt = torch.load(args.ckpt, map_location="cpu", weights_only=False)
     cfg = ckpt["config"]
     device = cfg["train"]["device"]
     tag = args.tag or Path(args.ckpt).stem
+    if args.tta:
+        tag += "_tta"
 
     model = build_model(cfg)
     model.load_state_dict(ckpt["model_state"])
@@ -104,7 +129,11 @@ def main() -> None:
         num_workers=cfg["data"]["num_workers"],
     )
 
-    probs, labels = predict(model, loader, device)
+    if args.tta:
+        p_orig, p_flip, labels = predict_hflip_pair(model, loader, device)
+        probs = (p_orig + p_flip) / 2
+    else:
+        probs, labels = predict(model, loader, device)
     run_name = cfg["wandb"]["run_name"]
     m = compute_metrics(labels, probs)
     auc, thr, cm = m["auc"], m["threshold"], m["cm"]
@@ -116,7 +145,7 @@ def main() -> None:
     save_roc(labels, probs, auc, roc_path)
     save_confusion(cm, cm_path)
 
-    preds_path = reports_dir / f"preds_{run_name}.csv"
+    preds_path = reports_dir / f"preds_{run_name}{'_tta' if args.tta else ''}.csv"
     pd.DataFrame(
         {
             "image_path": eval_df["image_path"].values,
@@ -127,7 +156,7 @@ def main() -> None:
     ).to_csv(preds_path, index=False)
 
     print(f"checkpoint: {args.ckpt} (epoch {ckpt['epoch']}) | split: {args.split} "
-          f"| n = {len(labels)}")
+          f"| n = {len(labels)} | TTA: {'hflip' if args.tta else 'off'}")
     print(f"AUC:         {auc:.4f}")
     print(f"Youden thr:  {thr:.4f}")
     print(f"Sensitivity: {m['sensitivity']:.4f}")
