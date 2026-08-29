@@ -13,22 +13,23 @@ Read this at session start. Update the checkboxes when a task completes.
 - [x] 5-fold CV vit_b16: AUC 0.931 ± 0.016 (comparison table in RESULTS.md)
 - [x] Backbone comparison table + interpretability audit (RESULTS.md)
 - [x] Backbone decision: vit_base_patch16_224 (see standing decisions)
+- [x] Pre-registered CoarseDropout ViT CV: cdrop discarded per pre-registered
+      rule; plain cv_vit is the frozen backbone artifact set
+      (models/cv_vit_fold{1-5}.pt). Details in RESULTS.md.
 
 ## Next (strict order)
-1. Pre-registered CoarseDropout ViT CV (see standing decisions for the
-   adoption rule, frozen before results)
-2. TTA (hflip only) on winning ViT's CV checkpoints, pooled OOF AUC
-3. calibrate.py: pooled OOF preds → temperature scaling
-4. pick_threshold.py: sens ≥ 0.90 operating point on calibrated OOF
-5. FREEZE: tag frozen-v1 (5 ckpts + TTA setting + calibration.json +
+1. TTA (hflip only) on plain cv_vit CV checkpoints, pooled OOF AUC
+2. calibrate.py: pooled OOF preds → temperature scaling
+3. pick_threshold.py: sens ≥ 0.90 operating point on calibrated OOF
+4. FREEZE: tag frozen-v1 (5 ckpts + TTA setting + calibration.json +
    operating_point.json). After this tag, NO model changes.
-6. External validation (ONE run only): dedup_busi.py → external_val.py
+5. External validation (ONE run only): dedup_busi.py → external_val.py
    on BrEaST + cleaned BUSI, ensemble of 5 ckpts, frozen threshold.
    Results go to RESULTS.md regardless of outcome. Never re-tune after.
-7. Grad-CAM gallery (TP/TN/FP/FN × 4)
-8. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
-9. Gradio app → HF Spaces
-10. README / slides / one-pager / rehearsal
+6. Grad-CAM gallery (TP/TN/FP/FN × 4)
+7. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
+8. Gradio app → HF Spaces
+9. README / slides / one-pager / rehearsal
 
 ## Standing decisions (do not relitigate)
 - Patient-level splits only; BUS-BRA official folds

@@ -8,6 +8,7 @@
 | 2026-08-27 | vit_b16_fold5 | vit_base_patch16_224 | folds 1-4 / 5 | 0.9293 | 0.884 | 0.847 | 0.788 (Youden) | vit_b16_fold5.pt | screening, 30 ep, lr 1e-4, warmup 3, best ep 17 |
 | 2026-08-28 | cv_convnext (5-fold) | convnext_small | official 5-fold CV | 0.930 ± 0.017 | 0.852 ± 0.028 | 0.886 ± 0.047 | per-fold Youden | cv_convnext_fold{1-5}.pt | 30 ep/fold, lr 1e-4, wandb group cv_convnext, per-fold AUC 0.954/0.940/0.922/0.909/0.926, details in reports/cv_convnext_summary.csv |
 | 2026-08-28 | cv_vit (5-fold) | vit_base_patch16_224 | official 5-fold CV | 0.931 ± 0.016 | 0.881 ± 0.025 | 0.868 ± 0.047 | per-fold Youden | cv_vit_fold{1-5}.pt | 30 ep/fold, lr 1e-4, warmup 3, wandb group cv_vit, per-fold AUC 0.953/0.941/0.919/0.913/0.927, details in reports/cv_vit_summary.csv |
+| 2026-08-29 | cv_vit_cdrop (5-fold) | vit_base_patch16_224 | official 5-fold CV | 0.933 ± 0.020 | 0.853 ± 0.025 | 0.874 ± 0.036 | per-fold Youden | cv_vit_cdrop_fold{1-5}.pt | pre-registered CoarseDropout experiment (configs/vit_cdrop.yaml), per-fold AUC 0.956/0.943/0.930/0.902/0.934, DISCARDED per adoption rule (below), kept as audit trail |
 
 ## Backbone comparison (5-fold CV, BUS-BRA official folds)
 
@@ -42,7 +43,10 @@ Grids: reports/gradcam_check{,2}_*.png · raw-image audit: reports/artifact_audi
 
 - Both models show caliper-adjacent heat on malignant TPs (ConvNeXt most
   visibly); calipers bracket lesions in both classes, so they are a spatial
-  shortcut rather than a class-discriminative cue.
+  shortcut rather than a class-discriminative cue. Update (adoption eval,
+  2026-08-29): at blocks[-2].norm1 the plain ViT localizes all 4 saturated
+  malignant TPs well — caliper-adjacent heat is a localized observation on 3
+  moderate-confidence cases, and external validation is the definitive test.
 - ViT attention rollout concentrates on the bottom burned-in-text band, but
   rollout is class-agnostic — treat as secondary evidence only.
 - Border-occlusion probe (outer 15%, image-mean fill): median prob drop < 0.01
@@ -50,4 +54,28 @@ Grids: reports/gradcam_check{,2}_*.png · raw-image audit: reports/artifact_audi
   — confounded by lesions extending to the border.
 
 Method note: ViT's blank TP CAMs in check 1 were a method artifact (saturated
-last-block target), resolved at blocks[-2].norm1.
+last-block target), confirmed resolved at blocks[-2].norm1 by the adoption
+eval grid (reports/gradcam_adoption_vit_cdrop.png).
+
+## Robustness experiment: CoarseDropout ViT (pre-registered, 2026-08-29)
+
+Adoption rule frozen before results (plan.md): adopt only if pooled OOF AUC
+>= (plain ViT pooled OOF - 0.01) AND visibly reduced caliper-adjacent heat on
+malignant TPs. Script: src/adoption_eval.py · grid:
+reports/gradcam_adoption_vit_cdrop.png
+
+| | plain cv_vit | cv_vit_cdrop |
+|---|---|---|
+| Pooled OOF AUC (1875 imgs) | 0.9231 | 0.9139 |
+| Mean fold AUC ± sd | 0.9307 ± 0.0161 | 0.9329 ± 0.0199 |
+| Gate 1 (>= 0.9131) | — | PASS (margin 0.0008) |
+| Gate 2 (visibly reduced caliper heat) | — | FAIL (1/3 improved, 1 unchanged, 1 improved map but flipped a malignant 0.75→0.28) |
+
+**Verdict: KEEP plain cv_vit; cdrop discarded per the pre-registered AND
+rule, no iteration.** Gate 1 passed by only 0.0008 and the pooled ordering
+actually reversed the mean-of-folds ordering.
+
+Metric note: pooled OOF AUC (0.9231) sits below mean-of-folds (0.9307)
+because pooling concatenates five uncalibrated per-fold probability scales.
+The headline internal metric is mean-of-folds 0.9307 ± 0.0161; pooled OOF is
+the operational basis for calibration and thresholding.

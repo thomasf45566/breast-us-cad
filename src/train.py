@@ -119,6 +119,7 @@ def train_one_fold(
         batch_size=cfg["data"]["batch_size"],
         img_size=cfg["data"]["img_size"],
         num_workers=cfg["data"]["num_workers"],
+        coarse_dropout=cfg["data"].get("coarse_dropout"),
     )
 
     # pos_weight from train-fold class frequencies only (val stays untouched)

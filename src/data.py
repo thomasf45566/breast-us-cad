@@ -6,6 +6,7 @@ Splits are patient-level via the official BUS-BRA 5-fold assignments
 (5-fold-cv.csv, `kFold` column); never split by image.
 """
 
+import random
 from pathlib import Path
 
 import albumentations as A
@@ -54,8 +55,40 @@ def build_master_df(root: str | Path = "data/raw/busbra") -> pd.DataFrame:
     return out
 
 
-def get_transforms(split: str, img_size: int = 224) -> A.Compose:
-    """Albumentations pipeline. `split` is 'train' or 'val'/'test'."""
+class MeanFillCoarseDropout(A.ImageOnlyTransform):
+    """CoarseDropout filling holes with the per-image mean intensity."""
+
+    def __init__(
+        self,
+        min_holes: int = 2,
+        max_holes: int = 4,
+        hole_size: int = 32,
+        p: float = 0.5,
+    ):
+        super().__init__(p=p)
+        self.min_holes = min_holes
+        self.max_holes = max_holes
+        self.hole_size = hole_size
+
+    def apply(self, img: np.ndarray, **params) -> np.ndarray:
+        img = img.copy()
+        h, w = img.shape[:2]
+        fill = img.mean()
+        for _ in range(random.randint(self.min_holes, self.max_holes)):
+            y = random.randint(0, max(h - self.hole_size, 0))
+            x = random.randint(0, max(w - self.hole_size, 0))
+            img[y : y + self.hole_size, x : x + self.hole_size] = fill
+        return img
+
+
+def get_transforms(
+    split: str, img_size: int = 224, coarse_dropout: dict | None = None
+) -> A.Compose:
+    """Albumentations pipeline. `split` is 'train' or 'val'/'test'.
+
+    `coarse_dropout` (train only): kwargs for MeanFillCoarseDropout, applied
+    after Resize (hole size is at input scale) and before Normalize.
+    """
     aug = []
     if split == "train":
         aug = [
@@ -65,6 +98,8 @@ def get_transforms(split: str, img_size: int = 224) -> A.Compose:
             ),
             A.RandomBrightnessContrast(p=0.5),
         ]
+        if coarse_dropout:
+            aug.append(MeanFillCoarseDropout(**coarse_dropout))
     return A.Compose(
         [
             A.Resize(img_size, img_size),
@@ -102,6 +137,7 @@ def make_dataloaders(
     batch_size: int = 32,
     img_size: int = 224,
     num_workers: int = 0,
+    coarse_dropout: dict | None = None,
 ) -> tuple[DataLoader, DataLoader]:
     """Build train/val loaders from official fold indices (patient-level splits)."""
     overlap = set(train_folds) & set(val_folds)
@@ -112,7 +148,7 @@ def make_dataloaders(
     val_df = df[df["fold"].isin(val_folds)]
 
     train_loader = DataLoader(
-        BusDataset(train_df, get_transforms("train", img_size)),
+        BusDataset(train_df, get_transforms("train", img_size, coarse_dropout)),
         batch_size=batch_size,
         shuffle=True,
         num_workers=num_workers,
