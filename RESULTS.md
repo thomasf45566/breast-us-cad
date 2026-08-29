@@ -231,3 +231,40 @@ malignant medians stay high (0.68–0.83) — hence sensitivity holds. The
 frozen calibration/threshold encode BUS-BRA's benign appearance; external
 benigns look "more suspicious" to the model. Descriptive observation only;
 per protocol the threshold stays frozen.
+
+## Pre-registered secondary analysis: model vs radiologist BI-RADS
+
+Protocol §h, run 2026-08-29 from the SAVED single-shot predictions only
+(no new inference). Script: src/birads_comparison.py · figures:
+reports/birads_comparison_{gdph,sysucc}.png. Reader positive call:
+normalized BI-RADS ≥ 4a (4A→4a case-fold). The pre-registered stray-'c'
+exclusion turned out vacuous on the analyzed images: the affected row
+(SYSUCC benign(274); the stray value sits in the reader2 column, not
+reader1 as the protocol text guessed) was already removed by the dedup
+keep-list, so n is unchanged. Reader agreement is on the binarized
+(≥ 4a) calls. Descriptive only; the frozen threshold is unchanged.
+
+### GDPH (n = 810)
+
+| Rater | Sensitivity | Specificity |
+|---|---|---|
+| model (thr 0.2683) | 0.9707 | 0.4529 |
+| BIRADS-reader1 | 0.9760 | 0.8943 |
+| BIRADS-reader2 | 0.9787 | 0.5126 |
+
+Reader1 vs reader2 agreement 0.7593, Cohen's κ 0.5149. On GDPH the model
+matches both readers' sensitivity but reader1 achieves far higher
+specificity (0.89 vs the model's 0.45); reader2 sits close to the model's
+ROC curve.
+
+### SYSUCC (n = 1013)
+
+| Rater | Sensitivity | Specificity |
+|---|---|---|
+| model (thr 0.2683) | 0.9309 | 0.4740 |
+| BIRADS-reader1 | 0.9130 | 0.6505 |
+| BIRADS-reader2 | 0.9931 | 0.1315 |
+
+Reader1 vs reader2 agreement 0.7887, Cohen's κ 0.2152. On SYSUCC the model
+operating point lies between the two readers, who themselves diverge widely
+(reader2 calls 87% of benigns ≥ 4a; κ 0.22).

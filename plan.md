@@ -58,14 +58,18 @@ Read this at session start. Update the checkboxes when a task completes.
       frozen-v1)"; preds/ROC/CM in reports/external_*. Recorded as-is;
       no re-tuning.
 
+- [x] Pre-registered secondary BI-RADS reader comparison (protocol (h),
+      2026-08-29, from saved predictions only): GDPH — model sens 0.9707 /
+      spec 0.4529 vs reader1 0.9760/0.8943, reader2 0.9787/0.5126 (κ 0.51);
+      SYSUCC — model 0.9309/0.4740 vs reader1 0.9130/0.6505, reader2
+      0.9931/0.1315 (κ 0.22). src/birads_comparison.py, figures + table in
+      RESULTS.md. Stray-'c' exclusion vacuous (row already dedup-dropped).
+
 ## Next (strict order)
-1. Pre-registered secondary BI-RADS reader comparison (protocol (h)) on
-   GDPH/SYSUCC from the saved external predictions (no second inference
-   pass).
-2. Grad-CAM gallery (TP/TN/FP/FN × 4)
-3. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
-4. Gradio app → HF Spaces
-5. README / slides / one-pager / rehearsal
+1. Grad-CAM gallery (TP/TN/FP/FN × 4)
+2. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
+3. Gradio app → HF Spaces
+4. README / slides / one-pager / rehearsal
 
 ## Standing decisions (do not relitigate)
 - TTA ADOPTED (2026-08-29): hflip TTA + 5-model ensemble is the frozen
