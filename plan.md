@@ -49,13 +49,19 @@ Read this at session start. Update the checkboxes when a task completes.
       (≥4a positive, run only after primary). Self-check re-passed after
       registry changes. Details: data/external_protocol.md Amendment 1.
 
+- [x] External validation — THE RUN (2026-08-29, single-shot, tag
+      external-v1): AUC BrEaST 0.8542 / BUSI 0.9339 / GDPH 0.9154 /
+      SYSUCC 0.8380. Sensitivity held ≥ 0.92 on all four at the frozen
+      threshold; specificity dropped to 0.41–0.63 (internal 0.77) —
+      threshold does not transfer under domain shift. Full table +
+      reading in RESULTS.md "External validation (single-shot,
+      frozen-v1)"; preds/ROC/CM in reports/external_*. Recorded as-is;
+      no re-tuning.
+
 ## Next (strict order)
-1. External validation — THE RUN (ONE run only):
-   `python src/external_val.py --dataset all --confirm` on BrEaST (252),
-   BUSI-clean (379), GDPH-clean (810), SYSUCC-clean (1013). Frozen
-   ensemble + threshold. Results go to RESULTS.md regardless of outcome.
-   Never re-tune after. THEN the pre-registered secondary BI-RADS reader
-   comparison (protocol (h)) from the saved predictions.
+1. Pre-registered secondary BI-RADS reader comparison (protocol (h)) on
+   GDPH/SYSUCC from the saved external predictions (no second inference
+   pass).
 2. Grad-CAM gallery (TP/TN/FP/FN × 4)
 3. Segmentation: U-Net on BUS-BRA masks (fallback: MedSAM2 zero-shot)
 4. Gradio app → HF Spaces

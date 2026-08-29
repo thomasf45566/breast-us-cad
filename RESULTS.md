@@ -169,3 +169,42 @@ validation runs against exactly this artifact set, once.
 Note: per-fold CV numbers above use each fold's single checkpoint; the
 frozen ensemble itself has no unbiased internal estimate (every image is
 in-fold for 4 of 5 members) — its honest test is the external validation.
+
+## External validation (single-shot, frozen-v1)
+
+Run 2026-08-29 per data/external_protocol.md (incl. Amendment 1), tag
+external-v1. ONE run of `python src/external_val.py --dataset all --confirm`
+against the frozen artifact set (5× cv_vit ckpts + hflip TTA + T=2.3644 +
+threshold 0.2683). No adjustments of any kind; cohorts never pooled.
+Bootstrap: 2000 iterations, seed 42 — patient-level for BrEaST (1 case =
+1 image = 1 patient, so case-level ≡ image-level); IMAGE-level for BUSI,
+GDPH, SYSUCC (no patient IDs published — CIs may be optimistically narrow).
+
+| Cohort | n images | Prevalence | AUC (95% CI) | Sensitivity (95% CI) | Specificity (95% CI) |
+|---|---|---|---|---|---|
+| BrEaST | 252 | 0.389 | 0.8542 (0.8019–0.9024) | 0.9184 (0.8605–0.9678) | 0.4091 (0.3333–0.4897) |
+| BUSI (clean) | 379 | 0.430 | 0.9339 (0.9062–0.9580) | 0.9571 (0.9250–0.9868) | 0.6296 (0.5603–0.6927) |
+| GDPH | 810 | 0.463 | 0.9154 (0.8949–0.9343) | 0.9707 (0.9529–0.9866) | 0.4529 (0.4060–0.5000) |
+| SYSUCC | 1013 | 0.715 | 0.8380 (0.8098–0.8655) | 0.9309 (0.9119–0.9489) | 0.4740 (0.4169–0.5318) |
+
+Internal reference (BUS-BRA pooled OOF): AUC 0.9254, sens 0.9028 /
+spec 0.7713 at the same frozen threshold.
+
+Reading: discrimination transfers reasonably (AUC 0.84–0.93; BUSI and GDPH
+within or near the internal range, BrEaST and SYSUCC lower). The operating
+point does NOT transfer: sensitivity stays ≥ 0.90 on all four cohorts, but
+specificity collapses from 0.77 internally to 0.41–0.63 externally — the
+calibrated probabilities shift upward under domain shift, so the frozen
+threshold over-calls malignancy. PPV/NPV per cohort in the run log /
+per-image CSVs; SYSUCC is a cancer-center case mix (prevalence 0.715), so
+its PPV 0.816 / NPV 0.733 are not comparable to the other cohorts.
+Confusions (tp/fp/fn/tn): BrEaST 90/91/8/63 · BUSI 156/80/7/136 ·
+GDPH 364/238/11/197 · SYSUCC 674/152/50/137.
+
+Artifacts per cohort: reports/external_{breast,busi,gdph,sysucc}_preds.csv
+(per-image y_true, raw + calibrated prob, decision),
+reports/roc_external_*.png, reports/cm_external_*.png.
+
+Recorded as-is per protocol: no re-tuning, no threshold change, no second
+run. Next pre-registered step: BI-RADS reader comparison (protocol §h) on
+GDPH/SYSUCC from these saved predictions.
