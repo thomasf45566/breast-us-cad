@@ -208,3 +208,26 @@ reports/roc_external_*.png, reports/cm_external_*.png.
 Recorded as-is per protocol: no re-tuning, no threshold change, no second
 run. Next pre-registered step: BI-RADS reader comparison (protocol §h) on
 GDPH/SYSUCC from these saved predictions.
+
+## Probability shift under domain shift (descriptive, post-hoc)
+
+Descriptive analysis of the SAVED single-shot predictions only — no model,
+no inference, no threshold changes. Script: src/plot_prob_shift.py · slide
+asset: reports/prob_shift_external.png (calibrated-probability histograms by
+class, internal vs each external cohort, frozen threshold dashed).
+
+| Cohort | median p (benign) | median p (malignant) | frac benign ≥ thr (=1−spec) |
+|---|---|---|---|
+| Internal (OOF) | 0.0625 | 0.8533 | 0.2287 |
+| BrEaST | 0.3061 | 0.7561 | 0.5909 |
+| BUSI | 0.1739 | 0.8309 | 0.3704 |
+| GDPH | 0.2894 | 0.7698 | 0.5471 |
+| SYSUCC | 0.2869 | 0.6804 | 0.5260 |
+
+The specificity collapse is a benign-distribution shift: median benign
+calibrated prob rises from 0.06 internally to 0.17–0.31 externally,
+pushing 37–59% of benign images over the frozen 0.2683 threshold, while
+malignant medians stay high (0.68–0.83) — hence sensitivity holds. The
+frozen calibration/threshold encode BUS-BRA's benign appearance; external
+benigns look "more suspicious" to the model. Descriptive observation only;
+per protocol the threshold stays frozen.
