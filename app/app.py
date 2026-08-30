@@ -13,34 +13,39 @@ target) — a single-model visualization, while the decision is the ensemble.
 Usage: python app/app.py
 """
 
-import json
 import os
 import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
-os.chdir(ROOT)  # src/ modules address models/ and configs/ relative to repo root
+HERE = Path(__file__).resolve().parent
+_repo_src = HERE.parent / "src"
+if _repo_src.exists():  # repo layout: app/app.py beside src/ and models/
+    sys.path.insert(0, str(_repo_src))
+    os.chdir(HERE.parent)  # weights resolve via models/ relative to repo root
+# Space layout: inference.py sits next to app.py; weights come from the HF Hub
 
 import cv2
 import gradio as gr
 import numpy as np
 import torch
 
-from compare_backbones import load_cpu_model
-from data import get_transforms
-from explain import CAM_CKPT, cam_overlay, make_cam
-from external_val import (
-    CALIBRATION_JSON,
-    CKPT_PATHS,
-    OPERATING_POINT_JSON,
+from inference import (
+    CAM_CKPT_FILE,
+    CKPT_FILES,
     calibrate_probs,
+    cam_overlay,
+    ensemble_prob,
+    load_calibration,
+    load_classifier,
+    load_operating_point,
+    load_seg_model,
+    make_cam,
+    preprocess_gray,
+    seg_prob_map,
 )
-from gradcam_check import IMG_SIZE
-from train_seg import build_seg_model
 
-EXAMPLES_DIR = ROOT / "app" / "examples"
+EXAMPLES_DIR = HERE / "examples"
 CONTOUR_BGR_RGB = (57, 255, 20)  # neon green, visible on grayscale US
 
 BANNER_HTML = (
@@ -70,22 +75,13 @@ model provided for orientation only.
 
 def load_pipeline():
     """Load every frozen artifact once, on CPU. Nothing hardcoded."""
-    calib = json.loads(CALIBRATION_JSON.read_text())
-    op = json.loads(OPERATING_POINT_JSON.read_text())
-
-    classifiers = [load_cpu_model(p) for p in CKPT_PATHS]
-
-    seg_ckpt = torch.load("models/seg_unet_effb0.pt", map_location="cpu", weights_only=False)
-    seg_model = build_seg_model(seg_ckpt["config"])
-    seg_model.load_state_dict(seg_ckpt["model_state"])
-    seg_model.eval()
-
-    cam = make_cam(load_cpu_model(CAM_CKPT))
-    return classifiers, seg_model, cam, calib["temperature"], op["threshold"]
+    classifiers = [load_classifier(f) for f in CKPT_FILES]
+    seg_model = load_seg_model()
+    cam = make_cam(load_classifier(CAM_CKPT_FILE))
+    return classifiers, seg_model, cam, load_calibration(), load_operating_point()
 
 
 CLASSIFIERS, SEG_MODEL, CAM, TEMPERATURE, THRESHOLD = load_pipeline()
-VAL_TF = get_transforms("val", IMG_SIZE)
 
 
 def preprocess(image_path: str) -> tuple[torch.Tensor, np.ndarray]:
@@ -93,22 +89,12 @@ def preprocess(image_path: str) -> tuple[torch.Tensor, np.ndarray]:
     gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if gray is None:
         raise gr.Error("Could not read the image file.")
-    rgb = np.repeat(gray[:, :, None], 3, axis=2)
-    return VAL_TF(image=rgb)["image"].unsqueeze(0), gray
-
-
-def ensemble_prob(x: torch.Tensor) -> float:
-    """Frozen decision path: mean sigmoid over 5 ckpts x {orig, hflip}."""
-    xs = torch.cat([x, torch.flip(x, dims=[3])])
-    with torch.no_grad():
-        per_model = [torch.sigmoid(m(xs).squeeze(1)).mean().item() for m in CLASSIFIERS]
-    return float(np.mean(per_model))
+    return preprocess_gray(gray), gray
 
 
 def lesion_contour_panel(x: torch.Tensor, gray: np.ndarray) -> tuple[np.ndarray, int]:
     """Original image with the predicted lesion contour; returns (panel, n_contours)."""
-    with torch.no_grad():
-        prob_map = torch.sigmoid(SEG_MODEL(x)).squeeze().numpy()
+    prob_map = seg_prob_map(SEG_MODEL, x)
     mask = cv2.resize(
         (prob_map >= 0.5).astype(np.uint8),
         (gray.shape[1], gray.shape[0]),
@@ -153,7 +139,7 @@ def predict(image_path: str | None):
         raise gr.Error("Please upload a breast ultrasound image.")
     x, gray = preprocess(image_path)
 
-    raw = ensemble_prob(x)
+    raw = ensemble_prob(x, CLASSIFIERS)
     p_cal = float(calibrate_probs(np.array([raw]), TEMPERATURE)[0])
     suspicious = p_cal >= THRESHOLD
 
@@ -167,6 +153,8 @@ def predict(image_path: str | None):
     if n_contours == 0:
         card += ("<div style='font-size:0.8em;color:#6b7280;margin-top:4px'>"
                  "No lesion contour detected by the segmentation model.</div>")
+    # full-precision values for the deployment verification script (invisible)
+    card += f"<!-- raw={raw!r} cal={p_cal!r} -->"
     return contour_panel, cam_panel, card
 
 
@@ -191,7 +179,8 @@ def build_ui() -> gr.Blocks:
             out_cam = gr.Image(label="Grad-CAM (fold-5 model, predicted class)")
         out_card = gr.HTML(label="Result")
         btn = gr.Button("Analyze", variant="primary")
-        btn.click(predict, inputs=inp, outputs=[out_contour, out_cam, out_card])
+        btn.click(predict, inputs=inp, outputs=[out_contour, out_cam, out_card],
+                  api_name="predict")
         gr.Examples(
             examples=examples,
             inputs=inp,
@@ -204,5 +193,6 @@ def build_ui() -> gr.Blocks:
 
 
 if __name__ == "__main__":
-    startup_latency(EXAMPLES_DIR / "benign_bus_0186-r.png")
+    if not os.environ.get("SPACE_ID"):  # skip the timing run on Spaces (cold start)
+        startup_latency(EXAMPLES_DIR / "benign_bus_0186-r.png")
     build_ui().launch()

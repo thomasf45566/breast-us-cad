@@ -30,14 +30,13 @@ import pandas as pd
 import yaml
 from sklearn.metrics import roc_auc_score
 
-from calibrate import probs_to_logits
 from data import BusDataset, build_master_df, get_transforms
-from evaluate import predict_hflip_pair, save_confusion, save_roc
+from evaluate import save_confusion, save_roc
+from inference import CKPT_FILES, calibrate_probs, ensemble_tta_probs_from_loader
 from pick_threshold import confusion_counts, point_metrics
 from torch.utils.data import DataLoader
-from tta_eval import load_model
 
-CKPT_PATHS = [f"models/cv_vit_fold{k}.pt" for k in (1, 2, 3, 4, 5)]
+CKPT_PATHS = [f"models/{f}" for f in CKPT_FILES]
 CALIBRATION_JSON = Path("models/calibration.json")
 OPERATING_POINT_JSON = Path("models/operating_point.json")
 BREAST_DIR = Path("data/raw/breast_poland")
@@ -49,29 +48,19 @@ BOOT_SEED = 42
 
 
 def ensemble_tta_probs(df: pd.DataFrame, ckpt_paths: list[str], cfg: dict):
-    """Frozen inference core: per-ckpt hflip-TTA probs, averaged over ckpts.
+    """Frozen inference core, delegated to src/inference.py.
 
     Identical code path for self-check (one ckpt) and external run (five).
     Returns (raw ensemble probs, labels).
     """
-    device = cfg["train"]["device"]
     loader = DataLoader(
         BusDataset(df, get_transforms("val", cfg["data"]["img_size"])),
         batch_size=cfg["data"]["batch_size"],
         shuffle=False,
         num_workers=cfg["data"]["num_workers"],
     )
-    per_model, labels = [], None
-    for path in ckpt_paths:
-        model = load_model(path, device)
-        p_orig, p_flip, labels = predict_hflip_pair(model, loader, device)
-        per_model.append((p_orig + p_flip) / 2)
-        del model
-    return np.mean(per_model, axis=0), labels
-
-
-def calibrate_probs(raw: np.ndarray, temperature: float) -> np.ndarray:
-    return 1 / (1 + np.exp(-probs_to_logits(raw) / temperature))
+    ckpt_files = [Path(p).name for p in ckpt_paths]
+    return ensemble_tta_probs_from_loader(loader, ckpt_files, cfg["train"]["device"])
 
 
 def build_breast_df() -> pd.DataFrame:
