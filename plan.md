@@ -81,8 +81,15 @@ Read this at session start. Update the checkboxes when a task completes.
       external eval by design. models/seg_unet_effb0.pt, wandb
       seg_unet_effb0, reports/seg_examples.png, section in RESULTS.md.
 
+- [x] Gradio demo app (2026-08-30, app/app.py): frozen-v1 pipeline on CPU
+      (5-ckpt hflip-TTA ensemble, T + threshold read from models/*.json),
+      U-Net contour + fold-5 Grad-CAM + calibrated-prob result card,
+      research-prototype banner, About w/ limitations, 4 bundled BUS-BRA
+      fold-5 examples (all classified correctly end-to-end). Warm CPU
+      latency 0.53 s (target < 3 s). Section in RESULTS.md.
+
 ## Next (strict order)
-1. Gradio app → HF Spaces
+1. Deploy app → HF Spaces
 2. README / slides / one-pager / rehearsal
 
 ## Standing decisions (do not relitigate)

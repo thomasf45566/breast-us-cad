@@ -339,3 +339,30 @@ already visually tight.
 Metric note: Dice/IoU computed per image at 224×224 (masks resized
 with nearest interpolation), thresholding sigmoid probs at 0.5;
 mean is over images, not pixels pooled.
+
+## Gradio demo app (manual Step 11, 2026-08-30)
+
+Script: app/app.py (`python app/app.py`, CPU) · examples bundled in
+app/examples/.
+
+Frozen-v1 inference verbatim: 5x cv_vit_fold{1-5} ckpts x {orig, hflip}
+sigmoid probs averaged, T and threshold read from models/calibration.json
+and models/operating_point.json (nothing hardcoded). Three panels per
+image: U-Net (seg_unet_effb0) lesion contour on the original, fold-5
+Grad-CAM @ blocks[-2].norm1 (predicted-class target, single-model caveat
+shown in the card), and a result card with the calibrated probability
+bar + operating-point call ("threshold set for sensitivity >= 0.90 on
+internal validation"). Fixed banner top and bottom: research prototype,
+not a medical device. About section covers data, external validation,
+and the domain-shift specificity caveat.
+
+End-to-end CPU latency (ensemble+TTA+seg+CAM, 1 image, warm, M4):
+**0.53 s** (target < 3 s), printed at startup.
+
+Bundled examples (BUS-BRA fold 5, moderate difficulty by OOF calibrated
+prob, all classified correctly by the app): benign bus_0186-r (16.6%),
+benign bus_0223-l (22.9%), malignant bus_0328-r (69.1%), malignant
+bus_0663-l (69.9%). App probabilities are legitimately higher/lower than
+the OOF picks' (~0.46 mal / ~0.24 ben): OOF used only the held-out fold-5
+ckpt, while the app's 5-ckpt ensemble includes four members trained on
+fold 5 — expected, and why example difficulty was chosen on OOF.
