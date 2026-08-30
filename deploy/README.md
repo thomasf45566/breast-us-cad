@@ -34,7 +34,7 @@ is calibrated on internal validation only and does not transfer across
 scanners and populations.
 
 **Weights:** downloaded at startup from the companion model repo
-([breast-us-cad-weights](https://huggingface.co/WEIGHTS_REPO_PLACEHOLDER)).
+([breast-us-cad-weights](https://huggingface.co/happytommy/breast-us-cad-weights)).
 
 **Example image attribution:** the four bundled examples are from the
 BUS-BRA dataset validation fold — W. Gómez-Flores, M. J. Gregorio-Calas,

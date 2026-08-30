@@ -88,9 +88,36 @@ Read this at session start. Update the checkboxes when a task completes.
       fold-5 examples (all classified correctly end-to-end). Warm CPU
       latency 0.53 s (target < 3 s). Section in RESULTS.md.
 
+- [x] HF Spaces deployment (2026-08-30): src/inference.py = frozen
+      inference path (no wandb/albumentations), app + external_val import
+      it; self-check + four-example probs re-verified bitwise after every
+      change. Weights at happytommy/breast-us-cad-weights; public Gradio
+      Space happytommy/breast-us-cad (cpu-basic; free tier gone — needed
+      HF PRO). cv2.resize INTER_LINEAR proved platform-unstable (Arm
+      KleidiCV HAL locally vs x86) → ported to integer numpy
+      (inference.resize_bilinear_frozen), bitwise-equal to local cv2 on
+      all 1,879 BUS-BRA images. Live Space matches local to max delta
+      1.07e-07 (cross-arch BLAS floor; identical at display precision).
+      Details in RESULTS.md "Hugging Face Spaces deployment".
+
 ## Next (strict order)
-1. Deploy app → HF Spaces
-2. README / slides / one-pager / rehearsal
+1. README / slides / one-pager / rehearsal
+
+## Interview-day checklist
+- Live demo: https://huggingface.co/spaces/happytommy/breast-us-cad
+  (weights: https://huggingface.co/happytommy/breast-us-cad-weights)
+- Cold start (sleeping/restart → first prediction): **9.7 s** — open the
+  Space BEFORE the interview starts; a first-ever container build also
+  downloads 1.7 GB of weights and takes minutes.
+- Warm latency on the Space (2 vCPU): ~6.8 s/image. Local fallback:
+  `python app/app.py` (0.54 s warm on the M4) — keep it ready in a
+  terminal in case conference wifi or HF is down.
+- Live-vs-local sanity: `python scripts/verify_space.py` (expects match
+  at the 1e-5 platform tolerance; bitwise equality across CPU archs is
+  impossible — talking point: KleidiCV resize + BLAS floor, see
+  RESULTS.md deployment section).
+- Four examples (calibrated p, threshold 0.2683): benign 16.6% / 22.9%,
+  malignant 69.1% / 69.9% — all classify correctly on the live Space.
 
 ## Standing decisions (do not relitigate)
 - TTA ADOPTED (2026-08-29): hflip TTA + 5-model ensemble is the frozen

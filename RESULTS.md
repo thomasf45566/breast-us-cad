@@ -366,3 +366,52 @@ bus_0663-l (69.9%). App probabilities are legitimately higher/lower than
 the OOF picks' (~0.46 mal / ~0.24 ben): OOF used only the held-out fold-5
 ckpt, while the app's 5-ckpt ensemble includes four members trained on
 fold 5 — expected, and why example difficulty was chosen on OOF.
+
+## Hugging Face Spaces deployment (Step 12, 2026-08-30)
+
+Live demo: **https://huggingface.co/spaces/happytommy/breast-us-cad**
+(public Gradio Space, cpu-basic) · weights:
+https://huggingface.co/happytommy/breast-us-cad-weights (5x cv_vit fold
+ckpts, seg_unet_effb0.pt, calibration.json, operating_point.json).
+
+Structure: src/inference.py is the complete frozen-v1 inference path
+(no wandb / albumentations / training imports); app/app.py and
+src/external_val.py both import it. deploy/ bundles app.py +
+inference.py + the 4 examples and is the Space repo verbatim
+(scripts/deploy_hf.py rebuilds and pushes it; scripts/verify_space.py
+checks the live Space against reports/app_example_probs.json).
+Requirements are pinned CPU wheels; albumentations was dropped — the val
+transform is re-implemented in cv2+numpy, verified bitwise-identical to
+the albumentations pipeline on all BUS-BRA images.
+
+Refactor verification (local, after every change): external_val.py
+--self-check reproduces fold-5 TTA AUC 0.9234433158791243
+digit-for-digit (byte-identical output to reports/external_selfcheck.txt)
+and the four bundled examples reproduce their recorded probabilities
+bitwise (reports/app_example_probs.json).
+
+**Cross-platform determinism finding.** The first deploy produced
+probabilities off by up to ~1e-3 (16.9% vs 16.6% on bus_0186-r).
+Root cause: cv2.resize(INTER_LINEAR, uint8) is not platform-stable —
+the local Apple-Silicon OpenCV 5.0 build routes it to the Arm KleidiCV
+HAL, x86 builds do not, and no runtime flag reconciles them (decode and
+normalize were verified identical via checksums; only the resized pixels
+differed). Fix: inference.resize_bilinear_frozen, a pure-integer numpy
+port of the KleidiCV bilinear kernel (16-bit fixed-point center-aligned
+coordinates, 8-bit fractions, vertical-then-horizontal lerp with
+round-half-up), verified bitwise-identical to local cv2.resize on all
+1,879 BUS-BRA images (713 distinct sizes) + the 4 examples, and
+deterministic across platforms. Local numbers are unchanged (all
+verifications re-passed bitwise).
+
+Live verification (scripts/verify_space.py): all four example
+probabilities agree with local to max |delta| = 1.07e-07 — the measured
+cross-architecture BLAS floor (identical model on identical input
+tensors differs by ~1e-7 in prob space between Apple Accelerate and
+x86 BLAS; measured with a fixed synthetic input). Bitwise float
+equality across CPU architectures is unattainable; at any display
+precision the live Space and local app are identical, and all four
+examples classify correctly. Latency (2 vCPU): cold start
+(restart -> first prediction) **9.7 s** (first-ever boot additionally
+downloads 1.7 GB of weights, ~minutes); warm median **6.8 s**/image
+(local M4: 0.54 s).

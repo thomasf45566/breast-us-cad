@@ -86,7 +86,7 @@ def main() -> None:
     )
     patch_default_repo(
         DEPLOY / "README.md",
-        r"huggingface\.co/[^)\s]*breast-us-cad-weights[^)\s]*|WEIGHTS_REPO_PLACEHOLDER",
+        r"(?:huggingface\.co/)+(?:[^)\s]*breast-us-cad-weights[^)\s]*|WEIGHTS_REPO_PLACEHOLDER)",
         f"huggingface.co/{weights_repo}",
     )
 
