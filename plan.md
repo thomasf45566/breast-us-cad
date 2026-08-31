@@ -156,6 +156,37 @@ section "v2: Site-specific recalibration".
       drops cross-site sens to 0.80–0.87. reports/v2_cross_site.csv +
       _matrix.png.
 
+## v2 line 4 — multi-source training + domain-pretrained backbone
+Protocol: data/external_protocol.md Amendment 4 (committed alone at
+3faa70b, BEFORE any v2-line-4 code). external-v1 is final and untouched;
+external cohorts may enter TRAINING for v2 models only. Q2 first; Q1's
+backbone fixed by rule (v). Artifacts: models/v2_*, reports/v2_*,
+RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
+"v2: Multi-source LOCO training (Q1)".
+- [x] Amendment 4 written and committed alone, pre-code (3faa70b)
+- [ ] Q2a: USFM loading spike — openmedlab/USFM weights into ViT-B/16
+      skeleton (224), weight-coverage check stated. If not clean within
+      one session: declare BiomedCLIP ViT-B/16 (open_clip) substitution
+      in protocol + RESULTS.md BEFORE any training (no third option)
+- [ ] Q2b: 5-fold CV per v1 protocol exactly (same aug/optim/epochs),
+      hflip TTA, temperature on pooled OOF, sens ≥ 0.90 threshold on
+      calibrated OOF → FREEZE models/v2_usfm_fold{1-5}.pt +
+      v2_usfm_{calibration,operating_point}.json
+- [ ] Q2c: single-shot external eval on 4 cohorts (frozen keep-lists,
+      preprocessing (c)); mechanical verdict per (u) criterion
+- [ ] Backbone decision for Q1 per rule (v), recorded with Q2 verdict
+- [ ] Q1a: build LOCO train/val splits — BUS-BRA folds 1–4 train /
+      fold 5 val (patient-level) + 85/15 image-level split of each
+      external cohort, seed 42, drawn once, reused across runs
+- [ ] Q1b: four LOCO runs (hold out breast/busi/gdph/sysucc); per run:
+      early stop + temperature + sens ≥ 0.90 threshold on validation
+      only, single model + hflip TTA, then SINGLE-SHOT held-out eval
+      (AUC + CI, sens/spec at run threshold, benign median p_cal)
+- [ ] Q1c: comparator table — v1 fold-5 single + TTA derived from saved
+      v2_members_*.csv (m5 cols, T=2.3644, thr 0.2683; no v1 re-run),
+      v1 full ensemble as reference; mechanical verdict per (t) criterion
+- [ ] RESULTS.md sections + plan.md checkboxes in the same commits
+
 ## Interview-day checklist
 - Live demo: https://huggingface.co/spaces/happytommy/breast-us-cad
   (weights: https://huggingface.co/happytommy/breast-us-cad-weights)
