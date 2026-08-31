@@ -487,3 +487,77 @@ pre-registered criterion tolerates that down to 0.85. SYSUCC's recovery
 ratio is noisy because its frozen→oracle gap is small (0.474→0.568).
 All k on the pre-registered grid are reported; no post-hoc selection.
 The frozen model, calibration, and operating point remain unchanged.
+
+### M2/M3 (secondary): recalibration methods comparison
+
+Same harness, draws, and seed as M1 (all methods see identical k-sets).
+Logits z = log(p/(1−p)) of the raw pre-temperature TTA probability
+(calibrate.probs_to_logits convention, recovered from y_prob_raw per
+Amendment 2 (i)). M2: temperature refit on the k local logits with the
+calibrate.py LBFGS fitter, applied with (a) the frozen threshold 0.2683
+and (b) the local sens ≥ 0.90 rule. M3: unregularized Platt scaling
+p = sigmoid(a·z + b) + local rule. Fallback rule (run-time necessity,
+same spirit as the degenerate-draw rule): an M2 fit returning a
+non-positive temperature (ill-posed local NLL, e.g. a locally
+anti-correlated k-set) reverts that draw to the frozen pipeline, flagged
+fit_failed — 7–20% of draws at k=10, ≤ 1% by k=30, 0% at k ≥ 100
+(per-cell fractions in the summary CSV). Files:
+reports/v2_recalib_methods_{draws,summary}.csv, figure
+reports/v2_recalib_methods.png (its band-width row is POST-HOC, see
+below).
+
+k_reliable = smallest k with 2.5th-percentile recovery ≥ 0.5. **POST-HOC
+metric** — defined 2026-08-31 after the M1 results were seen, NOT part of
+pre-registered Amendment 2; reported for transparency alongside the
+pre-registered k*. Medians at k=30/k=100:
+
+| Cohort | Method | k* (pre-reg) | k_reliable (POST-HOC) | k=30 spec / sens | k=100 spec / sens |
+|---|---|---|---|---|---|
+| BrEaST | M1 | 20 | not reached | 0.699 / 0.870 | 0.636 / 0.897 |
+| | M2a | not reached | not reached | 0.448 / 0.920 | 0.424 / 0.923 |
+| | M2b | 10 | not reached | 0.696 / 0.872 | 0.636 / 0.897 |
+| | M3 | 20 | not reached | 0.699 / 0.870 | 0.636 / 0.897 |
+| BUSI | M1 | 20 | not reached | 0.828 / 0.880 | 0.802 / 0.904 |
+| | M2a | not reached | not reached | 0.754 / 0.920 | 0.748 / 0.924 |
+| | M2b | 20 | not reached | 0.826 / 0.883 | 0.802 / 0.904 |
+| | M3 | 20 | not reached | 0.830 / 0.879 | 0.802 / 0.904 |
+| GDPH | M1 | 10 | 200 | 0.800 / 0.887 | 0.781 / 0.896 |
+| | M2a | not reached | not reached | 0.657 / 0.941 | 0.654 / 0.940 |
+| | M2b | 20 | 200 | 0.788 / 0.894 | 0.781 / 0.896 |
+| | M3 | 10 | 200 | 0.800 / 0.887 | 0.781 / 0.896 |
+| SYSUCC | M1 | 10 | not reached | 0.562 / 0.904 | 0.564 / 0.903 |
+| | M2a | not reached | not reached | 0.505 / 0.921 | 0.490 / 0.926 |
+| | M2b | 20 | not reached | 0.561 / 0.905 | 0.564 / 0.903 |
+| | M3 | 10 | not reached | 0.562 / 0.904 | 0.564 / 0.903 |
+
+Reading — three results, one of them structural:
+
+1. **M2b and M3 are M1 in disguise.** Temperature and Platt scaling are
+   monotone transforms of the score, and the local sens ≥ 0.90 rule picks
+   the same rank-space boundary regardless of the monotone map — so once
+   the threshold is re-selected locally, the recalibration map is
+   irrelevant. Their curves coincide with M1 everywhere (differences at
+   k ≤ 30 are only the M2 fit-failure fallbacks and Platt ties). The k
+   local labels' entire value is in placing the threshold, not reshaping
+   the probabilities.
+2. **M2a shows the shift is not just scale.** Refitting only T while
+   keeping the frozen threshold holds sensitivity highest of all methods
+   (0.92–0.95) but recovers only part of the specificity gap (e.g. GDPH
+   0.657 vs oracle 0.775; BrEaST barely moves, 0.42–0.45 vs frozen 0.41)
+   — k* is never reached. The external benign-shift is a location
+   problem in logit space, which a symmetric-around-p=0.5 temperature
+   cannot fix at a 0.2683 threshold.
+3. **Stability trade-off (band-width panel, POST-HOC):** M2a has clearly
+   the narrowest 95% specificity bands at every k (the frozen threshold
+   doesn't jump draw-to-draw; only T varies) — more reliable, less
+   recovery. M1/M2b/M3 are identically unstable, so the answer to
+   "are M2/M3 more stable than M1 at small k?" is NO for the local-rule
+   variants and YES only for M2a, bought with less specificity.
+   k_reliable is reached only on GDPH (k=200, local-rule methods): at a
+   draw-level reliability bar, no method makes small-k recalibration
+   trustworthy inside the pre-registered grid.
+
+All k on the pre-registered grid reported for every method; no post-hoc
+selection of k, methods, or cohorts. M1 draws re-verified to reproduce the
+committed first run before the extension (printed determinism check).
+The frozen model, calibration, and operating point remain unchanged.

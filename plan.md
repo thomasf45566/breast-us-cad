@@ -118,8 +118,16 @@ section "v2: Site-specific recalibration".
       BrEaST 20, BUSI 20. All k reported. reports/v2_recalib_M1_{draws,
       summary}.csv + _curves.png; RESULTS.md "v2: Site-specific
       recalibration" (external-v1 sections untouched).
-- [ ] M2 temperature refit (frozen thr + local rule) and M3 Platt + local
-      rule, same harness (run_curve method arg), same reporting
+- [x] M2/M3 (2026-08-31, same harness/draws/seed; M1 determinism-checked
+      against committed CSV): M2 refit-T (calibrate.py LBFGS; non-positive-T
+      draws fall back to frozen, 7–20% at k=10 → 0% at k≥100) with (a)
+      frozen thr / (b) local rule; M3 Platt + local rule. Findings: M2b/M3
+      ≡ M1 (monotone maps + local rule pick the same rank boundary); M2a
+      keeps sens highest but never reaches k* (shift is location, not
+      scale); POST-HOC k_reliable (2.5th-pct recovery ≥ 0.5) reached only
+      GDPH k=200 — no method is draw-level reliable at small k. Labeled
+      POST-HOC in RESULTS.md + figure. reports/v2_recalib_methods_{draws,
+      summary}.csv + v2_recalib_methods.png.
 
 ## Interview-day checklist
 - Live demo: https://huggingface.co/spaces/happytommy/breast-us-cad
