@@ -128,6 +128,13 @@ section "v2: Site-specific recalibration".
       GDPH k=200 — no method is draw-level reliable at small k. Labeled
       POST-HOC in RESULTS.md + figure. reports/v2_recalib_methods_{draws,
       summary}.csv + v2_recalib_methods.png.
+- [x] POST-HOC cross-site transfer (2026-08-31, src/v2_cross_site.py, not
+      pre-registered — labeled descriptive): 5 sources (internal + 4
+      cohorts, full data) × 4 targets, M1 thr transfer + M2 T transfer.
+      Internal row reproduces external-v1 (asserted). Every external M1
+      threshold beats the internal one on every target; GDPH's thr 0.4484
+      drops cross-site sens to 0.80–0.87. reports/v2_cross_site.csv +
+      _matrix.png.
 
 ## Interview-day checklist
 - Live demo: https://huggingface.co/spaces/happytommy/breast-us-cad

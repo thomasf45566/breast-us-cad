@@ -561,3 +561,39 @@ All k on the pre-registered grid reported for every method; no post-hoc
 selection of k, methods, or cohorts. M1 draws re-verified to reproduce the
 committed first run before the extension (printed determinism check).
 The frozen model, calibration, and operating point remain unchanged.
+
+### POST-HOC descriptive: cross-site calibration transfer
+
+NOT pre-registered (Amendment 2 covers within-cohort curves only);
+descriptive, saved predictions only, frozen pipeline unchanged. Script:
+src/v2_cross_site.py · matrix reports/v2_cross_site_matrix.png · values
+reports/v2_cross_site.csv. Each source's FULL data calibrates M1
+(re-selected threshold, transferred in calibrated-prob space) and M2
+(refit temperature, transferred with the frozen 0.2683 threshold; a
+source-selected threshold under refit T gives identical decisions to M1 —
+monotone map — so it is not a separate variant). Diagonals are in-sample.
+Source calibrations: Internal thr 0.2683 / T 2.3644 (reproduces the
+frozen pipeline exactly, asserted), BrEaST 0.3755 / 2.2717, BUSI 0.3851 /
+1.5804, GDPH 0.4484 / 1.3778, SYSUCC 0.3314 / 2.2253.
+
+Per-row reading (factual):
+
+- **Internal (OOF):** reproduces external-v1 on all four targets in both
+  panels (spec 0.41/0.63/0.45/0.47, sens 0.92–0.97).
+- **BrEaST-calibrated:** M1 lifts every target's specificity to 0.62–0.80
+  at sens 0.87–0.93; its M2 temperature (2.27 ≈ frozen 2.36) leaves the
+  M2 row within 0.03 of the internal row.
+- **BUSI-calibrated:** M1 gives 0.62–0.69 specificity off-diagonal at
+  sens 0.87–0.93; its sharper T = 1.58 raises M2 specificity to
+  0.57–0.60 off-diagonal at sens 0.90–0.95.
+- **GDPH-calibrated:** the highest threshold (0.4484) yields the largest
+  off-diagonal M1 specificity (0.71–0.72 on BrEaST/SYSUCC, 0.89 on BUSI)
+  but drops sensitivity to 0.80–0.87 on all three other targets, below
+  the 0.90 design floor.
+- **SYSUCC-calibrated:** the smallest threshold shift (0.3314) keeps sens
+  at 0.92–0.95 everywhere with moderate M1 specificity gains (0.56–0.74);
+  its M2 row (T = 2.23) sits within 0.04 of the internal row.
+
+Across rows: every externally re-selected M1 threshold gives higher
+specificity than the internal threshold on every target, and M2 rows move
+specificity less than M1 rows at matched sensitivity throughout.
