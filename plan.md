@@ -103,6 +103,24 @@ Read this at session start. Update the checkboxes when a task completes.
 ## Next (strict order)
 1. README / slides / one-pager / rehearsal
 
+## v2 line — site-specific recalibration study (secondary, post-hoc)
+Strictly post-hoc to external-v1; must never alter any external-v1 number.
+Protocol: data/external_protocol.md Amendment 2 (committed 2026-08-31
+BEFORE any v2 computation). Inputs: saved external_*_preds.csv only — no
+inference, no training, no model changes. Outputs: reports/v2_* + RESULTS.md
+section "v2: Site-specific recalibration".
+- [x] Amendment 2 written and committed alone, pre-computation (79520e9)
+- [ ] src/v2_recalibration.py: per-cohort learning curves — k grid per
+      Amendment 2 (BrEaST/BUSI to 100, GDPH to 200, SYSUCC full), R=500
+      draws, seed 42, natural prevalence; M1 local threshold (primary),
+      M2 temperature refit (frozen thr + local rule), M3 Platt + local rule
+- [ ] Evaluate on held-out n−k; sens/spec + recovery fraction vs in-sample
+      oracle; medians/IQR over draws; degenerate-draw fractions reported
+- [ ] Decision metric k* per cohort (median recovery ≥ 0.80 AND median
+      sens ≥ 0.85, M1); report ALL k, no post-hoc selection
+- [ ] reports/v2_* figures/CSVs + RESULTS.md "v2: Site-specific
+      recalibration" (new section only; external-v1 sections untouched)
+
 ## Interview-day checklist
 - Live demo: https://huggingface.co/spaces/happytommy/breast-us-cad
   (weights: https://huggingface.co/happytommy/breast-us-cad-weights)
