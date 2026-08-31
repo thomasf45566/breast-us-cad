@@ -109,7 +109,7 @@ Protocol: data/external_protocol.md Amendment 2 (committed 2026-08-31
 BEFORE any v2 computation). Inputs: saved external_*_preds.csv only — no
 inference, no training, no model changes. Outputs: reports/v2_* + RESULTS.md
 section "v2: Site-specific recalibration".
-- [x] Amendment 2 written and committed alone, pre-computation (79520e9)
+- [x] Amendment 2 written and committed alone, pre-computation (610e87f)
 - [x] M1 (primary, 2026-08-31): src/v2_recalib_curve.py — sanity checks
       (a) k=0 reproduces external-v1 digit-for-digit, (b) oracle sens ≥
       0.90, (c) cal/eval disjoint — all passed; k grid per Amendment 2,
