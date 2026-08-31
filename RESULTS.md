@@ -415,3 +415,75 @@ examples classify correctly. Latency (2 vCPU): cold start
 (restart -> first prediction) **9.7 s** (first-ever boot additionally
 downloads 1.7 GB of weights, ~minutes); warm median **6.8 s**/image
 (local M4: 0.54 s).
+
+## v2: Site-specific recalibration
+
+Secondary post-hoc study per data/external_protocol.md Amendment 2
+(committed 2026-08-31 BEFORE any v2 computation). Question: how many
+locally labeled images k does a new site need to recover the specificity
+lost to domain shift? Inputs: the SAVED external-v1 prediction CSVs only —
+no inference, no training, no model changes; every external-v1 number
+above stands untouched. Script: src/v2_recalib_curve.py.
+
+Pre-registered sanity checks (all passed, printed by the script before the
+run): (a) k=0 at the frozen threshold reproduces external-v1
+confusions/sens/spec digit-for-digit on all four cohorts, and recomputed
+decisions match the saved y_pred column exactly; (b) the all-n oracle
+threshold satisfies sens >= 0.90 in-sample by construction; (c) calibration
+and evaluation index sets verified disjoint.
+
+### M1 (primary): local threshold re-selection
+
+Per cohort: R = 500 draws of k images at natural prevalence (seed 42;
+BrEaST patient-level ≡ image-level; BUSI/GDPH/SYSUCC image-level —
+LIMITATION: correlated same-patient images can split across the k-set and
+holdout, flattering the curve). Threshold re-selected on the k calibrated
+probs with the frozen rule (highest thr with sens >= 0.90); evaluated on
+the held-out n−k. Recovery = (spec_k − spec_frozen)/(spec_oracle −
+spec_frozen), all on the same holdout. Degenerate single-class draws fall
+back to the frozen threshold (only at k=10: 0.8% BrEaST, 0.6% BUSI, 2.4%
+SYSUCC). Medians [2.5–97.5 pct] over draws; full grid in
+reports/v2_recalib_M1_summary.csv, per-draw rows in
+reports/v2_recalib_M1_draws.csv, figure reports/v2_recalib_M1_curves.png.
+
+| Cohort | frozen→oracle spec | k | sens median [95%] | spec median [95%] | recovery median |
+|---|---|---|---|---|---|
+| BrEaST | 0.409 → 0.623 | 10 | 0.830 [0.250–1.000] | 0.764 [0.000–0.970] | 1.64 |
+| | | 20 | 0.897 [0.602–1.000] | 0.639 [0.000–0.895] | 1.10 |
+| | | 30 | 0.870 [0.604–0.989] | 0.699 [0.008–0.887] | 1.36 |
+| | | 50 | 0.895 [0.698–1.000] | 0.640 [0.185–0.853] | 1.07 |
+| | | 100 | 0.897 [0.748–0.984] | 0.636 [0.280–0.814] | 1.00 |
+| BUSI | 0.630 → 0.819 | 10 | 0.846 [0.318–0.997] | 0.900 [0.223–0.995] | 1.43 |
+| | | 20 | 0.889 [0.586–0.994] | 0.824 [0.276–0.971] | 1.04 |
+| | | 30 | 0.880 [0.658–0.993] | 0.828 [0.297–0.965] | 1.05 |
+| | | 50 | 0.894 [0.715–0.985] | 0.818 [0.480–0.961] | 1.00 |
+| | | 100 | 0.904 [0.771–0.971] | 0.802 [0.627–0.944] | 0.90 |
+| GDPH | 0.453 → 0.775 | 10 | 0.866 [0.290–0.995] | 0.827 [0.174–0.993] | 1.16 |
+| | | 20 | 0.888 [0.598–0.995] | 0.798 [0.177–0.957] | 1.07 |
+| | | 30 | 0.887 [0.642–0.989] | 0.800 [0.213–0.952] | 1.08 |
+| | | 50 | 0.897 [0.746–0.983] | 0.779 [0.340–0.909] | 1.02 |
+| | | 100 | 0.896 [0.780–0.969] | 0.781 [0.528–0.888] | 1.02 |
+| | | 200 | 0.903 [0.822–0.958] | 0.771 [0.644–0.850] | 0.98 |
+| SYSUCC | 0.474 → 0.568 | 10 | 0.909 [0.576–0.999] | 0.554 [0.046–0.878] | 0.85 |
+| | | 20 | 0.904 [0.713–0.992] | 0.563 [0.175–0.788] | 1.00 |
+| | | 30 | 0.904 [0.753–0.981] | 0.562 [0.282–0.764] | 1.00 |
+| | | 50 | 0.913 [0.799–0.979] | 0.535 [0.303–0.716] | 0.69 |
+| | | 100 | 0.903 [0.825–0.967] | 0.564 [0.386–0.692] | 1.00 |
+| | | 200 | 0.905 [0.846–0.950] | 0.561 [0.445–0.663] | 1.00 |
+
+**Pre-registered k\*** (smallest k with median recovery >= 0.80 AND median
+sens >= 0.85): **GDPH 10, SYSUCC 10, BrEaST 20, BUSI 20.**
+
+Reading: in the MEDIAN, a handful of local labels (10–20) already moves
+the threshold to near-oracle specificity — the shift is mostly a location
+problem, and re-selecting the threshold locally fixes most of it. Two
+honest caveats. (1) The median hides brutal draw-to-draw variance: at
+k = 10–30 the 95% specificity bands span roughly 0→0.97, i.e. an
+individual site recalibrating on 10 images can land anywhere; bands only
+become usable at k ≈ 100–200. (2) Median sensitivity sits at 0.83–0.90 —
+re-selecting on k samples trades away some of the frozen pipeline's
+external sensitivity (≥ 0.92 everywhere in external-v1), and the
+pre-registered criterion tolerates that down to 0.85. SYSUCC's recovery
+ratio is noisy because its frozen→oracle gap is small (0.474→0.568).
+All k on the pre-registered grid are reported; no post-hoc selection.
+The frozen model, calibration, and operating point remain unchanged.
