@@ -168,3 +168,98 @@ predictions (no second inference pass).
 - Report per cohort per reader: sens/spec of the reader vs pathology label,
   alongside model sens/spec at the frozen threshold on the same images.
   Descriptive comparison only — no threshold adjustment in response.
+
+---
+
+# Amendment 2 — Site-specific recalibration study (v2)
+
+Written 2026-08-31, BEFORE any v2 computation. Verified at time of writing:
+reports/ contains no v2_* files and RESULTS.md has no v2 section; the only
+external artifacts are the external-v1 outputs (external_{breast,busi,gdph,
+sysucc}_preds.csv with 252/379/810/1013 rows, matching (a)/(b)/(e)).
+
+This is a strictly POST-HOC secondary study on external-v1's saved
+predictions. It answers one question: how many locally labeled images (k)
+would a new site need to recover specificity lost to domain shift, while
+keeping sensitivity? Nothing here alters, re-runs, or reinterprets any
+external-v1 number; the external-v1 tables in RESULTS.md stand as recorded.
+
+## (i) Inputs and outputs
+
+- **Inputs:** the saved prediction CSVs ONLY —
+  reports/external_{breast,busi,gdph,sysucc}_preds.csv. No inference, no
+  training, no model or checkpoint changes, no touching of raw images.
+- **Logit recovery:** the CSVs store y_prob_raw and y_prob_calibrated but no
+  logit column. The frozen pipeline defines calibration as
+  p_cal = sigmoid(logit(p_raw)/T), so the pre-calibration ensemble logit is
+  recovered deterministically as z = log(p_raw / (1 − p_raw)) from
+  y_prob_raw. M2/M3 operate on z; no new forward passes.
+- **Outputs:** files under reports/v2_* only, plus a single new RESULTS.md
+  section titled "v2: Site-specific recalibration". External-v1 files and
+  sections are never edited.
+
+## (j) Design
+
+- **Per cohort, never pooled** (BrEaST, BUSI, GDPH, SYSUCC — same keep-lists
+  as external-v1, i.e. exactly the rows of each preds CSV).
+- **k grid:** k ∈ {10, 20, 30, 50, 100, 200}, dropping any k ≥ n/2. With
+  the known cohort sizes this fixes: BrEaST (n=252) and BUSI (n=379):
+  k ∈ {10, 20, 30, 50, 100}; GDPH (n=810): k ∈ {10, 20, 30, 50, 100, 200};
+  SYSUCC (n=1013): full grid.
+- **R = 500 random draws per (cohort, k), seed 42** (one master seed; draw
+  seeds derived deterministically from it).
+- **Sampling at natural prevalence** — simple random sampling of the
+  cohort's rows, NO stratification by label. BrEaST: sampling is
+  PATIENT-level on the patient_id column (per (a), one case = one image =
+  one patient, so this coincides with image-level — stated for the record).
+  BUSI, GDPH, SYSUCC: image-level sampling, because no patient IDs exist;
+  this is a LIMITATION stated wherever v2 results are reported (correlated
+  images from one patient can appear split across the k-set and the
+  held-out set, which flatters the learning curve).
+- **Degenerate draws** (pre-registered handling): if a draw's k-set contains
+  zero positives or zero negatives, threshold selection (M1, M2b, M3) is
+  undefined → that draw falls back to the frozen threshold 0.2683 for the
+  affected method, and the fraction of such draws is reported per
+  (cohort, k). No draw is discarded or redrawn.
+
+## (k) Methods
+
+- **M1 (primary) — local threshold re-selection:** on the k local CALIBRATED
+  probabilities (y_prob_calibrated as saved; frozen T unchanged), re-select
+  the decision threshold with the frozen rule: highest threshold achieving
+  sens ≥ 0.90 on the k images (same rule as pick_threshold.py).
+- **M2 (secondary) — local temperature refit:** refit a single temperature
+  T_local on the k local recovered logits z (NLL minimization, same
+  procedure as calibrate.py), then apply (a) the FROZEN internal threshold
+  0.2683 to the re-calibrated probs, and (b) the local sens ≥ 0.90 rule on
+  the re-calibrated probs.
+- **M3 (secondary) — Platt scaling:** fit logistic (a, b) on the k local
+  logits z (p = sigmoid(a·z + b)), then apply the local sens ≥ 0.90 rule.
+
+## (l) Evaluation
+
+- Always on the n − k HELD-OUT images of the same cohort (the draw's
+  complement); the k-set is never scored.
+- **Metrics per (cohort, k, method, draw):** sensitivity and specificity on
+  the held-out set, plus
+  **recovery fraction = (spec_k − spec_frozen) / (spec_oracle − spec_frozen)**
+  where, all evaluated on the SAME held-out n − k images:
+  - spec_k: specificity of the method's threshold/calibration from the k-set;
+  - spec_frozen: specificity of the frozen pipeline as-is (threshold 0.2683
+    on y_prob_calibrated) — the external-v1 operating point;
+  - spec_oracle: specificity of the threshold chosen by the frozen
+    sens ≥ 0.90 rule using ALL n images of the cohort (in-sample oracle,
+    computed once per cohort on calibrated probs).
+- Summaries: median and IQR (and 5th–95th percentile band) over the R = 500
+  draws, per (cohort, k, method).
+
+## (m) Pre-registered decision metric
+
+- **k\* = the smallest k with median recovery fraction ≥ 0.80 AND median
+  sensitivity ≥ 0.85** (both on the held-out sets, per cohort, primary
+  method M1). Reported per cohort; "not reached" is a valid outcome.
+- ALL k values on the grid are reported for all methods — no post-hoc
+  selection of k values, methods, or cohorts, regardless of outcome.
+- This study produces NO change to the frozen model, calibration, or
+  operating point. Any future deployment-style threshold adaptation would
+  be a new study, not a revision of frozen-v1 or external-v1.
