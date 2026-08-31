@@ -370,3 +370,133 @@ without re-scoring OOF images with in-fold checkpoints, which would be
 leakage. The abstention analysis is therefore external-only, with no
 internal reference value for the error-AUROC; this is stated wherever
 Amendment 3 results are reported.
+
+---
+
+# Amendment 4 — Multi-source training and domain-pretrained backbone (v2)
+
+Written 2026-08-31, BEFORE any code or computation for this amendment.
+Verified at time of writing: the working tree is clean; models/ and
+reports/ contain no LOCO, USFM, or BiomedCLIP artifacts and no models/v2_*
+files; RESULTS.md contains no multi-source or domain-pretraining section.
+The only v2 artifacts are those of Amendments 2–3 (reports/v2_recalib_*,
+v2_members_*, v2_abstention_*, v2_disagreement_*, v2_cross_site*).
+
+This amendment authorizes TRAINING for the first time outside the
+frozen-v1 line, and therefore supersedes rule (b)'s "external-only"
+restriction FOR v2 MODELS ONLY, under the scope rules of (s). It asks two
+questions:
+
+- **Q1:** does multi-source training (adding external cohorts to the
+  training pool) reduce the domain-shift specificity collapse observed in
+  external-v1?
+- **Q2:** does a domain-pretrained backbone (USFM) reduce that shift
+  relative to the ImageNet-pretrained v1 backbone, under the v1 protocol
+  unchanged?
+
+## (s) Scope — external-v1 stands; v2 training authorization
+
+- **external-v1 (tag `external-v1`) is FINAL and untouched.** No file,
+  number, table, or section of frozen-v1 or external-v1 is altered,
+  re-run, or reinterpreted by this amendment. The frozen-v1 model,
+  calibration, threshold, and the demo app do not change.
+- External cohorts (BrEaST, BUSI, GDPH, SYSUCC — always their frozen
+  dedup keep-lists: the 252-image BrEaST set of (a),
+  data/splits/{busi,gdph,sysucc}_clean.csv) MAY enter TRAINING for v2
+  models only, as specified in (t).
+- **LOCO guarantee:** in each leave-one-cohort-out run, the held-out
+  cohort is never seen by that run in ANY form — not in training, not in
+  validation, not in early stopping, calibration, or threshold selection.
+  Its evaluation is SINGLE-SHOT: one scoring pass after the run's model,
+  temperature, and threshold are fixed; results recorded regardless of
+  outcome, no re-tuning, no second run. The cross-set pHash sweep of (g)
+  (all set pairs clean at d ≤ 8 after visual adjudication) is the
+  contamination check that makes training on three cohorts while holding
+  out the fourth defensible.
+- **Artifact isolation:** every v2-line-4 artifact lives in models/v2_*,
+  reports/v2_*, and dedicated RESULTS.md sections
+  ("v2: Domain-pretrained backbone (Q2)" and
+  "v2: Multi-source LOCO training (Q1)"). External-v1 and earlier v2
+  files/sections are never edited.
+
+## (t) Q1 — leave-one-cohort-out (LOCO) multi-source training
+
+- **Four runs**, holding out in turn: BrEaST, BUSI, GDPH, SYSUCC.
+- **Training pool per run:** BUS-BRA official folds 1–4 (patient-level,
+  per golden rule) + 85% of EACH of the other three external cohorts
+  (keep-list rows).
+- **Training-side validation per run:** BUS-BRA official fold 5
+  (patient-level) + the remaining 15% of each training external cohort.
+  The 15% splits are IMAGE-level (no patient IDs exist for BUSI, GDPH,
+  SYSUCC; BrEaST case-level ≡ image-level per (a)), drawn once with
+  seed 42 and reused across runs. LIMITATION, stated wherever Q1 results
+  are reported: image-level external splits can place correlated images
+  on both sides, flattering validation metrics; and the validation
+  mixture's prevalence matches no single deployment site.
+- **Validation roles (all decided on validation only, before the
+  held-out cohort is touched):** early stopping (on validation AUC),
+  temperature fit (NLL, same procedure as calibrate.py, on the pooled
+  validation set), and threshold = frozen rule (highest threshold with
+  sens ≥ 0.90 on pooled calibrated validation probs).
+- **Model:** ONE model per run (no ensemble) + hflip TTA. Backbone per
+  rule (v), decided by Q2's outcome before any Q1 training. All other
+  hyperparameters identical to v1 (configs/baseline.yaml lineage: same
+  augmentation, optimizer, schedule, epochs, img_size 224).
+- **Held-out cohort metrics (single-shot, per run):** AUC on calibrated
+  probs with 95% percentile bootstrap CI, 2000 iterations, seed 42, same
+  resampling units as (d) (case-level BrEaST, image-level otherwise,
+  limitation stated); sensitivity and specificity at that run's
+  training-side threshold; median calibrated probability on benign
+  images (the (d)/Amendment-2 shift marker).
+- **Comparator — v1 fold-5 single model + hflip TTA,** computed from the
+  SAVED reports/v2_members_{cohort}.csv only (no v1 re-run): columns
+  m5_orig/m5_flip are the fold-5 checkpoint (models/cv_vit_fold5.pt;
+  ordering fixed by inference.CKPT_FILES, verified at time of writing),
+  so p_raw = (m5_orig + m5_flip)/2, p_cal = sigmoid(logit(p_raw)/2.3644),
+  decisions at 0.2683. This matches Q1's single-model + TTA form and its
+  BUS-BRA folds 1–4 training data. The v1 full 10-member ensemble
+  (external-v1 as recorded) is reported alongside as reference only.
+- **Pre-registered criterion — "multi-source training reduces shift"
+  is claimed ONLY if:** ΔAUC ≥ +0.01 vs v1-single on ≥ 3/4 held-out
+  cohorts, OR Δspec ≥ +0.10 (at the respective thresholds) on ≥ 3/4
+  held-out cohorts with that run's held-out sensitivity ≥ 0.85.
+  All four runs are reported regardless of outcome.
+
+## (u) Q2 — domain-pretrained backbone (USFM), v1 protocol replicated
+
+Replicate the v1 protocol EXACTLY with only the backbone replaced:
+
+- **Pipeline:** BUS-BRA official 5-fold CV (patient-level folds,
+  data/splits/*.csv), same augmentation/optimizer/schedule/epochs as v1,
+  hflip TTA, ONE temperature fit on pooled OOF TTA probs, threshold =
+  sens ≥ 0.90 rule on calibrated pooled OOF, then FREEZE
+  (models/v2_usfm_fold{1-5}.pt + v2_usfm_calibration.json +
+  v2_usfm_operating_point.json), then exactly ONE evaluation on the four
+  external cohorts with the frozen keep-lists and preprocessing (c).
+  Single-shot; recorded regardless of outcome.
+- **Backbone:** USFM (openmedlab/USFM) pretrained weights loaded into a
+  ViT-B/16 skeleton (224 input, matching v1's vit_base_patch16_224
+  geometry). Loading is verified by a stated weight-coverage check
+  (fraction of backbone tensors loaded from the USFM checkpoint) before
+  training.
+- **Pre-registered fallback:** if USFM cannot be loaded cleanly within
+  one working session, substitute the BiomedCLIP ViT-B/16 image encoder
+  (open_clip), and STATE the substitution in the protocol and RESULTS.md
+  BEFORE any training with it. No third option.
+- **Pre-registered criterion — "domain pretraining reduces shift" is
+  claimed ONLY if:** external AUC ≥ v1 (full-ensemble external-v1) AUC
+  + 0.01 on ≥ 3/4 cohorts, OR the benign median calibrated-probability
+  shift shrinks by ≥ 30% on ≥ 3/4 cohorts, where per cohort
+  shift = median p_cal(benign, external cohort) − median p_cal(benign,
+  own pooled OOF), v1's value computed from the saved
+  reports/oof_vit_preds.csv + external_*_preds.csv, and "shrinks ≥ 30%"
+  means |shift_v2| ≤ 0.70 · |shift_v1|.
+
+## (v) Order and backbone rule — fixed now
+
+Q2 runs FIRST. Then: **Q1's backbone = USFM if Q2's criterion in (u) is
+met, else the v1 ImageNet vit_base_patch16_224** (same backbone as v1,
+giving the cleanest multi-source-vs-v1 comparison). This decision rule is
+fixed before any training; whichever branch fires, it is recorded in
+RESULTS.md with the Q2 verdict that triggered it. No other backbone may
+be introduced under this amendment.
