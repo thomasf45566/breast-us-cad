@@ -175,9 +175,19 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
 - [ ] Q2c: single-shot external eval on 4 cohorts (frozen keep-lists,
       preprocessing (c)); mechanical verdict per (u) criterion
 - [ ] Backbone decision for Q1 per rule (v), recorded with Q2 verdict
-- [ ] Q1a: build LOCO train/val splits — BUS-BRA folds 1–4 train /
-      fold 5 val (patient-level) + 85/15 image-level split of each
-      external cohort, seed 42, drawn once, reused across runs
+- [x] Q1a (2026-08-31, done ahead of Q2 as pure infrastructure — no
+      training): src/v2_data.py build_multisource_df(hold_out) — BUS-BRA
+      folds 1–4 train / fold 5 val (patient-level) + 85/15 image-level
+      split of each external cohort, seed 42, drawn once (asserted
+      identical across runs), held-out cohort asserted absent;
+      tests/test_v2_splits.py (5 tests PASS). Preprocessing = same
+      data.get_transforms path that produced external-v1. FINDING: the
+      inference.py resize port matches cv2 only inside KleidiCV's
+      size-dispatch envelope — 1421/2454 external images differ by
+      ≤ 1 gray level (BrEaST 99/252, GDPH 309/810, SYSUCC 1013/1013,
+      BUSI 0/379); parity check asserts load/normalize identical and
+      the difference confined to that kernel dispatch
+      (`python src/v2_data.py --sweep` reproduces the sweep)
 - [ ] Q1b: four LOCO runs (hold out breast/busi/gdph/sysucc); per run:
       early stop + temperature + sens ≥ 0.90 threshold on validation
       only, single model + hflip TTA, then SINGLE-SHOT held-out eval
