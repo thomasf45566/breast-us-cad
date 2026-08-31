@@ -128,6 +128,19 @@ section "v2: Site-specific recalibration".
       GDPH k=200 — no method is draw-level reliable at small k. Labeled
       POST-HOC in RESULTS.md + figure. reports/v2_recalib_methods_{draws,
       summary}.csv + v2_recalib_methods.png.
+- [x] Amendment 3 written and committed alone, pre-computation (78f3991):
+      ensemble disagreement as abstention signal. Authorized constrained
+      re-run to persist the 10 member probs (must reproduce saved
+      y_prob_raw to 1e-9 or abort; no metrics in the re-run script);
+      signals U_std/U_range vs margin baseline |p_cal − 0.2683|;
+      per-cohort error-AUROC + abstention curves q ∈ {5,10,20,30}%;
+      success = error-AUROC(U_std) ≥ 0.65 AND q=10% spec +0.05 with sens
+      not below frozen AND U_std > margin baseline. No internal OOF
+      reference exists (one held-out member per image) — stated.
+- [ ] Amendment 3 execution: member-persistence re-run
+      (reports/v2_members_{cohort}.csv, reproduction assert) → abstention
+      analyses → RESULTS.md "v2: Ensemble disagreement as an abstention
+      signal"
 - [x] POST-HOC cross-site transfer (2026-08-31, src/v2_cross_site.py, not
       pre-registered — labeled descriptive): 5 sources (internal + 4
       cohorts, full data) × 4 targets, M1 thr transfer + M2 T transfer.
