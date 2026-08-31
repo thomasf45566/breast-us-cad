@@ -597,3 +597,97 @@ Per-row reading (factual):
 Across rows: every externally re-selected M1 threshold gives higher
 specificity than the internal threshold on every target, and M2 rows move
 specificity less than M1 rows at matched sensitivity throughout.
+
+## v2: Ensemble disagreement as an abstention signal
+
+Pre-registered: data/external_protocol.md Amendment 3 (committed 78f3991
+BEFORE any computation). Run 2026-08-31. Scripts: src/v2_dump_members.py
+(member persistence) + src/v2_disagreement.py (analyses). Outputs:
+reports/v2_members_{cohort}.csv, reports/v2_abstention_{metrics,curves}.csv,
+reports/v2_disagreement_auroc.png, reports/v2_abstention_curves.png.
+(Presentational deviation from (p): the single registered figure
+v2_abstention.png was split into the two PNGs above; analyses unchanged.)
+External-v1 numbers untouched; frozen model/calibration/threshold unchanged.
+
+**Member persistence (n) — reproduction check PASSED, bitwise.** The
+constrained re-run of the frozen 5-ckpt × hflip pipeline reproduced the
+saved y_prob_raw column bitwise at the stored float32 precision on ALL
+images of all four cohorts (252/252, 379/379, 810/810, 1013/1013; max
+float64 delta vs the decimal parse 3.0e-08 = shortest-repr gap; the
+registered 1e-9 fallback was not needed). No metrics were computed in the
+re-run script.
+
+### (a) Error-prediction AUROC (target = misclassified at thr 0.2683)
+
+95% percentile bootstrap ×2000, seed 42; case-level BrEaST (≡ image-level),
+IMAGE-level BUSI/GDPH/SYSUCC (no patient IDs — CIs may be optimistically
+narrow).
+
+| cohort | errors | U_std | U_range | margin baseline |
+|---|---|---|---|---|
+| BrEaST | 99/252 | **0.774** (0.710–0.831) | 0.772 (0.708–0.829) | 0.664 (0.595–0.729) |
+| BUSI | 87/379 | **0.856** (0.812–0.895) | 0.851 (0.806–0.891) | 0.754 (0.694–0.809) |
+| GDPH | 249/810 | **0.802** (0.772–0.833) | 0.800 (0.770–0.831) | 0.717 (0.682–0.752) |
+| SYSUCC | 202/1013 | 0.626 (0.589–0.665) | 0.626 (0.589–0.665) | **0.747** (0.710–0.784) |
+
+U_std ≈ U_range everywhere (Δ ≤ 0.005). U_std beats the margin baseline
+clearly on BrEaST/BUSI/GDPH (+0.09 to +0.11, non-overlapping CIs on
+BUSI/GDPH) but LOSES to it on SYSUCC (0.626 vs 0.747) — on the
+highest-prevalence cancer-center cohort, member disagreement is the
+weakest error signal of the three.
+
+### (b)/(c) Abstention curves (retained-set sens/spec at the frozen threshold)
+
+Full grid q ∈ {5,10,20,30}% in reports/v2_abstention_curves.csv +
+v2_abstention_curves.png. At the pre-registered decision point q = 10%
+(frozen → retained; enrich = abstained-set error rate / full-cohort rate):
+
+| cohort | signal | sens | spec | enrich |
+|---|---|---|---|---|
+| BrEaST | U_std | 0.9184 → 0.9091 | 0.4091 → 0.4532 | ×1.53 |
+| BrEaST | margin | 0.9184 → 0.9474 | 0.4091 → 0.3939 | ×1.43 |
+| BUSI | U_std | 0.9571 → 0.9527 | 0.6296 → 0.7047 | ×2.64 |
+| BUSI | margin | 0.9571 → 0.9557 | 0.6296 → 0.6612 | ×2.06 |
+| GDPH | U_std | 0.9707 → 0.9675 | 0.4529 → 0.5038 | ×1.77 |
+| GDPH | margin | 0.9707 → 0.9756 | 0.4529 → 0.4389 | ×1.53 |
+| SYSUCC | U_std | 0.9309 → 0.9226 | 0.4740 → 0.5150 | ×1.14 |
+| SYSUCC | margin | 0.9309 → 0.9615 | 0.4740 → 0.4703 | ×2.53 |
+
+Consistent pattern across all q: abstaining by U_std raises retained
+specificity monotonically (BUSI reaches 0.88 at q=30%) at the cost of a
+small monotone sensitivity decline; abstaining by margin does the
+opposite — retained sensitivity rises (near-threshold cases are
+disproportionately positives at this low threshold) while specificity
+stays flat or falls. The two signals abstain different images.
+
+### Pre-registered verdict (q) — applied mechanically
+
+Criteria: (1) error-AUROC(U_std) ≥ 0.65; (2) at q=10%, retained spec ≥
+frozen + 0.05 AND retained sens ≥ frozen; (3) U_std > margin on
+error-AUROC.
+
+| cohort | c1 ≥0.65 | c2 q=10% | c3 beats margin | verdict |
+|---|---|---|---|---|
+| BrEaST | PASS (0.774) | FAIL (spec +0.044 < 0.05; sens 0.9184→0.9091) | PASS | **NOT USEFUL** |
+| BUSI | PASS (0.856) | FAIL (spec +0.075 ✓; sens 0.9571→0.9527) | PASS | **NOT USEFUL** |
+| GDPH | PASS (0.802) | FAIL (spec +0.051 ✓; sens 0.9707→0.9675) | PASS | **NOT USEFUL** |
+| SYSUCC | FAIL (0.626) | FAIL (spec +0.041; sens 0.9309→0.9226) | FAIL (0.626 < 0.747) | **NOT USEFUL** |
+
+**Verdict: 0/4 cohorts meet the pre-registered bar** — in every case
+because criterion 2's sensitivity condition (retained sens not below the
+frozen full-set value) fails: U_std-ranked abstention always removes a
+few true positives along with the errors, costing 0.3–0.9 points of
+sensitivity at q=10%. Recorded as registered; no criterion is relaxed
+post-hoc. Factual reading alongside the verdict: disagreement IS strongly
+error-informative on 3/4 cohorts (AUROC 0.77–0.86, error enrichment up to
+×2.6, spec +4.4 to +7.5 points at q=10%), so the pre-registered bar
+failed on the strict sensitivity-preservation clause, not on signal
+quality — except on SYSUCC, where disagreement genuinely underperforms
+the free margin baseline. Any softer criterion (e.g. "sens within CI of
+frozen") would be a NEW pre-registration, not a re-read of this one.
+
+**Limitation (r):** no internal OOF reference exists — each OOF image was
+scored by only its one held-out fold's checkpoint, so a 10-member
+disagreement signal cannot be computed internally without leakage. This
+analysis is external-only, with no internal error-AUROC to compare
+against.

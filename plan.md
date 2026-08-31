@@ -137,10 +137,17 @@ section "v2: Site-specific recalibration".
       success = error-AUROC(U_std) ≥ 0.65 AND q=10% spec +0.05 with sens
       not below frozen AND U_std > margin baseline. No internal OOF
       reference exists (one held-out member per image) — stated.
-- [ ] Amendment 3 execution: member-persistence re-run
-      (reports/v2_members_{cohort}.csv, reproduction assert) → abstention
-      analyses → RESULTS.md "v2: Ensemble disagreement as an abstention
-      signal"
+- [x] Amendment 3 execution (2026-08-31): src/v2_dump_members.py —
+      reproduction check PASSED BITWISE (float32) on all 4 cohorts
+      (252/379/810/1013 images), members in reports/v2_members_*.csv;
+      src/v2_disagreement.py — error-AUROC U_std 0.77/0.86/0.80 on
+      BrEaST/BUSI/GDPH (beats margin baseline) but 0.63 vs margin 0.75
+      on SYSUCC; q=10% U_std abstention gains spec +4.4/+7.5/+5.1/+4.1
+      pts with sens dipping 0.3–0.9 pts. VERDICT (mechanical, per (q)):
+      NOT USEFUL on 0/4 cohorts — c2's sens-held clause fails everywhere
+      (SYSUCC also fails c1/c3). reports/v2_abstention_{metrics,curves}
+      .csv, v2_disagreement_auroc.png, v2_abstention_curves.png;
+      RESULTS.md "v2: Ensemble disagreement as an abstention signal".
 - [x] POST-HOC cross-site transfer (2026-08-31, src/v2_cross_site.py, not
       pre-registered — labeled descriptive): 5 sources (internal + 4
       cohorts, full data) × 4 targets, M1 thr transfer + M2 T transfer.
