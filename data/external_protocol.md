@@ -263,3 +263,110 @@ external-v1 number; the external-v1 tables in RESULTS.md stand as recorded.
 - This study produces NO change to the frozen model, calibration, or
   operating point. Any future deployment-style threshold adaptation would
   be a new study, not a revision of frozen-v1 or external-v1.
+
+---
+
+# Amendment 3 — Ensemble disagreement as an abstention signal (v2)
+
+Written 2026-08-31, BEFORE any computation for this amendment. Verified at
+time of writing: reports/ contains no v2_members_* files and no abstention
+analysis exists anywhere in reports/, RESULTS.md, or src/; the working tree
+is clean. This amendment is committed ALONE, before any code or output it
+describes.
+
+This is a v2 secondary study. It asks one question: does disagreement among
+the 10 frozen ensemble members (5 checkpoints × {original, hflip}) predict
+the frozen pipeline's errors on the external cohorts well enough to serve
+as an abstention ("defer to human") signal? Nothing here alters, re-runs,
+or reinterprets any external-v1 metric; the external-v1 tables in
+RESULTS.md stand as recorded.
+
+## (n) Authorized re-run — member-probability persistence ONLY
+
+External-v1 saved only the ensemble-mean probabilities; the 10 per-member
+probabilities per image were not persisted. A re-run of the frozen
+inference pipeline is therefore authorized, tightly constrained:
+
+- **Scope:** the frozen 5-checkpoint × hflip pipeline on the four external
+  cohorts — BrEaST, BUSI, GDPH, SYSUCC — with EXACTLY the external-v1
+  keep-lists (the rows of reports/external_{cohort}_preds.csv) and EXACTLY
+  the frozen preprocessing of (c). No model, calibration, threshold, or
+  transform change of any kind.
+- **Sole purpose:** persist the 10 per-member sigmoid probabilities per
+  image to reports/v2_members_{cohort}.csv (one row per image: image id,
+  label, 10 member columns, recomputed mean).
+- **Hard reproduction guarantee, asserted in code:** for EVERY image, the
+  recomputed ensemble mean must reproduce the saved y_prob_raw column of
+  the external-v1 preds CSV bitwise, or to within 1e-9 absolute. On ANY
+  mismatch the script ABORTS, writes nothing further, and the failure is
+  reported; no analysis proceeds until the discrepancy is explained.
+- **No metrics are computed in the re-run script** — no AUC, no sens/spec,
+  no error flags. It writes the member CSVs and the reproduction check
+  result, nothing else. This keeps the re-run a pure persistence step, not
+  a second evaluation.
+
+## (o) Uncertainty signals (pre-registered)
+
+Per image, from the 10 member probabilities p_1..p_10 (raw, pre-temperature):
+
+- **U_std** = standard deviation of the 10 member probabilities (primary).
+- **U_range** = max(p_i) − min(p_i).
+- **Baseline M** (margin to threshold) = |p_calibrated − 0.2683|, computed
+  from the SAVED y_prob_calibrated column — deliberately a signal that
+  needs no member probabilities, so it costs nothing extra. LOW margin =
+  high uncertainty; for comparability, the abstention/AUROC direction is
+  −M (abstain on smallest margins).
+
+No other signals; no signal combinations; no tuning of any signal on
+external data.
+
+## (p) Analyses — per cohort, never pooled
+
+Target variable: **error** = misclassified at the frozen operating point
+(prediction = [y_prob_calibrated ≥ 0.2683] vs label), exactly the
+external-v1 decisions.
+
+- **(a) Error-prediction AUROC** of each signal (U_std, U_range, −M)
+  against the error indicator, per cohort. 95% percentile bootstrap CI,
+  2000 iterations, seed 42, same resampling unit as (d): case-level for
+  BrEaST, image-level for BUSI/GDPH/SYSUCC (limitation stated as usual).
+- **(b) Abstention curves:** for each signal and each abstention fraction
+  q ∈ {5, 10, 20, 30}%, abstain the top-q% most uncertain images of the
+  cohort (ties broken by stable sort on image id). Report, per (cohort,
+  signal, q): sensitivity and specificity on the RETAINED set at the
+  frozen threshold, retained-set n and prevalence, and the **error
+  enrichment ratio** = (error rate in the abstained set) / (error rate in
+  the full cohort).
+- **(c)** The same curves for the margin baseline −M — the comparison that
+  decides whether member disagreement adds anything over what the single
+  saved calibrated probability already provides.
+
+Outputs: reports/v2_abstention_{metrics,curves}.csv +
+reports/v2_abstention.png, and ONE new RESULTS.md section titled
+"v2: Ensemble disagreement as an abstention signal". External-v1 and
+earlier v2 files/sections are never edited.
+
+## (q) Pre-registered success criterion
+
+"Disagreement is a useful abstention signal" is claimed for a cohort ONLY
+if ALL three hold:
+
+1. error-AUROC(U_std) ≥ 0.65;
+2. at q = 10%, retained-set specificity ≥ (cohort's frozen external-v1
+   specificity + 0.05) AND retained-set sensitivity ≥ the cohort's frozen
+   external-v1 sensitivity;
+3. error-AUROC(U_std) > error-AUROC(−M) on that cohort.
+
+All cohorts and all cells of (p) are reported regardless of outcome — no
+post-hoc selection of cohorts, signals, or q values. Failure on any
+criterion is recorded as "not useful on this cohort".
+
+## (r) No internal OOF reference — stated limitation
+
+An internal (BUS-BRA OOF) version of this analysis is NOT available: each
+OOF image is scored by only its ONE held-out fold's checkpoint, so no
+5-member (let alone 10-member) disagreement exists for internal data
+without re-scoring OOF images with in-fold checkpoints, which would be
+leakage. The abstention analysis is therefore external-only, with no
+internal reference value for the error-AUROC; this is stated wherever
+Amendment 3 results are reported.
