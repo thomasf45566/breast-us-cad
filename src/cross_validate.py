@@ -47,6 +47,8 @@ def main() -> None:
     parser.add_argument("--folds", type=int, nargs="+", default=ALL_FOLDS)
     parser.add_argument("--epochs", type=int, help="override config epochs (smoke tests)")
     parser.add_argument("--prefix", default="cv_effb0")
+    parser.add_argument("--ckpt-prefix", help="checkpoint filename prefix (default: --prefix)")
+    parser.add_argument("--summary-name", help="summary CSV filename (default: <prefix>_summary.csv)")
     args = parser.parse_args()
 
     cfg = yaml.safe_load(Path(args.config).read_text())
@@ -56,7 +58,7 @@ def main() -> None:
     for k in args.folds:
         train_folds = [f for f in ALL_FOLDS if f != k]
         run_name = f"{args.prefix}_fold{k}"
-        ckpt_path = f"models/{args.prefix}_fold{k}.pt"
+        ckpt_path = f"models/{args.ckpt_prefix or args.prefix}_fold{k}.pt"
         print(f"\n=== fold {k}: train {train_folds}, val [{k}] ===")
         result = train_one_fold(
             cfg,
@@ -92,7 +94,7 @@ def main() -> None:
 
     reports_dir = Path(cfg["paths"]["reports_dir"])
     reports_dir.mkdir(parents=True, exist_ok=True)
-    out_path = reports_dir / f"{args.prefix}_summary.csv"
+    out_path = reports_dir / (args.summary_name or f"{args.prefix}_summary.csv")
     out.to_csv(out_path, index=False)
 
     print("\n" + summary.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
