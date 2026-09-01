@@ -8,9 +8,18 @@ threshold loading, Grad-CAM generation, and the exact val preprocessing.
 Dependency boundary: torch / timm / segmentation_models_pytorch /
 pytorch_grad_cam / cv2 / numpy / huggingface_hub only — no wandb, no
 albumentations, no training-side modules. The val transform below is a
-plain cv2+numpy re-implementation verified bitwise-identical to the
-albumentations pipeline used in training/eval (same cv2.INTER_LINEAR
-resize, same float32 (x - 255*mean) * 1/(255*std) normalize).
+plain cv2+numpy re-implementation of the albumentations pipeline used in
+training/eval (same float32 (x - 255*mean) * 1/(255*std) normalize).
+Resize parity is SIZE-DEPENDENT: bitwise-identical to cv2.INTER_LINEAR on
+the BUS-BRA training/validation size envelope (all 713 distinct sizes),
+but cv2 dispatches its KleidiCV HAL kernel only for some sizes — outside
+that envelope (1421/2454 external keep-list images, e.g. all of SYSUCC)
+cv2 falls back to OpenCV's own bilinear kernel and the resized pixels
+differ by <= 1 uint8 gray level pre-normalization. Measured impact of
+that difference through the full frozen ensemble (src/v2_resize_impact.py,
+reports/v2_resize_dispatch_impact.csv): max |delta calibrated prob|
+0.0072, median 0.0008, decisions at the frozen threshold flip on 2/1421
+affected images (both borderline BrEaST cases, p within 0.002 of 0.2683).
 
 Weights resolve from models/ when present (repo workflow unchanged),
 otherwise from the Hugging Face Hub weights repo with the default local
@@ -122,7 +131,12 @@ def resize_bilinear_frozen(rgb: np.ndarray, out: int = IMG_SIZE) -> np.ndarray:
     to that cv2.resize on every BUS-BRA image (1879 images, 713 distinct
     sizes) and all bundled examples; unlike cv2.resize, it produces the
     same bits on every platform (cv2's INTER_LINEAR differs between ARM
-    and x86 builds, which is why this port exists).
+    and x86 builds, which is why this port exists). CAVEAT (2026-08-31):
+    cv2 dispatches KleidiCV only for some image sizes; for sizes outside
+    that envelope (common in the external cohorts) cv2's own bilinear
+    kernel differs from this port by <= 1 uint8 gray level, so "bitwise
+    equal to local cv2" holds on the BUS-BRA envelope only. This port is
+    the pipeline's defined resize for deployment either way.
     """
     h, w = rgb.shape[:2]
     sx0, sx1, fx = _bilinear_maps(w, out)
@@ -136,9 +150,11 @@ def resize_bilinear_frozen(rgb: np.ndarray, out: int = IMG_SIZE) -> np.ndarray:
 def val_transform_rgb(rgb: np.ndarray, img_size: int = IMG_SIZE) -> torch.Tensor:
     """HWC uint8 RGB -> normalized (3, S, S) float32 tensor.
 
-    Bitwise-identical to the training-side albumentations val pipeline
-    (Resize INTER_LINEAR -> Normalize(ImageNet) -> ToTensorV2) as realized
-    on the machine that produced the frozen numbers.
+    Matches the training-side albumentations val pipeline (Resize
+    INTER_LINEAR -> Normalize(ImageNet) -> ToTensorV2) as realized on the
+    machine that produced the frozen numbers: bitwise-identical for
+    BUS-BRA-envelope sizes; for other sizes the resize stage differs by
+    <= 1 uint8 gray level (see module docstring), normalize identical.
     """
     img = resize_bilinear_frozen(rgb, img_size)
     mean = np.array(IMAGENET_MEAN, dtype=np.float32) * 255.0

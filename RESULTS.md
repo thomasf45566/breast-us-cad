@@ -691,3 +691,19 @@ scored by only its one held-out fold's checkpoint, so a 10-member
 disagreement signal cannot be computed internally without leakage. This
 analysis is external-only, with no internal error-AUROC to compare
 against.
+
+## Reproducibility notes
+
+**Resize-kernel dispatch (2026-09-01, read-only diagnostic —
+src/v2_resize_impact.py, reports/v2_resize_dispatch_impact.csv):**
+cv2.resize INTER_LINEAR dispatches the KleidiCV kernel (which
+inference.resize_bilinear_frozen ports) only for some image sizes, so the
+port's bitwise equality with local cv2 holds on the BUS-BRA size envelope
+(all 713 sizes) but not on 1,421/2,454 external keep-list images (BrEaST
+99/252, BUSI 0/379, GDPH 309/810, SYSUCC 1013/1013), where the two resizes
+differ by ≤ 1 uint8 gray level; run through the full frozen ensemble this
+moves calibrated probabilities by max 0.0072 / median 0.0008 and flips
+2/1,421 decisions at the frozen threshold (case038, case200 — BrEaST cases
+within 0.002 of 0.2683). External-v1 numbers are untouched (canonical
+albumentations path; re-verified here to ≤ 3e-08, the MPS batch-composition
+floor); the deployed Space's port remains the defined deployment resize.
