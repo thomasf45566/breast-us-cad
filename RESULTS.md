@@ -765,6 +765,30 @@ fine-tuning must absorb that difference.
   from the BiomedCLIP init. wandb run v2_biomedclip_fold5_smoke
   (830ejnrt). Q2b (full 5-fold CV) NOT launched.
 
+### Q2b — 5-fold CV training runs (2026-09-02, wandb group cv_biomedclip)
+
+configs/v2_biomedclip.yaml (v1 protocol, BiomedCLIP init), 30 epochs/fold
+on MPS (~1.5–2 h/fold under caffeinate), init_state_dict validation
+confirmed in-log for every fold (150 trunk tensors loaded, head random).
+Checkpoints models/v2_biomedclip_fold{1-5}.pt; per-fold metrics at each
+fold's own best-val-AUC epoch (reports/v2_biomedclip_cv_summary.csv):
+
+| fold | AUC | v1 ViT AUC | Δ |
+|---|---|---|---|
+| 1 | 0.9438 | 0.9526 | −0.009 |
+| 2 | 0.9229 | 0.9411 | −0.018 |
+| 3 | 0.9119 | 0.9193 | −0.007 |
+| 4 | 0.8835 | 0.9132 | −0.030 |
+| 5 | 0.9230 | 0.9272 | −0.004 |
+| **mean ± sd** | **0.9170 ± 0.0220** | 0.9307 ± 0.0161 | −0.014 |
+
+Internal CV observation (descriptive only): the BiomedCLIP init trails
+the v1 ImageNet init on all five folds. This does NOT decide Q2 — the
+pre-registered criterion in (u) is about external shift reduction and is
+evaluated only after the freeze, single-shot. Remaining Q2b steps
+pending: hflip TTA on the OOF pool, one temperature fit, sens ≥ 0.90
+threshold, then FREEZE (v2_biomedclip_{calibration,operating_point}.json).
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —
