@@ -749,6 +749,22 @@ BiomedCLIP pretraining used CLIP normalization statistics while the v1
 pipeline (kept unchanged per (u)) normalizes with ImageNet statistics;
 fine-tuning must absorb that difference.
 
+### BiomedCLIP setup + smoke test (2026-09-01)
+
+- Export (src/v2_export_biomedclip.py, reading visual.trunk.* directly
+  from open_clip_pytorch_model.bin): **CLEAN — 150/150** backbone tensors,
+  zero unfilled / zero unused, all five components LOADED; forward passes
+  no NaNs on CPU and MPS (max |MPS−CPU| 1.9e-03 at feature std 2.59);
+  CLS-feature cosine vs ImageNet init 0.048 → weights genuinely loaded.
+  Saved to models/pretrained/biomedclip_vitb16_timm.pt (consumed by
+  train.py via model.init_state_dict, which requires exactly head.* to
+  remain randomly initialized).
+- One-epoch fold-5 smoke (configs/v2_biomedclip.yaml, --epochs 1,
+  checkpoint kept out of models/): **epoch time 142.7 s (MPS, M4),
+  val AUC 0.8434**, train_loss 0.827 — training is numerically healthy
+  from the BiomedCLIP init. wandb run v2_biomedclip_fold5_smoke
+  (830ejnrt). Q2b (full 5-fold CV) NOT launched.
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —

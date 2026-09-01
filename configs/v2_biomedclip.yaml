@@ -1,0 +1,35 @@
+# v2 Q2 (Amendment 4 (u) + substitution note 2026-09-01): v1 ViT protocol
+# with only the initialization replaced — BiomedCLIP ViT-B/16 image encoder
+# exported to timm format by src/v2_export_biomedclip.py.
+data:
+  root: data/raw/busbra
+  img_size: 224   # must stay 224 for vit_base_patch16_224
+  batch_size: 32
+  num_workers: 4
+  train_folds: [1, 2, 3, 4]
+  val_folds: [5]
+
+model:
+  name: vit_base_patch16_224
+  pretrained: false   # ImageNet init replaced by init_state_dict below
+  init_state_dict: models/pretrained/biomedclip_vitb16_timm.pt
+
+train:
+  epochs: 30
+  optimizer: adamw
+  scheduler: cosine
+  loss: bce_with_logits
+  pos_weight: auto
+  lr: 1.0e-4
+  warmup_epochs: 3   # linear warmup (0.1x -> 1x lr) before cosine; ViT is warmup-sensitive
+  weight_decay: 1.0e-4
+  seed: 42
+  device: mps
+
+wandb:
+  project: breast-us-cad
+  run_name: v2_biomedclip_fold5
+
+paths:
+  ckpt: models/v2_biomedclip_fold5.pt
+  reports_dir: reports

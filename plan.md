@@ -171,7 +171,12 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       (src/v2_load_usfm.py). Pre-registered fallback fired: BiomedCLIP
       ViT-B/16 (open_clip) substitution declared in protocol + RESULTS.md
       BEFORE any training. Q2 artifacts renamed v2_usfm_* →
-      v2_biomedclip_*.
+      v2_biomedclip_*. Follow-through same day: BiomedCLIP export CLEAN
+      (150/150 tensors, src/v2_export_biomedclip.py →
+      models/pretrained/biomedclip_vitb16_timm.pt), train.py
+      model.init_state_dict + configs/v2_biomedclip.yaml, 1-epoch fold-5
+      smoke: val AUC 0.8434, 142.7 s/epoch (wandb
+      v2_biomedclip_fold5_smoke). Q2b not launched.
 - [ ] Q2b: 5-fold CV per v1 protocol exactly (same aug/optim/epochs),
       hflip TTA, temperature on pooled OOF, sens ≥ 0.90 threshold on
       calibrated OOF → FREEZE models/v2_biomedclip_fold{1-5}.pt +

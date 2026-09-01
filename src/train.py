@@ -29,9 +29,20 @@ def set_seed(seed: int) -> None:
 
 
 def build_model(cfg: dict) -> nn.Module:
-    return timm.create_model(
+    model = timm.create_model(
         cfg["model"]["name"], pretrained=cfg["model"]["pretrained"], num_classes=1
     )
+    init_sd = cfg["model"].get("init_state_dict")
+    if init_sd:
+        state = torch.load(init_sd, map_location="cpu", weights_only=True)
+        missing, unexpected = model.load_state_dict(state, strict=False)
+        if unexpected or set(missing) != {"head.weight", "head.bias"}:
+            raise ValueError(
+                f"init_state_dict {init_sd} is not a full backbone: "
+                f"missing={missing} unexpected={unexpected}"
+            )
+        print(f"backbone initialized from {init_sd} ({len(state)} tensors; head random)")
+    return model
 
 
 def resolve_pos_weight(cfg: dict, train_labels: pd.Series) -> float:

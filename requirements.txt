@@ -173,3 +173,4 @@ websocket-client==1.9.0
 widgetsnbextension==4.0.16
 pytest==9.1.1
 openpyxl
+open_clip_torch
