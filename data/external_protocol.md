@@ -500,3 +500,25 @@ giving the cleanest multi-source-vs-v1 comparison). This decision rule is
 fixed before any training; whichever branch fires, it is recorded in
 RESULTS.md with the Q2 verdict that triggered it. No other backbone may
 be introduced under this amendment.
+
+## Amendment 4 — substitution note (2026-09-01, declared pre-training)
+
+Executed per the pre-registered fallback in (u). The USFM release
+(openmedlab/USFM, USFM_latest.pth) is a BEiT-style ViT-B/16: it contains
+no absolute position embedding — positional information lives solely in a
+shared relative-position-bias table added inside every attention block —
+plus per-block LayerScale parameters, none of which have any
+representation in the v1 vit_base_patch16_224 skeleton. Coverage report
+(src/v2_load_usfm.py): pos_embed UNFILLED, 27/188 checkpoint tensors
+UNUSED (the entire positional mechanism + LayerScale). Loading is
+therefore NOT CLEAN under (u)'s coverage check.
+
+Accordingly, **Q2's backbone is the BiomedCLIP ViT-B/16 image encoder**
+(open_clip, hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224),
+whose vision tower is exactly a timm vit_base_patch16_224. Everything
+else in (u) is unchanged; Q2 artifact names become
+models/v2_biomedclip_fold{1-5}.pt +
+v2_biomedclip_{calibration,operating_point}.json, and rule (v) reads
+"BiomedCLIP" wherever it says "USFM". No third option remains. Declared
+BEFORE any v2 training (no training run, smoke or otherwise, has been
+launched at the time of this note).

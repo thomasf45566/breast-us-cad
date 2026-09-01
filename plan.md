@@ -164,14 +164,18 @@ backbone fixed by rule (v). Artifacts: models/v2_*, reports/v2_*,
 RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
 "v2: Multi-source LOCO training (Q1)".
 - [x] Amendment 4 written and committed alone, pre-code (3faa70b)
-- [ ] Q2a: USFM loading spike — openmedlab/USFM weights into ViT-B/16
-      skeleton (224), weight-coverage check stated. If not clean within
-      one session: declare BiomedCLIP ViT-B/16 (open_clip) substitution
-      in protocol + RESULTS.md BEFORE any training (no third option)
+- [x] Q2a (2026-09-01): USFM loading spike — NOT CLEAN. USFM_latest.pth
+      is BEiT-style: no pos_embed (position = shared rel-pos-bias table,
+      no slot in vanilla ViT) + LayerScale; 149/150 tensors map but 27
+      checkpoint tensors (entire positional mechanism) unused
+      (src/v2_load_usfm.py). Pre-registered fallback fired: BiomedCLIP
+      ViT-B/16 (open_clip) substitution declared in protocol + RESULTS.md
+      BEFORE any training. Q2 artifacts renamed v2_usfm_* →
+      v2_biomedclip_*.
 - [ ] Q2b: 5-fold CV per v1 protocol exactly (same aug/optim/epochs),
       hflip TTA, temperature on pooled OOF, sens ≥ 0.90 threshold on
-      calibrated OOF → FREEZE models/v2_usfm_fold{1-5}.pt +
-      v2_usfm_{calibration,operating_point}.json
+      calibrated OOF → FREEZE models/v2_biomedclip_fold{1-5}.pt +
+      v2_biomedclip_{calibration,operating_point}.json
 - [ ] Q2c: single-shot external eval on 4 cohorts (frozen keep-lists,
       preprocessing (c)); mechanical verdict per (u) criterion
 - [ ] Backbone decision for Q1 per rule (v), recorded with Q2 verdict

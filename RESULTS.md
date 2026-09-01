@@ -692,6 +692,63 @@ disagreement signal cannot be computed internally without leakage. This
 analysis is external-only, with no internal error-AUROC to compare
 against.
 
+## v2: Domain-pretrained backbone (Q2)
+
+Protocol: data/external_protocol.md Amendment 4 (u), committed pre-code
+at 3faa70b. Pre-registered fallback rule applied below.
+
+### Q2a — USFM loading spike (2026-09-01): NOT CLEAN → BiomedCLIP substitution
+
+**Verdict: USFM cannot be loaded cleanly into the v1 ViT skeleton. Per
+the pre-registered fallback in (u), Q2's backbone is substituted with the
+BiomedCLIP ViT-B/16 image encoder (open_clip). Declared here and in the
+protocol BEFORE any v2 training.**
+
+Evidence (src/v2_load_usfm.py; checkpoint models/pretrained/
+USFM_latest.pth, the openmedlab/USFM Google Drive release, 327 MB,
+188 tensors):
+
+- USFM is a BEiT-style ViT-B/16, not a vanilla ViT: the checkpoint
+  contains NO absolute pos_embed at all — position is encoded solely by a
+  shared relative-position-bias table
+  (rel_pos_bias.relative_position_bias_table, 732×12) added inside every
+  attention block, an architecture component vanilla timm
+  vit_base_patch16_224 has no parameter slot for. It also carries
+  per-block LayerScale (gamma_1/gamma_2 × 12) and BEiT split q/v biases
+  (no k bias).
+- Best-effort mapping: 149/150 skeleton backbone tensors filled (99.3%) —
+  patch embed, cls token, all 12 blocks (qkv bias fused as
+  q_bias ⊕ 0 ⊕ v_bias), final norm all LOADED. pos_embed UNFILLED
+  (nothing in the checkpoint to load), and 27 checkpoint tensors UNUSED:
+  24 LayerScale gammas, the rel-pos-bias table + index, mask_token.
+- Forward passes with the mapped weights: CPU and MPS both clean (no
+  NaNs, max |MPS−CPU| 8.1e-06); CLS-feature cosine vs an
+  ImageNet-initialized ViT −0.03, i.e. the USFM weights genuinely loaded.
+- Why NOT CLEAN despite 99.3% tensor coverage: the unused tensors are the
+  model's ENTIRE positional mechanism and its residual-branch scaling. A
+  vanilla-ViT forward with these weights computes a different function
+  from USFM — a randomly initialized pos_embed stands in for trained
+  relative position biases and residual branches lose their 0.1-scale
+  gammas. The pre-registered coverage check ("patch/pos embeddings,
+  blocks, and norm all loaded") fails on pos_embed.
+- Not pursued: loading USFM into a timm BEiT skeleton would be clean but
+  changes the architecture, violating (u)'s "matching v1's
+  vit_base_patch16_224 geometry" and rule (v)'s no-other-backbone clause.
+
+### Substitution (declared pre-training, per (u))
+
+Q2's backbone = BiomedCLIP ViT-B/16 image encoder
+(hf-hub:microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224 via
+open_clip). Its vision tower is exactly a timm vit_base_patch16_224, so
+v1's architecture, preprocessing, and training protocol carry over with
+only the initialization replaced. Q2 artifact names become
+models/v2_biomedclip_fold{1-5}.pt +
+v2_biomedclip_{calibration,operating_point}.json; rule (v) reads
+"BiomedCLIP" where it says "USFM". Limitation, stated up front:
+BiomedCLIP pretraining used CLIP normalization statistics while the v1
+pipeline (kept unchanged per (u)) normalizes with ImageNet statistics;
+fine-tuning must absorb that difference.
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —

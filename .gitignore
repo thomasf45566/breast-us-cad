@@ -7,6 +7,7 @@ data/splits/*
 !data/splits/*.csv
 models/*.pt
 models/*.pth
+models/pretrained/
 wandb/
 logs/
 __pycache__/
