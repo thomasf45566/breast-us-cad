@@ -184,9 +184,16 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       models/v2_biomedclip_fold{1-5}.pt +
       v2_biomedclip_{calibration,operating_point}.json
       (src/v2_biomedclip_freeze.py; v1 artifacts asserted untouched)
-- [ ] Q2c: single-shot external eval on 4 cohorts (frozen keep-lists,
-      preprocessing (c)); mechanical verdict per (u) criterion
-- [ ] Backbone decision for Q1 per rule (v), recorded with Q2 verdict
+- [x] Q2c (2026-09-02, src/v2_biomedclip_external.py): self-check passed
+      digit-for-digit, then single-shot on 4 cohorts. v2 AUC LOWER on all
+      four (BrEaST 0.8441 / BUSI 0.9102 / GDPH 0.8821 / SYSUCC 0.8308 vs
+      v1 0.8542/0.9339/0.9154/0.8380); benign-shift ratios 0.892/0.689/
+      0.962/0.700163 — branch A 0/4, branch B 1/4 (SYSUCC misses 0.70 by
+      0.0002). VERDICT: NOT CLAIMED. Table + preds in reports/v2_biomedclip_
+      external_*, RESULTS.md "Q2 verdict". Tag v2-biomedclip.
+- [x] Backbone decision for Q1 per rule (v): Q2 criterion NOT met →
+      Q1 LOCO backbone = v1 ImageNet vit_base_patch16_224 (recorded with
+      the Q2 verdict in RESULTS.md)
 - [x] Q1a (2026-08-31, done ahead of Q2 as pure infrastructure — no
       training): src/v2_data.py build_multisource_df(hold_out) — BUS-BRA
       folds 1–4 train / fold 5 val (patient-level) + 85/15 image-level

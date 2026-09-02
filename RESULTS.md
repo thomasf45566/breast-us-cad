@@ -817,6 +817,57 @@ Internal comparison (descriptive): v2 trails v1 on pooled OOF AUC
 (−0.0145) and on internal specificity at the respective operating
 points (0.7177 vs 0.7713).
 
+### Q2c — single-shot external evaluation (2026-09-02)
+
+src/v2_biomedclip_external.py. Self-check first: the external code path
+(inference.ensemble_tta_probs_from_loader) reproduced the freeze
+script's fold-5 TTA AUC digit-for-digit (0.9230647908649297) —
+PASSED. Then exactly ONE --confirm run on the four frozen keep-lists;
+recorded as-is, no re-tuning. The v1 side of the table is recomputed
+from the SAVED reports/external_*_preds.csv (no v1 inference) and
+asserted against the recorded external-v1 AUCs before use. Each
+pipeline is scored at its own frozen threshold (v1: T=2.3644,
+thr=0.2683; v2: T=2.8645, thr=0.2007). Benign shift = median
+p_cal(benign, cohort) − median p_cal(benign, own pooled OOF); own-OOF
+benign medians: v1 0.0625, v2 0.0808.
+
+| cohort | n | AUC v1 (CI) | AUC v2 (CI) | ΔAUC | sens v1→v2 | spec v1→v2 | benign med v1→v2 | shift v1→v2 | ratio |
+|---|---|---|---|---|---|---|---|---|---|
+| BrEaST | 252 | 0.8542 (0.802–0.902) | 0.8441 (0.789–0.894) | −0.0101 | 0.918→0.929 | 0.409→0.325 | 0.306→0.298 | +0.244→+0.217 | 0.892 |
+| BUSI | 379 | 0.9339 (0.906–0.958) | 0.9102 (0.875–0.942) | −0.0237 | 0.957→0.926 | 0.630→0.602 | 0.174→0.158 | +0.111→+0.077 | 0.689 |
+| GDPH | 810 | 0.9154 (0.895–0.934) | 0.8821 (0.858–0.904) | −0.0333 | 0.971→0.968 | 0.453→0.345 | 0.289→0.299 | +0.227→+0.218 | 0.962 |
+| SYSUCC | 1013 | 0.8380 (0.810–0.866) | 0.8308 (0.801–0.858) | −0.0072 | 0.931→0.946 | 0.474→0.443 | 0.287→0.238 | +0.224→+0.157 | 0.700 |
+
+reports/v2_biomedclip_external_comparison.csv +
+v2_biomedclip_external_{cohort}_preds.csv + per-cohort ROC/CM pngs.
+Bootstrap ×2000 seed 42, case-level BrEaST / image-level otherwise
+(limitation as in (d)).
+
+### Q2 verdict (Amendment 4 (u), applied mechanically) and rule (v) decision
+
+- **Branch A** (v2 AUC ≥ v1 + 0.01 on ≥ 3/4 cohorts): **0/4** — v2's
+  external AUC is LOWER on all four cohorts. NOT MET.
+- **Branch B** (|shift_v2| ≤ 0.70·|shift_v1| on ≥ 3/4 cohorts): **1/4**
+  (BUSI 0.689). SYSUCC's exact ratio is 0.700163 — it misses the ≤ 0.70
+  cut by 0.0002 and is counted as a fail, per the mechanical rule, no
+  rounding. NOT MET.
+- **Q2 VERDICT: "domain pretraining reduces shift" is NOT CLAIMED.**
+  The BiomedCLIP init reduced the benign probability shift somewhat on
+  all four cohorts (ratios 0.69–0.96) but paid for it with uniformly
+  lower external AUC, and neither pre-registered branch fires. Sens
+  held ≥ 0.926 everywhere at v2's own threshold; specificity was worse
+  than v1 on all four cohorts.
+- **Rule (v) decision — Q1 LOCO backbone = v1 ImageNet
+  vit_base_patch16_224** (same backbone as v1, cleanest
+  multi-source-vs-v1 comparison). No other backbone may be introduced
+  under Amendment 4.
+- Interpretation note (descriptive): BiomedCLIP's PMC-figure pretraining
+  is not ultrasound-specific, and the CLIP→ImageNet normalization
+  mismatch was absorbed by fine-tuning as required by (u); the USFM
+  weights that motivated Q2 could not be used (Q2a). The Q2 result
+  therefore speaks to THIS substitute init, not to ultrasound MIM
+  pretraining in general.
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —
