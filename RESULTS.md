@@ -789,6 +789,34 @@ evaluated only after the freeze, single-shot. Remaining Q2b steps
 pending: hflip TTA on the OOF pool, one temperature fit, sens ≥ 0.90
 threshold, then FREEZE (v2_biomedclip_{calibration,operating_point}.json).
 
+### Q2b — TTA, calibration, operating point, FREEZE (2026-09-02)
+
+src/v2_biomedclip_freeze.py (v1 pipeline replicated: tta_eval →
+calibrate → pick_threshold conventions, imported not re-implemented;
+v1 artifacts asserted byte-untouched). All on BUS-BRA OOF only — no
+external data touched before the freeze.
+
+- Pooled OOF hflip-TTA AUC **0.9109** (plain 0.9092; v1 reference
+  0.9254). Per-fold TTA: 0.9461 / 0.9267 / 0.9150 / 0.8832 / 0.9231;
+  per-fold plain AUCs reproduce reports/v2_biomedclip_cv_summary.csv
+  exactly. reports/v2_biomedclip_{tta_summary,oof_preds}.csv.
+- Temperature **T = 2.8645** on pooled OOF TTA (v1: 2.3644): NLL
+  0.5479 → 0.3464, ECE(15) 0.0976 → 0.0296, AUC unchanged (asserted).
+  models/v2_biomedclip_calibration.json,
+  reports/v2_biomedclip_reliability.png.
+- Operating point (sens ≥ 0.90, max spec, calibrated OOF): threshold
+  **0.2007** — sens 0.9012 (CI 0.8715–0.9294), spec 0.7177 (CI
+  0.6887–0.7481), PPV 0.6044, NPV 0.9381 (patient-level bootstrap
+  ×2000, seed 42). models/v2_biomedclip_operating_point.json,
+  reports/v2_biomedclip_roc_oof_operating_point.png.
+- **FREEZE (v2_biomedclip):** 5 ckpts + hflip TTA + T=2.8645 +
+  thr=0.2007. No model changes after this commit; next step is the
+  single-shot Q2c external run.
+
+Internal comparison (descriptive): v2 trails v1 on pooled OOF AUC
+(−0.0145) and on internal specificity at the respective operating
+points (0.7177 vs 0.7713).
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —

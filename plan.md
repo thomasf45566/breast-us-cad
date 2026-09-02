@@ -177,10 +177,13 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       model.init_state_dict + configs/v2_biomedclip.yaml, 1-epoch fold-5
       smoke: val AUC 0.8434, 142.7 s/epoch (wandb
       v2_biomedclip_fold5_smoke). Q2b not launched.
-- [ ] Q2b: 5-fold CV per v1 protocol exactly (same aug/optim/epochs),
-      hflip TTA, temperature on pooled OOF, sens ≥ 0.90 threshold on
-      calibrated OOF → FREEZE models/v2_biomedclip_fold{1-5}.pt +
+- [x] Q2b (2026-09-02): 5-fold CV per v1 protocol (wandb group
+      cv_biomedclip, mean best-val AUC 0.9170 ± 0.0220, trails v1 on all
+      5 folds); pooled OOF hflip-TTA AUC 0.9109 (v1 0.9254); T = 2.8645;
+      thr 0.2007 → sens 0.9012 / spec 0.7177 on calibrated OOF → FREEZE
+      models/v2_biomedclip_fold{1-5}.pt +
       v2_biomedclip_{calibration,operating_point}.json
+      (src/v2_biomedclip_freeze.py; v1 artifacts asserted untouched)
 - [ ] Q2c: single-shot external eval on 4 cohorts (frozen keep-lists,
       preprocessing (c)); mechanical verdict per (u) criterion
 - [ ] Backbone decision for Q1 per rule (v), recorded with Q2 verdict

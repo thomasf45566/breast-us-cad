@@ -1,0 +1,12 @@
+{
+  "method": "temperature_scaling",
+  "temperature": 2.8644654750823975,
+  "logit_convention": "logit of TTA-averaged prob, p clipped to [1e-6, 1-1e-6]",
+  "fit_on": "pooled OOF, reports/v2_biomedclip_oof_preds.csv, column y_prob_tta",
+  "n": 1875,
+  "ece_15bin_before": 0.09757680430362624,
+  "ece_15bin_after": 0.029587702258427936,
+  "nll_before": 0.5478794222996504,
+  "nll_after": 0.346425658425192,
+  "auc": 0.9108663905331595
+}

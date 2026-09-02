@@ -1,0 +1,33 @@
+{
+  "rule": "sensitivity >= 0.9 with maximum specificity",
+  "threshold": 0.20070531964302063,
+  "probability_space": "calibrated (temperature-scaled) hflip-TTA ensemble prob",
+  "temperature": 2.8644654750823975,
+  "calibration_file": "models/v2_biomedclip_calibration.json",
+  "fit_on": "pooled OOF, reports/v2_biomedclip_oof_preds.csv, column y_prob_tta",
+  "n_images": 1875,
+  "auc": 0.9108663905331595,
+  "confusion": {
+    "tp": 547,
+    "fp": 358,
+    "fn": 60,
+    "tn": 910
+  },
+  "sensitivity": 0.9011532125205931,
+  "specificity": 0.7176656151419558,
+  "ppv": 0.6044198895027625,
+  "npv": 0.9381443298969072,
+  "bootstrap": {
+    "n_patients": 1064,
+    "n_boot": 2000,
+    "seed": 42,
+    "sensitivity_ci95": [
+      0.8715252976190476,
+      0.9293939670376452
+    ],
+    "specificity_ci95": [
+      0.688714098954454,
+      0.748065501087502
+    ]
+  }
+}
