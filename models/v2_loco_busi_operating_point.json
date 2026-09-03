@@ -1,0 +1,20 @@
+{
+  "rule": "sensitivity >= 0.9 with maximum specificity",
+  "threshold": 0.4115960896015167,
+  "probability_space": "calibrated (temperature-scaled) hflip-TTA single-model prob",
+  "temperature": 2.4799695014953613,
+  "calibration_file": "models/v2_loco_busi_calibration.json",
+  "fit_on": "LOCO hold_out=busi pooled training-side val",
+  "n_images": 695,
+  "auc": 0.9532821665849577,
+  "confusion": {
+    "tp": 269,
+    "fp": 50,
+    "fn": 29,
+    "tn": 347
+  },
+  "sensitivity": 0.9026845637583892,
+  "specificity": 0.8740554156171285,
+  "ppv": 0.8432601880877743,
+  "npv": 0.9228723404255319
+}

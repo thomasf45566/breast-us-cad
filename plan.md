@@ -214,7 +214,11 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       — breast DONE (2026-09-03, src/v2_loco.py, wandb v2_loco_breast):
       AUC 0.8657 vs v1-single 0.8467 (+0.019), spec 0.7532 vs 0.4740
       (+0.279) at sens 0.8571 — both (t) branches satisfied on this
-      cohort. busi/gdph/sysucc pending.
+      cohort.
+      — busi DONE (2026-09-03, wandb v2_loco_busi): AUC 0.9371 vs
+      v1-single 0.9069 (+0.030, branch A satisfied); spec 0.8796 vs
+      0.6065 (+0.273) but sens 0.8466 < 0.85 → branch B NOT satisfied
+      on this cohort. gdph/sysucc pending.
 - [ ] Q1c: comparator table — v1 fold-5 single + TTA derived from saved
       v2_members_*.csv (m5 cols, T=2.3644, thr 0.2683; no v1 re-run),
       v1 full ensemble as reference; mechanical verdict per (t) criterion

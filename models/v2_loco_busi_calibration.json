@@ -1,0 +1,9 @@
+{
+  "method": "temperature_scaling",
+  "temperature": 2.4799695014953613,
+  "logit_convention": "logit of TTA-averaged prob, p clipped to [1e-6, 1-1e-6]",
+  "fit_on": "LOCO hold_out=busi pooled training-side val (hflip TTA)",
+  "n": 695,
+  "auc_val_tta": 0.9532821665849577,
+  "best_epoch": 17
+}

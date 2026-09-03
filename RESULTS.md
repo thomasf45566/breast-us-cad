@@ -909,6 +909,29 @@ only, external-v1): AUC 0.8542, sens 0.9184, spec 0.4091.
 reports/v2_loco_breast_preds.csv, v2_loco_{roc,cm}_breast.png,
 summary row in reports/v2_loco_summary.csv.
 
+### Run 2 — hold_out = BUSI (2026-09-03, wandb v2_loco_busi)
+
+Train 3,255 / val 695 (pos_weight 1.161); early stop at epoch 24, best
+epoch 17, pooled val TTA AUC 0.9533; T = 2.4800, thr = 0.4116 (val sens
+0.9027 / spec 0.8741). models/v2_loco_busi.pt + run JSONs frozen before
+the held-out pass.
+
+| n=379, image-level bootstrap | AUC (95% CI) | sens | spec | benign median p_cal |
+|---|---|---|---|---|
+| LOCO (thr 0.4116) | **0.9371** (0.912–0.959) | 0.8466 | 0.8796 | 0.0512 |
+| v1-single (thr 0.2683) | 0.9069 (0.873–0.937) | 0.9387 | 0.6065 | 0.1501 |
+
+ΔAUC **+0.0302** (branch A satisfied on this cohort), Δspec **+0.2731**
+but held-out sens 0.8466 falls below the 0.85 clause — branch B is NOT
+satisfied on this cohort (verdict is taken only after all four runs).
+Same trade as Run 1, slightly steeper: the LOCO threshold gives up
+sensitivity (0.939 → 0.847) for specificity (+0.27); here the sens cost
+crosses the pre-registered floor. Benign median p_cal 0.0512 — the
+lowest benign shift of any external eval so far. v1 full ensemble
+(reference only, external-v1): AUC 0.9339, sens 0.9571, spec 0.6296.
+reports/v2_loco_busi_preds.csv, v2_loco_{roc,cm}_busi.png,
+summary row in reports/v2_loco_summary.csv.
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —
