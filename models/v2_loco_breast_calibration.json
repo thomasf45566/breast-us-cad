@@ -1,0 +1,9 @@
+{
+  "method": "temperature_scaling",
+  "temperature": 1.221592903137207,
+  "logit_convention": "logit of TTA-averaged prob, p clipped to [1e-6, 1-1e-6]",
+  "fit_on": "LOCO hold_out=breast pooled training-side val (hflip TTA)",
+  "n": 714,
+  "auc_val_tta": 0.9388216560509555,
+  "best_epoch": 4
+}

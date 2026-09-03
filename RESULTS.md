@@ -868,6 +868,47 @@ Bootstrap ×2000 seed 42, case-level BrEaST / image-level otherwise
   therefore speaks to THIS substitute init, not to ultrasound MIM
   pretraining in general.
 
+## v2: Multi-source LOCO training (Q1)
+
+Protocol: Amendment 4 (t); backbone fixed by rule (v) after the Q2
+verdict: **v1 ImageNet vit_base_patch16_224** (identical to v1).
+Pipeline: src/v2_loco.py over v2_data.build_multisource_df — one model
+per run, v1 hyperparameters + early stop (patience 7) on pooled val AUC;
+the run's temperature and sens ≥ 0.90 threshold are fit on the pooled
+training-side validation only (hflip TTA), then the held-out cohort is
+scored ONCE (script refuses a second run). Comparator per (t): v1 fold-5
+single model + TTA recomputed from the SAVED reports/v2_members_*.csv
+(m5 columns, T=2.3644, thr 0.2683) — no v1 inference. LIMITATION stated
+per (t): external val slices are image-level (correlated images may sit
+on both sides, flattering val metrics) and the pooled val mixture's
+prevalence matches no single site.
+
+Pre-registered criterion (t), decided over all four runs: claim only if
+ΔAUC ≥ +0.01 vs v1-single on ≥ 3/4 held-out cohorts, OR Δspec ≥ +0.10
+on ≥ 3/4 with that run's held-out sens ≥ 0.85.
+
+### Run 1 — hold_out = BrEaST (2026-09-03, wandb v2_loco_breast)
+
+Train 3,363 / val 714 (pos_weight 1.163); early stop at epoch 11, best
+epoch 4, pooled val TTA AUC 0.9388; T = 1.2216, thr = 0.4738 (val sens
+0.9045 / spec 0.8350). models/v2_loco_breast.pt + run JSONs frozen
+before the held-out pass.
+
+| n=252, case-level bootstrap | AUC (95% CI) | sens | spec | benign median p_cal |
+|---|---|---|---|---|
+| LOCO (thr 0.4738) | **0.8657** (0.817–0.910) | 0.8571 | 0.7532 | 0.2230 |
+| v1-single (thr 0.2683) | 0.8467 (0.794–0.895) | 0.9388 | 0.4740 | 0.2789 |
+
+ΔAUC **+0.0190**, Δspec **+0.2792** at held-out sens 0.8571 (≥ 0.85) —
+this cohort satisfies both branches of the (t) criterion (verdict is
+taken only after all four runs). Note the operating-point trade: the
+LOCO threshold trades v1-single's sensitivity (0.939 → 0.857) for a
+large specificity gain; the val-mixture threshold transfers far better
+to BrEaST than v1's internal threshold did. v1 full ensemble (reference
+only, external-v1): AUC 0.8542, sens 0.9184, spec 0.4091.
+reports/v2_loco_breast_preds.csv, v2_loco_{roc,cm}_breast.png,
+summary row in reports/v2_loco_summary.csv.
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —

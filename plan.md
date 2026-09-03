@@ -211,6 +211,10 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       early stop + temperature + sens ≥ 0.90 threshold on validation
       only, single model + hflip TTA, then SINGLE-SHOT held-out eval
       (AUC + CI, sens/spec at run threshold, benign median p_cal)
+      — breast DONE (2026-09-03, src/v2_loco.py, wandb v2_loco_breast):
+      AUC 0.8657 vs v1-single 0.8467 (+0.019), spec 0.7532 vs 0.4740
+      (+0.279) at sens 0.8571 — both (t) branches satisfied on this
+      cohort. busi/gdph/sysucc pending.
 - [ ] Q1c: comparator table — v1 fold-5 single + TTA derived from saved
       v2_members_*.csv (m5 cols, T=2.3644, thr 0.2683; no v1 re-run),
       v1 full ensemble as reference; mechanical verdict per (t) criterion

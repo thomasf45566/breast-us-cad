@@ -1,0 +1,20 @@
+{
+  "rule": "sensitivity >= 0.9 with maximum specificity",
+  "threshold": 0.47379565238952637,
+  "probability_space": "calibrated (temperature-scaled) hflip-TTA single-model prob",
+  "temperature": 1.221592903137207,
+  "calibration_file": "models/v2_loco_breast_calibration.json",
+  "fit_on": "LOCO hold_out=breast pooled training-side val",
+  "n_images": 714,
+  "auc": 0.9388216560509555,
+  "confusion": {
+    "tp": 284,
+    "fp": 66,
+    "fn": 30,
+    "tn": 334
+  },
+  "sensitivity": 0.9044585987261147,
+  "specificity": 0.835,
+  "ppv": 0.8114285714285714,
+  "npv": 0.9175824175824175
+}
