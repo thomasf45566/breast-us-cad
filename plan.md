@@ -229,10 +229,20 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       0.7163 vs 0.4498 (+0.266) but sens 0.7997 < 0.85 → branch B NOT
       satisfied on this cohort. ALL FOUR RUNS COMPLETE; mechanical (t)
       verdict deferred to Q1c per plan.
-- [ ] Q1c: comparator table — v1 fold-5 single + TTA derived from saved
-      v2_members_*.csv (m5 cols, T=2.3644, thr 0.2683; no v1 re-run),
-      v1 full ensemble as reference; mechanical verdict per (t) criterion
-- [ ] RESULTS.md sections + plan.md checkboxes in the same commits
+- [x] Q1c (2026-09-04, src/v2_loco_report.py, saved predictions only,
+      point values asserted to reproduce v2_loco_summary.csv +
+      external-v1): full table (cohort × v1-single / v1-ensemble-ref /
+      LOCO) with PAIRED bootstrap CIs on ΔAUC and Δspec (protocol (d)
+      units, R=2000, seed 42) in reports/v2_loco_q1c_table.csv; figure
+      reports/v2_loco_summary.png (ROC overlays + benign p_cal
+      distributions w/ thresholds). MECHANICAL (t) VERDICT: branch A
+      4/4 (ΔAUC ≥ +0.01), branch B 2/4 (BUSI sens 0.8466, SYSUCC
+      0.7997 < 0.85) → criterion MET via branch A. Δspec paired CIs
+      exclude 0 on 4/4; ΔAUC CIs cross 0 on BrEaST + SYSUCC
+      (descriptive). Anomalies recorded: SYSUCC T=0.876 (sole clearly
+      underconfident fit) + best-epoch-2 convergence. RESULTS.md
+      "Q1c" + "Q1 verdict" sections. Tag v2-loco. v2 LINE 4 COMPLETE.
+- [x] RESULTS.md sections + plan.md checkboxes in the same commits
 
 ## Interview-day checklist
 - Live demo: https://huggingface.co/spaces/happytommy/breast-us-cad

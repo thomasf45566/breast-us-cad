@@ -979,6 +979,101 @@ AUC 0.8380, sens 0.9309, spec 0.4740.
 reports/v2_loco_sysucc_preds.csv, v2_loco_{roc,cm}_sysucc.png,
 summary row in reports/v2_loco_summary.csv.
 
+### Q1c — summary table + paired delta CIs (2026-09-04, src/v2_loco_report.py)
+
+Post-hoc reporting from SAVED artifacts only (LOCO preds CSVs, members
+CSVs for v1-single, external-v1 preds for the v1-ensemble reference) — no
+inference. Before writing anything the script asserts every point value
+reproduces reports/v2_loco_summary.csv (tolerance 1e-6, the float32 CSV
+round-trip floor) and the v1-ensemble AUCs reproduce the external-v1
+table. Delta CIs are PAIRED bootstrap (the same resamples scored under
+both models), protocol (d) units — case-level BrEaST, image-level
+otherwise (limitation as before) — 2000 iterations, seed 42.
+
+| Held-out cohort | Model | AUC (95% CI) | Sens | Spec | Benign median p_cal | ΔAUC vs v1-single (95% CI) | Δspec (95% CI) |
+|---|---|---|---|---|---|---|---|
+| BrEaST (n=252) | v1-single | 0.8467 (0.794–0.895) | 0.9388 | 0.4740 | 0.2789 | | |
+| | v1-ensemble (ref) | 0.8542 (0.802–0.902) | 0.9184 | 0.4091 | 0.3061 | | |
+| | v2-LOCO | **0.8657** (0.817–0.910) | 0.8571 | 0.7532 | 0.2230 | **+0.0190** (−0.0155 to +0.0550) | **+0.2792** (+0.1961 to +0.3618) |
+| BUSI (n=379) | v1-single | 0.9069 (0.873–0.937) | 0.9387 | 0.6065 | 0.1501 | | |
+| | v1-ensemble (ref) | 0.9339 (0.906–0.958) | 0.9571 | 0.6296 | 0.1739 | | |
+| | v2-LOCO | **0.9371** (0.912–0.959) | 0.8466 | 0.8796 | 0.0512 | **+0.0302** (+0.0074 to +0.0550) | **+0.2731** (+0.2087 to +0.3378) |
+| GDPH (n=810) | v1-single | 0.8899 (0.867–0.913) | 0.9520 | 0.4115 | 0.3393 | | |
+| | v1-ensemble (ref) | 0.9154 (0.895–0.934) | 0.9707 | 0.4529 | 0.2894 | | |
+| | v2-LOCO | **0.9454** (0.930–0.960) | 0.9600 | 0.7126 | 0.2783 | **+0.0556** (+0.0371 to +0.0743) | **+0.3011** (+0.2484 to +0.3573) |
+| SYSUCC (n=1013) | v1-single | 0.8319 (0.804–0.859) | 0.9337 | 0.4498 | 0.3178 | | |
+| | v1-ensemble (ref) | 0.8380 (0.810–0.866) | 0.9309 | 0.4740 | 0.2869 | | |
+| | v2-LOCO | **0.8444** (0.817–0.870) | 0.7997 | 0.7163 | 0.1706 | **+0.0126** (−0.0099 to +0.0346) | **+0.2664** (+0.2122 to +0.3206) |
+
+Thresholds: v1 rows at the frozen 0.2683 (T=2.3644); LOCO rows at each
+run's val-fit threshold (0.4738 / 0.4116 / 0.5410 / 0.4968). v1-ensemble
+is reference only per (t); the comparator for the criterion is v1-single.
+Descriptive, not part of the criterion: the paired ΔAUC CI excludes 0 on
+BUSI and GDPH but crosses 0 on BrEaST and SYSUCC; the paired Δspec CI
+excludes 0 on all four (lower bounds +0.20 to +0.25 on three).
+Figure: reports/v2_loco_summary.png — per cohort, ROC overlay (v1-single
+vs LOCO, both operating points marked) over the benign calibrated-
+probability distributions with both thresholds. Table CSV:
+reports/v2_loco_q1c_table.csv.
+
+### Q1 verdict (Amendment 4 (t), applied mechanically)
+
+| Held-out | Branch A: ΔAUC ≥ +0.01 | Branch B: Δspec ≥ +0.10 AND sens ≥ 0.85 |
+|---|---|---|
+| BrEaST | PASS (+0.0190) | PASS (+0.2792, sens 0.8571) |
+| BUSI | PASS (+0.0302) | fail (+0.2731, but sens 0.8466 < 0.85) |
+| GDPH | PASS (+0.0556) | PASS (+0.3011, sens 0.9600) |
+| SYSUCC | PASS (+0.0126) | fail (+0.2664, but sens 0.7997 < 0.85) |
+
+Branch A: **4/4** (≥ 3/4 required) → **criterion MET via branch A**.
+Branch B: 2/4 — not met on its own. Per (t) the claim is therefore made:
+**multi-source training reduces the domain-shift specificity collapse**,
+carried by the AUC branch; the specificity branch fails only through its
+sensitivity clause (Δspec ≥ +0.10 itself holds on 4/4, paired CIs
+excluding zero).
+
+**Mechanism, per cohort (benign-median deltas, LOCO − v1-single):**
+BrEaST −0.056, BUSI −0.099, GDPH −0.061, SYSUCC −0.147.
+- **BrEaST:** benign distribution barely moves (0.279 → 0.223) while the
+  operating threshold moves +0.21 — the spec gain (+0.28) is mostly
+  threshold placement: the val-mixture threshold lands above the BrEaST
+  benign mass where v1's internal threshold sat inside it (v1 benign
+  median 0.2789 > thr 0.2683).
+- **BUSI:** genuine distribution-shift reduction — benign median drops
+  0.150 → 0.051 (the lowest of any external eval in the project) on top
+  of ΔAUC +0.030 (CI excludes 0); threshold placement adds the rest.
+- **GDPH:** the largest separability gain (ΔAUC +0.056, CI +0.037 to
+  +0.074, LOCO/v1 AUC CIs disjoint); benign median stays high (0.278),
+  so the spec gain needs both the better ROC and the higher threshold.
+  Only cohort where LOCO sens also exceeds v1-single's (0.960 vs 0.952).
+- **SYSUCC:** the largest benign-median drop (0.318 → 0.171, nearly
+  halved) yet the smallest ΔAUC (+0.013, CI crosses 0) — the downshift
+  is not benign-specific: malignant probabilities move down with it,
+  and held-out sens falls to 0.7997 at the run threshold. The shift
+  marker improves without a matching separability gain.
+
+**Sensitivity portability (stated factually):** every LOCO run hit
+sens ≈ 0.90 on its pooled validation, but held-out sensitivity landed
+at 0.857 / 0.847 / 0.960 / 0.800 — 0.80–0.86 on 3/4 cohorts, below the
+0.85 floor on two — whereas v1's frozen threshold held sens ≥ 0.92 on
+all four (single and ensemble). The multi-source threshold buys its
++0.27 specificity at a sensitivity cost that itself does not port
+reliably; the val-sens ≥ 0.90 rule does not guarantee held-out
+sens ≥ 0.85.
+
+**Descriptive anomalies (recorded, not interpreted):** (i) the SYSUCC
+run's temperature is 0.876 — the smallest of the four and the only one
+materially below 1, i.e. the sole clearly underconfident case (GDPH's
+0.9545 sits just under unity; every other temperature in the project is
+> 1); (ii) the same run converged at best epoch 2 (early stop at 9) —
+the multi-source pool saturates on SYSUCC-adjacent signal almost
+immediately.
+
+Tag: v2-loco. Artifacts: src/v2_loco_report.py,
+reports/v2_loco_q1c_table.csv, reports/v2_loco_summary.png (point
+values asserted against reports/v2_loco_summary.csv and the external-v1
+records at run time).
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —
