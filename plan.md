@@ -207,7 +207,7 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       BUSI 0/379); parity check asserts load/normalize identical and
       the difference confined to that kernel dispatch
       (`python src/v2_data.py --sweep` reproduces the sweep)
-- [ ] Q1b: four LOCO runs (hold out breast/busi/gdph/sysucc); per run:
+- [x] Q1b: four LOCO runs (hold out breast/busi/gdph/sysucc); per run:
       early stop + temperature + sens ≥ 0.90 threshold on validation
       only, single model + hflip TTA, then SINGLE-SHOT held-out eval
       (AUC + CI, sens/spec at run threshold, benign median p_cal)
@@ -223,7 +223,12 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
       scripts/v2_loco_queue.sh): AUC 0.9454 vs v1-single 0.8899
       (+0.056), spec 0.7126 vs 0.4115 (+0.301) at sens 0.9600 — both
       (t) branches satisfied on this cohort; only run so far where LOCO
-      sens also exceeds v1-single's. sysucc pending (queued next).
+      sens also exceeds v1-single's.
+      — sysucc DONE (2026-09-03, wandb v2_loco_sysucc, same queue): AUC
+      0.8444 vs v1-single 0.8319 (+0.0126, branch A satisfied); spec
+      0.7163 vs 0.4498 (+0.266) but sens 0.7997 < 0.85 → branch B NOT
+      satisfied on this cohort. ALL FOUR RUNS COMPLETE; mechanical (t)
+      verdict deferred to Q1c per plan.
 - [ ] Q1c: comparator table — v1 fold-5 single + TTA derived from saved
       v2_members_*.csv (m5 cols, T=2.3644, thr 0.2683; no v1 re-run),
       v1 full ensemble as reference; mechanical verdict per (t) criterion

@@ -1,0 +1,20 @@
+{
+  "rule": "sensitivity >= 0.9 with maximum specificity",
+  "threshold": 0.49681493639945984,
+  "probability_space": "calibrated (temperature-scaled) hflip-TTA single-model prob",
+  "temperature": 0.8760985732078552,
+  "calibration_file": "models/v2_loco_sysucc_calibration.json",
+  "fit_on": "LOCO hold_out=sysucc pooled training-side val",
+  "n_images": 600,
+  "auc": 0.9327272727272727,
+  "confusion": {
+    "tp": 199,
+    "fp": 66,
+    "fn": 21,
+    "tn": 314
+  },
+  "sensitivity": 0.9045454545454545,
+  "specificity": 0.8263157894736842,
+  "ppv": 0.7509433962264151,
+  "npv": 0.9373134328358209
+}

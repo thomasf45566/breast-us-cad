@@ -955,6 +955,30 @@ v1 full ensemble (reference only, external-v1): AUC 0.9154, sens
 0.9707, spec 0.4529. reports/v2_loco_gdph_preds.csv,
 v2_loco_{roc,cm}_gdph.png, summary row in reports/v2_loco_summary.csv.
 
+### Run 4 — hold_out = SYSUCC (2026-09-03, wandb v2_loco_sysucc)
+
+Train 2,716 / val 600 (pos_weight 1.655); early stop at epoch 9, best
+epoch 2, pooled val TTA AUC 0.9327; T = 0.8761, thr = 0.4968 (val sens
+0.9045 / spec 0.8263). models/v2_loco_sysucc.pt + run JSONs frozen
+before the held-out pass.
+
+| n=1013, image-level bootstrap | AUC (95% CI) | sens | spec | benign median p_cal |
+|---|---|---|---|---|
+| LOCO (thr 0.4968) | **0.8444** (0.817–0.870) | 0.7997 | 0.7163 | 0.1706 |
+| v1-single (thr 0.2683) | 0.8319 (0.804–0.859) | 0.9337 | 0.4498 | 0.3178 |
+
+ΔAUC **+0.0126** (branch A satisfied on this cohort); Δspec **+0.2664**
+but held-out sens 0.7997 falls well below the 0.85 clause — branch B is
+NOT satisfied on this cohort (verdict is taken only after all four
+runs; this completes the four). The hardest cohort for every model so
+far, and the steepest operating-point trade: the LOCO threshold gives
+up 0.134 sensitivity for +0.27 specificity. Best epoch 2 with early
+stop at 9 — the multi-source pool saturates on SYSUCC-adjacent signal
+almost immediately. v1 full ensemble (reference only, external-v1):
+AUC 0.8380, sens 0.9309, spec 0.4740.
+reports/v2_loco_sysucc_preds.csv, v2_loco_{roc,cm}_sysucc.png,
+summary row in reports/v2_loco_summary.csv.
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —
