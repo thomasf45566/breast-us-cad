@@ -932,6 +932,29 @@ lowest benign shift of any external eval so far. v1 full ensemble
 reports/v2_loco_busi_preds.csv, v2_loco_{roc,cm}_busi.png,
 summary row in reports/v2_loco_summary.csv.
 
+### Run 3 — hold_out = GDPH (2026-09-03, wandb v2_loco_gdph)
+
+Train 2,889 / val 630 (pos_weight 1.190); early stop at epoch 11, best
+epoch 4, pooled val TTA AUC 0.9276; T = 0.9545, thr = 0.5410 (val sens
+0.9011 / spec 0.8011). models/v2_loco_gdph.pt + run JSONs frozen before
+the held-out pass.
+
+| n=810, image-level bootstrap | AUC (95% CI) | sens | spec | benign median p_cal |
+|---|---|---|---|---|
+| LOCO (thr 0.5410) | **0.9454** (0.930–0.960) | 0.9600 | 0.7126 | 0.2783 |
+| v1-single (thr 0.2683) | 0.8899 (0.867–0.913) | 0.9520 | 0.4115 | 0.3393 |
+
+ΔAUC **+0.0556**, Δspec **+0.3011** at held-out sens 0.9600 (≥ 0.85) —
+this cohort satisfies both branches of the (t) criterion (verdict is
+taken only after all four runs), and it is the only run so far where
+the LOCO model's held-out sensitivity also EXCEEDS v1-single's
+(0.9600 vs 0.9520): no sens-for-spec trade was needed. Largest ΔAUC of
+the three runs, and the CIs do not overlap. Note T = 0.9545 < 1 — the
+pooled-val fit sharpens rather than softens this run's probabilities.
+v1 full ensemble (reference only, external-v1): AUC 0.9154, sens
+0.9707, spec 0.4529. reports/v2_loco_gdph_preds.csv,
+v2_loco_{roc,cm}_gdph.png, summary row in reports/v2_loco_summary.csv.
+
 ## Reproducibility notes
 
 **Resize-kernel dispatch (2026-09-01, read-only diagnostic —

@@ -1,0 +1,20 @@
+{
+  "rule": "sensitivity >= 0.9 with maximum specificity",
+  "threshold": 0.5409913659095764,
+  "probability_space": "calibrated (temperature-scaled) hflip-TTA single-model prob",
+  "temperature": 0.9544717073440552,
+  "calibration_file": "models/v2_loco_gdph_calibration.json",
+  "fit_on": "LOCO hold_out=gdph pooled training-side val",
+  "n_images": 630,
+  "auc": 0.9276428520126,
+  "confusion": {
+    "tp": 246,
+    "fp": 71,
+    "fn": 27,
+    "tn": 286
+  },
+  "sensitivity": 0.9010989010989011,
+  "specificity": 0.8011204481792717,
+  "ppv": 0.7760252365930599,
+  "npv": 0.9137380191693291
+}
