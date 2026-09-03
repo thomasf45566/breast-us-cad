@@ -1,0 +1,33 @@
+# v2 Q1 (Amendment 4 (t)): multi-source LOCO training. Backbone fixed by
+# rule (v) after the Q2 verdict (NOT MET): v1 ImageNet vit_base_patch16_224.
+# Hyperparameters identical to configs/vit.yaml; early stopping added per
+# (t) (validation-AUC patience below). hold_out and paths come from the
+# v2_loco.py command line.
+data:
+  img_size: 224   # must stay 224 for vit_base_patch16_224
+  batch_size: 32
+  num_workers: 4
+
+model:
+  name: vit_base_patch16_224
+  pretrained: true
+
+train:
+  epochs: 30
+  early_stop_patience: 7   # stop after 7 epochs without a new best val AUC
+  optimizer: adamw
+  scheduler: cosine
+  loss: bce_with_logits
+  pos_weight: auto
+  lr: 1.0e-4
+  warmup_epochs: 3   # linear warmup (0.1x -> 1x lr) before cosine; ViT is warmup-sensitive
+  weight_decay: 1.0e-4
+  seed: 42
+  device: mps
+
+wandb:
+  project: breast-us-cad
+  group: v2_loco
+
+paths:
+  reports_dir: reports
