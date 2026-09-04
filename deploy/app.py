@@ -70,6 +70,14 @@ calibrated on internal validation only and does not transfer across scanners
 and populations. The Grad-CAM heatmap is a single-model visualization, not the
 ensemble decision path, and the lesion contour is a separate segmentation
 model provided for orientation only.
+
+**Follow-up (v2 recalibration study).** A post-hoc study on the saved external
+predictions found that re-selecting the decision threshold with only 10–20
+locally labeled images already recovers near-oracle *median* specificity at a
+new site, but draw-to-draw variance stays wide until roughly 100–200 labels.
+The operating threshold is therefore site-dependent by design — the frozen
+internal threshold used in this demo is a research operating point, not one
+that transfers across sites.
 """
 
 
