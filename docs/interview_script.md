@@ -2,13 +2,31 @@
 
 > 建立於 2026-09-07(plan.md P5)。版本庫、Drive 與先前 session 中均無此檔的舊版,故為新建;
 > 每一數字皆取自 docs/report.md / RESULTS.md,不引入任何新數字。研究原型,非醫療器材。
-> 結構:A 開場 60 秒 → 依對方興趣展開 B1–B6(各約 45 秒)→ C 常見追問。
+> 結構:A 三分鐘開場(五個計時節拍)→ 依對方興趣展開 B1–B6(各約 45 秒)→ C 常見追問。
+> 節拍結構取自 2026-09 的講稿草稿 v2;該草稿的所有數字與主張已作廢,本檔每句內容均改寫自修正版 report。
 
 ---
 
-## A. 開場(約 60 秒)
+## A. 三分鐘開場(五個計時節拍;粗體為錨句)
 
-我做的是乳房超音波良惡性分類器,重點不在模型,而在**驗證紀律**。用公開的 BUS-BRA(1,875 張、1,064 位病人)按官方 patient-level 五折訓練 ViT,凍結模型、校準與 operating point 之後,依事先寫進版本控制的 protocol,在四個外部世代——波蘭 BrEaST、埃及 BUSI、廣東 GDPH、中山 SYSUCC,共 2,454 張——**只跑一次**。結果:AUC 0.84 到 0.93,判別力跨洲際可攜;但凍結閾值下 sensitivity 雖然都 ≥ 0.918,specificity 從內部 0.77 掉到 0.41–0.63——operating point 不可攜。後續四個 amendments 從部署端與訓練端分別逼近,結論一致:**部署的最後一哩是用本地資料設定 operating point**。整個專案剛經過一次獨立對抗式稽核,文件已逐句修正,程式碼、權重、fold 檔與 DOI 都公開。
+**[0:00 臨床鉤子]**
+各位老師好。我用三分鐘介紹 PGY 期間做的乳房超音波 AI 專案。起點是門診每天的問題:台灣 55 歲以下女性逾八成屬緻密乳房,超音波是第一線工具,但判讀變異很大——我在兩個中國世代看到,兩位放射科醫師以 BI-RADS ≥ 4a 為陽性的 κ 只有 0.22 與 0.51。**問題不只是「AI 準不準」,而是「AI 換一家醫院還準不準」。**
+
+**[0:30 我做了什麼]**
+用巴西病理確診的公開資料集 BUS-BRA,1,875 張、1,064 位病人,按官方 patient-level 五折訓練 ViT。堅持三件事:切分一律以病人為單位;**operating point 用臨床邏輯預先定好——sensitivity ≥ 0.90、寧可多切片不漏癌——然後凍結**;凍結之後才在四個外部世代——波蘭 BrEaST、埃及 BUSI、廣東 GDPH、中山 SYSUCC,2,454 張——**只跑一次**,規則在看到數字前寫進版本控制(內部 pre-registration,沒有外部時間戳,這點我後面會講)。內部 pooled OOF AUC 0.925;單模型五折 CV 0.931,但那是 best-epoch 值,事後量化的樂觀量約 0.01。
+
+**[1:10 現場 demo]**
+這是線上展示系統。上傳一張影像,它給 U-Net 病灶輪廓、fold-5 單模型的 Grad-CAM 熱圖、和校準後的惡性機率。這張良性,16.6%,LIKELY BENIGN;這張惡性,69.9%,SUSPICIOUS,熱圖落在病灶本體。
+*(等待約 7 秒時說:)* 它現在在跑 5 個 checkpoint × 原圖與水平翻轉共 10 次前向,取平均後做 temperature 校準,再跟凍結閾值 0.2683 比。**決定來自 ensemble,熱圖只是其中一個模型的解釋,不是決策路徑。** 本機 0.5 秒,Space 上約 6–9 秒。
+
+**[1:50 我發現了什麼]**
+**判別力可以跨洲際遷移——四世代 AUC 0.84 到 0.93;但 operating point 不行。** 良性影像的校準機率中位數從 0.06 右移到 0.17–0.31,specificity 從 0.77 掉到 0.41–0.63。Sensitivity 四世代全部 ≥ 0.918——誤判方向是假陽性,不是漏診;這算不算「安全」,我沒做危害分析,不敢下結論。跟放射科醫師比:**在 SYSUCC,模型落在兩位判讀者之間;在 GDPH,模型兩軸都低於兩位。** 模型的假陽性和較保守的那位醫師高度重疊(reader2 把其中 64% 評為 ≥ 4a),和最好的那位幾乎不重疊(reader1:14%)。
+
+**[2:20 我怎麼修它]**
+兩端都做了 pre-registered 實驗。部署端:模擬本地重校準——**pre-registered k* 是 10–20 例,中位數上就接近 oracle specificity;但 post-hoc 的可靠性判準只有 GDPH 在 k=200 達標,k=10 的 sensitivity 中位數 0.83–0.85。** 訓練端:留一世代的多來源訓練,**判準經 AUC 分支達成(4/4),但 2/4 的 paired ΔAUC CI 含零、specificity 分支 2/4 未過,增益大宗是閾值定位**;醫學領域預訓練骨幹(BiomedCLIP)依判準 NOT CLAIMED。**四條線指向同一個結論:部署的最後一哩,是用本地資料定 operating point。**
+
+**[2:50 收尾]**
+所以我在台大想做的第一步很具體:約一百例本地病例,不動模型、只定閾值——起始候選是四個外部 in-sample 閾值 0.331 / 0.376 / 0.385 / 0.448 之一,但必須本地重選——protocol 先登 OSF 再算。第二步,BI-RADS 3、4A 病灶追蹤 upgrade 預測;第三步,腋下淋巴結轉移預測——讓超音波 AI 從「要不要切片」走到「要不要清腋下」。這個專案剛經過獨立稽核,文件逐句修正,程式碼、權重、fold 檔與 DOI 全部公開。謝謝各位老師。
 
 ---
 
@@ -21,7 +39,7 @@
 公開資料不能直接信。我對五個集合做全對感知雜湊比對,12,056,505 對,d ≤ 8 為候選:SYSUCC 有 35% 重複、39 個標籤衝突,同一張圖同時被標良性和惡性;BUSI_WHU 標籤對映驗不出來,排除。結論要講精確:是「pHash d ≤ 8 無近重複」,不是「零重疊」,因為這方法排不掉 d > 8 的同病人再掃。外部驗證單次執行、結果直接入帳:四世代 AUC 0.854 / 0.934 / 0.915 / 0.838,specificity 崩落伴隨良性校準機率中位數從 0.06 右移到 0.17–0.31——模型把外部的良性看得「更可疑」。誤判方向是假陽性不是漏診,但這方向算不算安全,我沒做危害分析,不敢說。
 
 ### B3 — 判讀者比較
-GDPH 和 SYSUCC 各有兩位放射科醫師的 BI-RADS,以 ≥ 4a 為陽性。On SYSUCC the model lies between the two readers; on GDPH it is below both. Its false positives overlap heavily with the more conservative reader (reader2 called 64% of them ≥4a) and barely with the best reader (reader1: 14%). κ 0.22 和 0.51 是兩位醫師之間的一致性,跟模型無關,只說明一致性工具有需求。我原本寫「模型和醫師被同一批影像用同一種方式騙」,稽核指出沒有逐影像分析支持;後來做了交叉表,對 GDPH 最好的那位醫師來說根本不成立——模型 86% 的假陽性她評 ≤ 3。
+GDPH 和 SYSUCC 各有兩位放射科醫師的 BI-RADS,以 ≥ 4a 為陽性。On SYSUCC the model lies between the two readers; on GDPH it is below both. Its false positives overlap heavily with the more conservative reader (reader2 called 64% of them ≥4a) and barely with the best reader (reader1: 14%). κ 0.22 和 0.51 是兩位醫師之間的一致性,跟模型無關,只說明一致性工具有需求。這是描述性的逐影像交叉表,沒有做檢定;判讀者看的是完整檢查,模型只看單張截圖,資訊不對等。
 
 ### B4 — 部署端:本地重校準與 abstention
 Amendment 2:模擬新場域抽 k 張本地標註重選閾值。Pre-registered k* 10–20; the post-hoc reliability criterion was reached only on GDPH at k=200; k=10 sensitivity median 0.83–0.85(BrEaST/BUSI)。也就是中位數上 10–20 張就接近 oracle,但單一場域抽 10 張可能落在任何地方。任何單調校準接本地閾值,結構上等價於直接重定閾值——本地標籤的價值全在閾值定位。Amendment 3 問 ensemble 分歧能不能當轉介信號:判準 0/4,因為 sens 保留條款全部沒過;信號本身在三個世代 AUROC 0.77–0.86,SYSUCC 反而輸給 margin 基線。依規定不放寬;要改判準就是新的 pre-registration。
