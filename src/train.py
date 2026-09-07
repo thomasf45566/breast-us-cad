@@ -91,6 +91,29 @@ def build_scheduler(cfg: dict, optimizer: torch.optim.Optimizer, epochs: int):
     )
 
 
+def checkpoint_payload(
+    cfg: dict,
+    model_state: dict,
+    *,
+    epoch: int,
+    val_auc: float,
+    train_folds: list[int],
+    val_folds: list[int],
+) -> dict:
+    """Checkpoint dict whose stored config records the folds ACTUALLY used.
+
+    cross_validate.py passes per-fold `train_folds`/`val_folds` that differ
+    from the YAML's `data.train_folds`/`data.val_folds`; before 2026-09-07 the
+    raw YAML was stored, so every existing checkpoint (models/cv_vit_fold{1-5}.pt,
+    cv_convnext_*, cv_effb0_*, cv_vit_cdrop_*, v2_biomedclip_fold{1-5}.pt)
+    carries `train_folds=[1,2,3,4], val_folds=[5]` regardless of fold — the
+    folds really used are in the wandb run configs (audit 2026-09-06 §1).
+    `cfg` is not mutated.
+    """
+    resolved = {**cfg, "data": {**cfg["data"], "train_folds": list(train_folds), "val_folds": list(val_folds)}}
+    return {"model_state": model_state, "config": resolved, "epoch": epoch, "val_auc": val_auc}
+
+
 @torch.no_grad()
 def predict(model: nn.Module, loader, device: str) -> tuple[np.ndarray, np.ndarray]:
     """Return (probs, labels) over a loader."""
@@ -191,12 +214,14 @@ def train_one_fold(
         if val_auc > best_auc:
             best_auc, best_epoch = val_auc, epoch
             torch.save(
-                {
-                    "model_state": model.state_dict(),
-                    "config": cfg,
-                    "epoch": epoch,
-                    "val_auc": val_auc,
-                },
+                checkpoint_payload(
+                    cfg,
+                    model.state_dict(),
+                    epoch=epoch,
+                    val_auc=val_auc,
+                    train_folds=train_folds,
+                    val_folds=val_folds,
+                ),
                 ckpt_path,
             )
             marker = f" -> saved {ckpt_path}"

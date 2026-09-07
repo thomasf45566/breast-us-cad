@@ -1089,3 +1089,169 @@ moves calibrated probabilities by max 0.0072 / median 0.0008 and flips
 within 0.002 of 0.2683). External-v1 numbers are untouched (canonical
 albumentations path; re-verified here to ≤ 3e-08, the MPS batch-composition
 floor); the deployed Space's port remains the defined deployment resize.
+
+## Post-hoc analyses responding to the 2026-09-06 audit
+
+**POST-HOC — not pre-registered.** Run 2026-09-07 (plan.md P2) from
+committed artifacts and local wandb run histories only: no retraining, no
+new external inference, no change to any frozen model, calibration or
+threshold. Each analysis answers one item of docs/AUDIT_2026-09-06.md; the
+per-row values are in reports/posthoc_*.csv. All reproduction asserts named
+below are executed by the scripts before anything is written.
+
+### POST-HOC 1 — Epoch-selection sensitivity (audit §1)
+
+Script: src/posthoc_epoch_selection.py · CSV: reports/posthoc_epoch_selection.csv
+· inputs: the five cv_vit wandb datastores (wandb/run-20260828_{084412,100807,
+113529,151003,164240}-*/run-*.wandb, matched by args `--config configs/vit.yaml
+--prefix cv_vit`; per-run val_folds read from the wandb config).
+train.py saves the checkpoint at the epoch with the best AUC on the held-out
+fold and cross_validate.py reports that fold's AUC, so every per-fold CV AUC
+in this file (0.9307 ± 0.0161 headline) is a max over 30 epochs on the fold
+it is reported on. Fixed epoch = median of the five best epochs
+{29, 10, 18, 16, 19} = 18. Assert: the best-epoch column reproduces
+reports/cv_vit_summary.csv (auc max |Δ| 1.1e-16; best_epoch identical).
+
+| fold | best epoch | AUC @ best epoch (reported) | AUC @ epoch 30 | AUC @ epoch 18 (fixed) | optimism best − fixed |
+|---|---|---|---|---|---|
+| 1 | 29 | 0.9526 | 0.9523 | 0.9419 | +0.0106 |
+| 2 | 10 | 0.9411 | 0.9306 | 0.9283 | +0.0128 |
+| 3 | 18 | 0.9193 | 0.9129 | 0.9193 | +0.0000 (fixed epoch = its best epoch) |
+| 4 | 16 | 0.9132 | 0.9098 | 0.9012 | +0.0120 |
+| 5 | 19 | 0.9272 | 0.9120 | 0.9069 | +0.0203 |
+| **mean ± SD** | — | **0.9307 ± 0.0161** | 0.9235 ± 0.0181 | **0.9195 ± 0.0164** | **0.0111 ± 0.0073** |
+
+Optimism best − final epoch: 0.0071 ± 0.0059. Reading (descriptive): the
+reported CV mean is about 0.011 AUC above a fixed-epoch protocol and about
+0.007 above the last epoch; the fold ranking is unchanged. The pooled OOF
+predictions used for T and the frozen threshold come from these best-epoch
+checkpoints and inherit the same selection. Because fold 3's best epoch is
+the median, its optimism is zero by construction and the mean is, if
+anything, slightly understated.
+
+### POST-HOC 2 — Nested (out-of-sample) internal operating point (audit §7)
+
+Script: src/posthoc_nested_threshold.py · CSV: reports/posthoc_nested_threshold.csv
+· inputs: reports/oof_vit_preds.csv (y_prob_tta), models/calibration.json
+(frozen T = 2.3644), the frozen rule from pick_threshold.py (highest
+threshold with sens ≥ 0.90). For each fold k the threshold is picked on the
+other four folds' calibrated OOF probabilities and evaluated on fold k.
+Assert: the in-sample recomputation reproduces models/operating_point.json
+(threshold 0.2683, sens 0.9028, spec 0.7713).
+
+| fold k | n | threshold from folds ≠ k | sens on k | spec on k |
+|---|---|---|---|---|
+| 1 | 376 | 0.2450 | 0.9426 | 0.8031 |
+| 2 | 385 | 0.2355 | 0.9760 | 0.5500 |
+| 3 | 366 | 0.3108 | 0.8500 | 0.8415 |
+| 4 | 365 | 0.3108 | 0.8487 | 0.8780 |
+| 5 | 383 | 0.2743 | 0.8843 | 0.8282 |
+| **mean ± SD** | — | 0.2753 ± 0.0354 | **0.9003 ± 0.0569** | **0.7802 ± 0.1315** |
+| pooled out-of-sample decisions | 1875 | (per-fold) | 0.9012 | 0.7784 |
+| in-sample (frozen 0.2683, reference) | 1875 | 0.2683 | 0.9028 | 0.7713 |
+
+Reading (descriptive): on average the out-of-sample operating point lands
+where the in-sample one does (sens 0.900 / spec 0.780 vs 0.903 / 0.771), so
+the in-sample optimism of the headline sens/spec is small in the mean. The
+per-fold spread is the real finding: the re-selected threshold moves
+between 0.236 and 0.311, held-out sensitivity ranges 0.849–0.976 and
+misses the 0.90 design floor on 3/5 folds, and specificity ranges
+0.550–0.878. The frozen threshold's "sens ≥ 0.90" is a property of the
+fitting set, not a guarantee on new patients — consistent with the
+external-v1 and Amendment 2 findings.
+
+### POST-HOC 3 — Overconfidence count (audit §2 item 6 / report §3.1)
+
+Script: src/posthoc_overconfidence.py · CSV: reports/posthoc_overconfidence.csv
+· input: reports/oof_vit_preds.csv. Malignant OOF images whose RAW
+(pre-temperature) probability lies in [0.6, 0.95]:
+
+| scope | column | n malignant | in [0.6, 0.95] | > 0.95 | < 0.6 |
+|---|---|---|---|---|---|
+| fold 5 | y_prob_tta (frozen path) | 121 | **32 (26.4%)** | 61 | 28 |
+| fold 5 | y_prob_plain | 121 | 27 (22.3%) | 69 | 25 |
+| all folds | y_prob_tta | 607 | 116 (19.1%) | 358 | 133 |
+| all folds | y_prob_plain | 607 | 97 (16.0%) | 383 | 127 |
+
+The sentence formerly in docs/report.md §3.1 ("121 malignant, only 3 with
+probability in 0.6–0.95") is NOT reproduced by any committed artifact: the
+count is 32/121 (TTA) or 27/121 (plain). It was deleted in P1; this table is
+the sourced replacement. About half of the malignant OOF probabilities
+exceed 0.95 before temperature scaling (T = 2.36 then pulls them toward the
+middle), which is the calibration-side overconfidence already described in
+the Calibration section.
+
+### POST-HOC 4 — Model false positives vs reader BI-RADS calls (audit §8 item 26)
+
+Script: src/posthoc_reader_concordance.py · CSV: reports/posthoc_reader_concordance.csv
+· inputs: reports/external_{gdph,sysucc}_preds.csv joined 1:1 with the two
+reader columns of BIRADS&FOLD.xlsx exactly as in birads_comparison.py
+(≥ 4a positive; rows with a non-BI-RADS reader value excluded from that
+reader's column only). Benign images only; no per-image concordance was
+pre-registered and nothing is tested.
+
+| cohort | reader | n benign | model FP | model FP also ≥ 4a by reader | model TN called ≥ 4a by reader | reader ≥ 4a on all benign |
+|---|---|---|---|---|---|---|
+| GDPH | reader1 | 435 | 238 | 34/238 = 0.143 | 12/197 = 0.061 | 0.106 |
+| GDPH | reader2 | 435 | 238 | 152/238 = 0.639 | 60/197 = 0.305 | 0.487 |
+| SYSUCC | reader1 | 289 | 152 | 81/152 = 0.533 | 20/137 = 0.146 | 0.349 |
+| SYSUCC | reader2 | 289 | 152 | 143/152 = 0.941 | 108/137 = 0.788 | 0.869 |
+
+Reading (descriptive): in all four reader × cohort cells the model's false
+positives are called ≥ 4a by the reader more often than its true negatives
+are, so the model's over-calls are enriched for images a radiologist also
+found suspicious. But the enrichment is far from agreement: on GDPH the
+high-specificity reader1 called only 14% of the model's 238 false positives
+≥ 4a, i.e. 86% of the model's GDPH over-calls are benigns reader1 rated
+BI-RADS ≤ 3. The report's former claim that model and readers were "misled
+by the same atypical benigns in the same way" is therefore not supported
+for reader1 and only loosely for reader2; it stays deleted.
+
+### train.py checkpoint metadata (audit §1, code fix in the same commit)
+
+train.checkpoint_payload now stores the folds actually used in each run
+(config.data.train_folds/val_folds as resolved by cross_validate.py);
+tests/test_checkpoint_config.py covers it. Existing checkpoints
+(models/cv_vit_fold{1-5}.pt, cv_convnext_*, cv_effb0_*, cv_vit_cdrop_*,
+v2_biomedclip_fold{1-5}.pt) still carry the raw YAML
+(train_folds=[1,2,3,4], val_folds=[5]) and are NOT rewritten — the folds
+really used are in the wandb run configs, verified by the audit.
+
+## Errata (2026-09-07)
+
+Appended after the independent audit (docs/AUDIT_2026-09-06.md). No line
+above this section has been edited since it was written; corrections are
+recorded here only, so that `git diff 2cbe1da HEAD -- RESULTS.md` continues
+to remove zero lines.
+
+- line 403: '1,879 BUS-BRA images (713 distinct sizes) + the 4 examples' →
+  '1,875 BUS-BRA images (713 distinct sizes), including the 4 bundled
+  examples' — reason: BUS-BRA has 1,875 images (models/operating_point.json
+  n_images = 1875); the four bundled examples are BUS-BRA images and were
+  counted a second time.
+- line 485: 'external sensitivity (≥ 0.92 everywhere in external-v1)' →
+  'external sensitivity (≥ 0.918 everywhere in external-v1)' — reason:
+  BrEaST sensitivity is 90/98 = 0.9184 (line 185, confusion line 201).
+- line 1058: "whereas v1's frozen threshold held sens ≥ 0.92 on all four
+  (single and ensemble)" → "held sens ≥ 0.918 on all four (ensemble; the
+  fold-5 single model ≥ 0.9337)" — reason: same BrEaST ensemble value
+  0.9184; single-model values 0.9388/0.9387/0.9520/0.9337 (Q1c table).
+- lines 1028–1033: 'Per (t) the claim is therefore made: **multi-source
+  training reduces the domain-shift specificity collapse**, carried by the
+  AUC branch; the specificity branch fails only through its sensitivity
+  clause (Δspec ≥ +0.10 itself holds on 4/4, paired CIs excluding zero).' →
+  'Per (t) the registered claim is made on branch A alone (ΔAUC ≥ +0.01 vs
+  the v1 fold-5 SINGLE model on 4/4). Stated in the same paragraph: the
+  paired ΔAUC CI includes zero on 2/4 cohorts (BrEaST −0.0155…+0.0550,
+  SYSUCC −0.0099…+0.0346); branch B fails 2/4 (sens 0.8466, 0.7997 < 0.85);
+  against the deployed v1 ensemble ΔAUC is +0.0115 / +0.0033 / +0.0301 /
+  +0.0064, only 2/4 ≥ +0.01; the registered question (protocol line 390)
+  concerned the specificity collapse, which the fired AUC branch does not
+  test directly; Δspec ≥ +0.10 holds on 4/4 with paired CIs excluding zero
+  but at different thresholds per model.' — reason: audit §4 "softening",
+  §7 and §8 item 5 — the wording exceeded what the fired branch tests.
+- lines 165–167 and 3–12 (context, not a numeric error): the per-fold CV
+  AUCs and the 0.9307 ± 0.0161 headline are best-epoch-on-the-reported-fold
+  values (POST-HOC 1 above: fixed-epoch mean 0.9195 ± 0.0164); the
+  sens 0.9028 / spec 0.7713 at the frozen threshold are in-sample
+  (POST-HOC 2: nested mean 0.9003 ± 0.0569 / 0.7802 ± 0.1315).
