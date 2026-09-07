@@ -238,6 +238,7 @@ bootstraps; pre-registration is internal only (above). Full list in
 ## Citation
 
 See [CITATION.cff](CITATION.cff) (version 1.0-audited). Zenodo DOI:
-pending (archive of tag `v1.0-audited` = commit 1f196a9, sha256
-`fcd270a5f6f9e30e…`, full record in [docs/PROVENANCE.md](docs/PROVENANCE.md)). Manuscript in
+pending (archive of tag `v1.0-audited` = commit fa193a8, sha256
+`bb45b685fa807fa1…`, full record in [docs/PROVENANCE.md](docs/PROVENANCE.md); the tag
+was re-pointed once before any deposition, for licensing corrections). Manuscript in
 preparation.

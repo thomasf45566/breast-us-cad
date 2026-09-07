@@ -55,7 +55,7 @@ externally notarised except where §5 and §7 say so.
 | P1 documentation corrections | 5652f0a | 2026-09-07 10:59:35 | docs/AUDIT_RESPONSE_2026-09-06.md |
 | P2 post-hoc analyses + errata | 35bdb43, f74647f | 2026-09-07 11:11:39, 11:13:21 | RESULTS.md append-only (0 lines removed vs 2cbe1da) |
 | P3 provenance part 1 | 67915b0 | 2026-09-07 12:12:38 | v2 weights on HF under v2/, CHECKSUMS.txt, fold file committed |
-| **`v1.0-audited`** (annotated; this deposition) | 1f196a9 | 2026-09-07 | Zenodo archive, sha256 in §7 |
+| **`v1.0-audited`** (annotated; this deposition; re-pointed once, §7) | fa193a8 | 2026-09-07 | Zenodo archive, sha256 in §7 |
 
 Git facts at HEAD of this document: 62 commits before the P4 commit, a
 single author/committer identity, author date == committer date on all
@@ -220,8 +220,8 @@ following applies, without exception:
   and the two v1 JSONs. Checkpoints are not in the archive; they are on
   Hugging Face with the checksums in `models/CHECKSUMS.txt`.
 - Metadata: `CITATION.cff` (version 1.0-audited) and `.zenodo.json`.
-- Tagged commit: `1f196a97917e610a3c3e21cac427b9ecb800f23f` (tag `v1.0-audited`, annotated, created 2026-09-07)
-- Archive SHA-256: `fcd270a5f6f9e30ec3eebf4de58c0af3c66b123105cae96fc11ea78e52e97853` (`git archive --format=zip --prefix=breast-us-cad-v1.0/ v1.0-audited`; note that an archive cannot contain its own hash, so this line lives in the commit after the tagged one)
+- Tagged commit: `fa193a83aafc264c44a82a5e361900858585add4` (tag `v1.0-audited`, annotated). Re-pointed on 2026-09-07 from 1f196a9 to this commit before any push or deposition; reason: licensing corrections (P4b LICENSE / THIRD_PARTY_DATA.md, P4c removal of GDPH/SYSUCC-image figures). The earlier archive (sha256 fcd270a5…) was never uploaded and is superseded.
+- Archive SHA-256: `bb45b685fa807fa14e83f01271f5256ab4cc933d5c43f53b176dd19b5b182c1e` (`git archive --format=zip --prefix=breast-us-cad-v1.0/ v1.0-audited`; note that an archive cannot contain its own hash, so this line lives in the commit after the tagged one)
 - Zenodo DOI: pending — the author uploads the archive and records the DOI
   here, in CITATION.cff, .zenodo.json and README.md.
 - Repository visibility: unchanged by this phase (author's decision).
