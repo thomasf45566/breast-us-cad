@@ -103,6 +103,33 @@ Read this at session start. Update the checkboxes when a task completes.
 ## Next (strict order)
 1. README / slides / one-pager / rehearsal
 
+## Audit response (docs/AUDIT_2026-09-06.md; playbook phases P1–P7)
+Independent adversarial audit archived unmodified at docs/AUDIT_2026-09-06.md
+(sha256 b0c07dff...; audit clone + scratchpad overlay deleted 2026-09-07,
+original repo verified untouched). One phase per session, in order:
+- [ ] P1 — Documentation corrections: fix docs/report.md, README.md,
+      CLAUDE.md, app/deploy About text, plan.md so every factual sentence
+      traces to RESULTS.md / external_protocol.md / committed artifacts;
+      produce docs/AUDIT_RESPONSE_2026-09-06.md item-by-item table.
+      Docs only — no changes to RESULTS.md, protocol, reports/, models/, src/.
+- [ ] P2 — Quantify disclosures post hoc: epoch-selection sensitivity,
+      nested out-of-sample operating point, overconfidence counts, optional
+      reader concordance — from committed artifacts + wandb history only;
+      new POST-HOC section in RESULTS.md; train.py stores resolved folds.
+- [ ] P3 — Provenance part 1: v2 checkpoints + BiomedCLIP export to HF
+      under v2/ with CHECKSUMS.txt; BUS-BRA fold file license check →
+      commit CSV or sha256+fetch script; self-check + pytest re-verified.
+- [ ] P4 — Provenance part 2: Zenodo deposition (CITATION.cff,
+      .zenodo.json, git archive + sha256); docs/PROVENANCE.md (tag
+      timeline, 2026-08-31 identity rewrite, HF timestamps, forward
+      OSF commitment). Visibility decision stays with me.
+- [ ] P5 — Sync interview script / project summary with corrected report;
+      add expansion module B6 (the audit).
+- [ ] P6 — Consistency sweep: every cross-document number checked against
+      RESULTS.md → docs/consistency_check.md; push with tags.
+- [ ] P7 — Re-audit in a fresh clone (same audit prompt + resolution
+      section), archive AUDIT2 reports into docs/.
+
 ## v2 line — site-specific recalibration study (secondary, post-hoc)
 Strictly post-hoc to external-v1; must never alter any external-v1 number.
 Protocol: data/external_protocol.md Amendment 2 (committed 2026-08-31
