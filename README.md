@@ -103,10 +103,12 @@ different thresholds per model), held-out sensitivity 0.80–0.96.
     src/            training, evaluation, frozen inference, v2 studies
     configs/        one YAML per experiment
     data/external_protocol.md   pre-registered protocol + amendments
-    data/splits/    frozen external keep-lists (busi/gdph/sysucc_clean.csv)
-                    — the BUS-BRA fold file is NOT here (see below)
-    models/         calibration + operating-point JSONs only; the .pt
-                    checkpoints are git-ignored (see below)
+    data/splits/    busbra_official_5fold.csv (verbatim official BUS-BRA
+                    partition, CC BY 4.0, notice in BUSBRA_LICENSE.txt) +
+                    frozen external keep-lists (busi/gdph/sysucc_clean.csv)
+    models/         calibration + operating-point JSONs and CHECKSUMS.txt
+                    (sha256 of every published weight); the .pt checkpoints
+                    are git-ignored and live on HF (see below)
     tests/          patient-level split guards (pytest)
     RESULTS.md      every number, chronological, commit-linked
     plan.md         task state
@@ -114,16 +116,19 @@ different thresholds per model), held-out sensitivity 0.80–0.96.
     app/ deploy/    Gradio demo (local / HF Space)
     docs/           report, independent audit + response
 
-**Not in the repository.** The official BUS-BRA folds are the
-`5-fold-cv.csv` shipped with the dataset (Zenodo 8231412), read from
-`data/raw/busbra/` which is git-ignored. All checkpoints
-(`models/*.pt`) are git-ignored; the five frozen-v1 classifiers, the
-segmentation model and the two JSONs are published at
-[happytommy/breast-us-cad-weights](https://huggingface.co/happytommy/breast-us-cad-weights).
-The nine v2 checkpoints (`v2_biomedclip_fold{1-5}.pt`,
-`v2_loco_{breast,busi,gdph,sysucc}.pt`) and the exported BiomedCLIP
-init are not yet published anywhere; the v2 results are reproducible
-only from their committed prediction CSVs (planned: plan.md P3).
+**Folds and weights.** The official BUS-BRA partition is committed as
+`data/splits/busbra_official_5fold.csv` (byte-identical to the dataset's
+`5-fold-cv.csv`, Zenodo 8231412, CC BY 4.0); `data.resolve_fold_file`
+prefers it, falls back to `data/raw/busbra/5-fold-cv.csv`, and refuses
+any file whose sha256 differs from the official one. All checkpoints
+(`models/*.pt`) are git-ignored and published at
+[happytommy/breast-us-cad-weights](https://huggingface.co/happytommy/breast-us-cad-weights):
+the five frozen-v1 classifiers, the segmentation model and the two JSONs
+at the repo root (the only files the demo uses), and the v2 research
+artifacts under `v2/` (`v2_biomedclip_fold{1-5}.pt`,
+`v2_loco_{breast,busi,gdph,sysucc}.pt`, their JSONs, and the exported
+BiomedCLIP init). `models/CHECKSUMS.txt` holds the sha256 of every
+published file; `inference.resolve_weight` resolves both layouts.
 
 ## Reproduce
 
@@ -191,8 +196,9 @@ downloaded frozen weights is exact.
 - Done (P2, 2026-09-07): post-hoc quantification of the epoch-selection
   and in-sample operating-point biases; `train.py` now stores the folds
   actually used in each checkpoint (existing checkpoints carry the raw
-  YAML). Planned: v2 checkpoints + fold-file provenance on HF (P3), Zenodo
-  deposition and `docs/PROVENANCE.md` (P4) — see plan.md.
+  YAML). Done (P3, 2026-09-07): v2 checkpoints published under `v2/` with
+  `models/CHECKSUMS.txt`; official fold file committed and hash-verified.
+  Planned: Zenodo deposition and `docs/PROVENANCE.md` (P4) — see plan.md.
 
 ## Data availability & licenses
 

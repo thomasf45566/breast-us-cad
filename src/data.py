@@ -3,9 +3,14 @@
 Research prototype — not for diagnostic use.
 
 Splits are patient-level via the official BUS-BRA 5-fold assignments
-(5-fold-cv.csv, `kFold` column); never split by image.
+(the dataset's 5-fold-cv.csv, `kFold` column); never split by image. The
+partition file is redistributed in this repository as
+data/splits/busbra_official_5fold.csv (BUS-BRA is CC BY 4.0; permission
+notice in data/splits/BUSBRA_LICENSE.txt) and is preferred over the raw
+copy; whichever is used is SHA-256-verified against the official file.
 """
 
+import hashlib
 import random
 from pathlib import Path
 
@@ -20,6 +25,30 @@ from torch.utils.data import DataLoader, Dataset
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 LABEL_MAP = {"benign": 0, "malignant": 1}
+OFFICIAL_FOLDS_CSV = Path("data/splits/busbra_official_5fold.csv")
+# sha256 of the official BUS-BRA 5-fold-cv.csv (Zenodo 8231412, BUSBRA.zip)
+OFFICIAL_FOLDS_SHA256 = "8bed2d2efdf6ea370ab82a3cbda4c213f498274a68b434828ceeb636ce43a68d"
+
+
+def resolve_fold_file(root: str | Path = "data/raw/busbra") -> Path:
+    """Official BUS-BRA 5-fold partition: committed copy first, raw copy as fallback.
+
+    Either candidate must hash to OFFICIAL_FOLDS_SHA256, so every split in
+    this project is provably the dataset's own patient-level partition
+    (golden rule #1; audit 2026-09-06 §1 noted the file was not in the repo).
+    """
+    candidates = [OFFICIAL_FOLDS_CSV, Path(root) / "5-fold-cv.csv"]
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        digest = hashlib.sha256(candidate.read_bytes()).hexdigest()
+        if digest != OFFICIAL_FOLDS_SHA256:
+            raise ValueError(
+                f"{candidate} is not the official BUS-BRA 5-fold-cv.csv "
+                f"(sha256 {digest[:12]}… != {OFFICIAL_FOLDS_SHA256[:12]}…)"
+            )
+        return candidate
+    raise FileNotFoundError(f"BUS-BRA fold file not found at any of {[str(c) for c in candidates]}")
 
 
 def build_master_df(root: str | Path = "data/raw/busbra") -> pd.DataFrame:
@@ -30,7 +59,7 @@ def build_master_df(root: str | Path = "data/raw/busbra") -> pd.DataFrame:
     """
     root = Path(root)
     meta = pd.read_csv(root / "bus_data.csv")
-    folds = pd.read_csv(root / "5-fold-cv.csv", usecols=["ID", "kFold"])
+    folds = pd.read_csv(resolve_fold_file(root), usecols=["ID", "kFold"])
     df = meta.merge(folds, on="ID", validate="one_to_one")
 
     out = pd.DataFrame(

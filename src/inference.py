@@ -54,14 +54,36 @@ OPERATING_POINT_FILE = "operating_point.json"
 
 # ---------------------------------------------------------------- weights
 
+HF_V2_PREFIX = "v2/"
+
+
+def hf_repo_path(filename: str) -> str:
+    """Path of a models/ file inside the HF weights repo.
+
+    The frozen-v1 artifacts (cv_vit_fold{k}.pt, seg_unet_effb0.pt, the two
+    JSONs) sit at the repo root; the v2 research artifacts — every `v2_*`
+    checkpoint/JSON and `pretrained/biomedclip_vitb16_timm.pt` — live under
+    `v2/` (scripts/upload_v2_weights.py). Pure function, no I/O.
+    """
+    name = filename.replace("\\", "/")
+    if name.startswith("v2_") or name.startswith("pretrained/"):
+        return HF_V2_PREFIX + name
+    return name
+
+
 def resolve_weight(filename: str) -> str:
-    """models/<filename> when present, else download from the HF weights repo."""
+    """models/<filename> when present, else download from the HF weights repo.
+
+    `filename` is always the models/-relative name (e.g. "cv_vit_fold5.pt",
+    "v2_loco_gdph.pt", "pretrained/biomedclip_vitb16_timm.pt"); the HF-side
+    layout difference is handled by hf_repo_path.
+    """
     local = MODELS_DIR / filename
     if local.exists():
         return str(local)
     from huggingface_hub import hf_hub_download
 
-    return hf_hub_download(repo_id=HF_WEIGHTS_REPO, filename=filename)
+    return hf_hub_download(repo_id=HF_WEIGHTS_REPO, filename=hf_repo_path(filename))
 
 
 def load_classifier(filename: str, device: str = "cpu") -> torch.nn.Module:

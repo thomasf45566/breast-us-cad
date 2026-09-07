@@ -14,7 +14,16 @@ device; no dataset here is used for diagnostic purposes.
 ## 1. BUS-BRA (primary dataset — training)
 
 - **Role:** Training and internal validation. The official patient-level
-  folds (`data/splits/*.csv`) are the single source of truth for splits.
+  folds are the dataset's own `5-fold-cv.csv` (`kFold` column). Since
+  2026-09-07 a verbatim copy is committed as
+  `data/splits/busbra_official_5fold.csv` (permitted under CC BY 4.0; the
+  dataset's permission notice is reproduced in
+  `data/splits/BUSBRA_LICENSE.txt`). `src/data.py:resolve_fold_file`
+  uses that copy, falls back to `data/raw/busbra/5-fold-cv.csv`, and
+  verifies the sha256 of whichever file it loads against the official
+  hash. Before 2026-09-07 the fold file lived only in the git-ignored
+  `data/raw/busbra/` (audit 2026-09-06 §1). The other `data/splits/*.csv`
+  files are the frozen external keep-lists, not BUS-BRA folds.
 - **Source:** Zenodo record 8231412
 - **URL:** https://zenodo.org/records/8231412
 - **License:** CC BY 4.0

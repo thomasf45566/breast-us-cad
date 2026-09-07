@@ -51,7 +51,39 @@ five ViT-B/16 cross-validation fold checkpoints (BUS-BRA official
 patient-level folds), a U-Net (efficientnet-b0 encoder) lesion
 segmentation demo model, the temperature-scaling parameter, and the
 frozen decision threshold. Trained on the public BUS-BRA dataset
-(Gómez-Flores et al., Medical Physics 2024).
+(Gómez-Flores et al., Medical Physics 2024). These root-level files are
+the ONLY artifacts the Space and the frozen-v1 external validation use.
+
+## v2/ — research artifacts, not the deployed model
+
+Checkpoints of the pre-registered follow-up studies (repository
+`data/external_protocol.md`, Amendment 4; results in `RESULTS.md`):
+
+- `v2/v2_biomedclip_fold{{1-5}}.pt` + `v2/v2_biomedclip_{{calibration,operating_point}}.json`
+  — Q2: same v1 protocol with the backbone initialised from the BiomedCLIP
+  ViT-B/16 image encoder. Pre-registered criterion NOT MET (verdict:
+  "domain pretraining reduces shift" is NOT CLAIMED).
+- `v2/v2_loco_{{breast,busi,gdph,sysucc}}.pt` + per-run
+  `_calibration.json` / `_operating_point.json` — Q1: leave-one-cohort-out
+  multi-source single models (BUS-BRA folds 1–4 + 85% of the three other
+  external cohorts). Criterion met via the AUC branch only; see RESULTS.md
+  for the caveats stated alongside.
+- `v2/pretrained/biomedclip_vitb16_timm.pt` — the BiomedCLIP vision tower
+  re-exported into timm `vit_base_patch16_224` layout (initialisation only;
+  derived from microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224,
+  subject to its licence).
+
+None of the v2 files is used by the demo. They are published so that the
+v2 results can be reproduced at inference level from the same frozen
+keep-lists, which an independent audit (2026-09-06) found impossible
+while they existed only on the author's disk.
+
+## Integrity
+
+`CHECKSUMS.txt` lists the SHA-256 of every file in this repo in
+`sha256sum` format (paths as in the repository's `models/` directory;
+`v2_*`/`pretrained/*` entries live under `v2/` here).
+`inference.resolve_weight` in the repository resolves both layouts.
 """
 
 

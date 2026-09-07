@@ -13,9 +13,11 @@ in code, comments, or UI text.
 
 ## Golden rules
 1. PATIENT-LEVEL SPLITS ONLY. Never split by image. BUS-BRA official
-   folds are the single source of truth: the dataset's own
-   data/raw/busbra/5-fold-cv.csv (git-ignored, NOT in the repo).
-   data/splits/*.csv holds only the frozen external keep-lists.
+   folds are the single source of truth: data/splits/busbra_official_5fold.csv
+   (verbatim copy of the dataset's 5-fold-cv.csv, CC BY 4.0, notice in
+   data/splits/BUSBRA_LICENSE.txt), sha256-verified by data.resolve_fold_file,
+   with data/raw/busbra/5-fold-cv.csv as the fallback. The other
+   data/splits/*.csv are the frozen external keep-lists.
 2. BrEaST, BUSI, GDPH and SYSUCC are EXTERNAL VALIDATION ONLY for the
    v1 line — never train or tune on them, never peek at their metrics
    before the model is frozen. v2 LOCO training on external cohorts is

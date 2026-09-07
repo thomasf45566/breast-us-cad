@@ -137,9 +137,17 @@ original repo verified untouched). One phase per session, in order:
       (2026-09-07)" (append-only, verified 0 removed lines vs 2cbe1da);
       train.checkpoint_payload stores resolved folds + 3 tests; report
       §2.1 dataset description restored (source publication).
-- [ ] P3 — Provenance part 1: v2 checkpoints + BiomedCLIP export to HF
-      under v2/ with CHECKSUMS.txt; BUS-BRA fold file license check →
-      commit CSV or sha256+fetch script; self-check + pytest re-verified.
+- [x] P3 — Provenance part 1 (2026-09-07): v2 checkpoints (9) + 10 JSONs +
+      BiomedCLIP export uploaded to happytommy/breast-us-cad-weights under
+      v2/ in one HF commit (scripts/upload_v2_weights.py); models/
+      CHECKSUMS.txt (sha256, v1 + v2, 28 files) committed + uploaded; model
+      card: v2 = research artifacts, not the deployed model;
+      inference.hf_repo_path maps v2 names → v2/. BUS-BRA fold file:
+      licence check (Zenodo cc-by-4.0 + bundled permissive notice) →
+      committed verbatim as data/splits/busbra_official_5fold.csv
+      (+ BUSBRA_LICENSE.txt); data.resolve_fold_file prefers it, falls
+      back to data/raw, sha256-verifies either. Self-check byte-identical;
+      pytest green. data/README.md:17 corrected.
 - [ ] P4 — Provenance part 2: Zenodo deposition (CITATION.cff,
       .zenodo.json, git archive + sha256); docs/PROVENANCE.md (tag
       timeline, 2026-08-31 identity rewrite, HF timestamps, forward
@@ -147,7 +155,13 @@ original repo verified untouched). One phase per session, in order:
 - [ ] P5 — Sync interview script / project summary with corrected report;
       add expansion module B6 (the audit).
 - [ ] P6 — Consistency sweep: every cross-document number checked against
-      RESULTS.md → docs/consistency_check.md; push with tags.
+      RESULTS.md → docs/consistency_check.md; push with tags. Also:
+      (a) add the same try/except retry loop to verify_space.py's main
+      four-example comparison loop (first post-rebuild request raised an
+      upstream AppError on 2026-09-07; the extra-timing loop already
+      catches it); (b) report Space warm latency as a range 6–9 s across
+      three measurements (RESULTS 6.8 s, audit 6.15 s, 2026-09-07 8.62 s)
+      instead of a single value.
 - [ ] P7 — Re-audit in a fresh clone (same audit prompt + resolution
       section), archive AUDIT2 reports into docs/.
 

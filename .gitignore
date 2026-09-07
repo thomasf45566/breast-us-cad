@@ -5,6 +5,7 @@ data/*
 !data/splits/
 data/splits/*
 !data/splits/*.csv
+!data/splits/BUSBRA_LICENSE.txt
 models/*.pt
 models/*.pth
 models/pretrained/
