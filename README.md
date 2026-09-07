@@ -203,6 +203,20 @@ downloaded frozen weights is exact.
   hash), HF timestamps, forward OSF commitment; CITATION.cff and
   .zenodo.json prepared; Zenodo DOI pending upload.
 
+## Licences
+
+- **Code** (src/, scripts/, tests/, app/, deploy/, configs/): Apache-2.0 — see [LICENSE](LICENSE).
+- **Documentation and figures authored here** (docs/, RESULTS.md, plan.md, the
+  plots and galleries under reports/): CC BY 4.0. This does not cover the
+  third-party material embedded in some figures (see below).
+- **Third-party data**: none of the five datasets is relicensed. Per-dataset
+  licence, required citation and the exact list of derived files tracked
+  here are in [THIRD_PARTY_DATA.md](THIRD_PARTY_DATA.md).
+- **Example images**: the four images in `app/examples/` and
+  `deploy/examples/` (and the README screenshot) are BUS-BRA images,
+  redistributed under the dataset's terms reproduced in
+  [data/splits/BUSBRA_LICENSE.txt](data/splits/BUSBRA_LICENSE.txt).
+
 ## Data availability & licenses
 
 All datasets are public research releases; none are redistributed in

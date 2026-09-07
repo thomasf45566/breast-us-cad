@@ -44,8 +44,8 @@ externally notarised except where §5 and §7 say so.
 | protocol (a)–(d) | a16a64f | 2026-08-29 18:49:09 | external protocol, BUSI keep-list, self-check |
 | Amendment 1 | 436ab56 | 2026-08-29 21:44:18 | GDPH/SYSUCC added, BUSI_WHU excluded, pHash sweep (already contains its dedup counts) |
 | **`external-v1`** (lightweight) | 2cbe1da | 2026-08-29 23:14:26 (15:14:26Z) | the single external run; the four preds CSVs have exactly one adding commit each and were never modified |
-| identity rewrite | 2c24500 | 2026-08-31 17:58:46 | see §3 |
 | Amendment 2 | 610e87f | 2026-08-31 16:46:51 | committed alone; first governed computation 17:55 (fbc4bba 17:56:44) |
+| identity rewrite | 2c24500 | 2026-08-31 17:58:46 | see §3 |
 | Amendment 3 | 78f3991 | 2026-08-31 20:27:20 | committed alone |
 | Amendment 4 | 3faa70b | 2026-08-31 22:53:53 | committed alone |
 | BiomedCLIP substitution note | 4fc3fb2 | 2026-09-01 18:38:49 | 20 min before the first BiomedCLIP run (wandb 830ejnrt 18:58:49) |

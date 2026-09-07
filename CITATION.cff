@@ -9,6 +9,7 @@ title: >-
   follow-up studies and an independent audit trail
 version: 1.0-audited
 date-released: "2026-09-07"
+license: Apache-2.0
 authors:
   - family-names: Wang
     given-names: Thomas

@@ -42,4 +42,6 @@ range (documented; calibrated-probability impact ≤ 0.007).
 BUS-BRA dataset validation fold — W. Gómez-Flores, M. J. Gregorio-Calas,
 W. Coelho de Albuquerque Pereira, "BUS-BRA: A Breast Ultrasound Dataset
 for Assessing Computer-Aided Diagnosis Systems," *Medical Physics*, 2024.
-Used under the dataset's research license.
+Used under the dataset's research license (CC BY 4.0; the dataset's
+permission notice is reproduced in the source repository at
+`data/splits/BUSBRA_LICENSE.txt`). The code of this Space is Apache-2.0.

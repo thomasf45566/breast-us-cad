@@ -159,6 +159,15 @@ original repo verified untouched). One phase per session, in order:
       NTUH). Repository visibility unchanged. TODO (user): upload the zip
       to Zenodo, paste the DOI into CITATION.cff / .zenodo.json /
       PROVENANCE.md / README.
+- [x] P4b — Licensing before publication (2026-09-07): LICENSE
+      (Apache-2.0); README Licences section (docs/ + authored figures
+      CC BY 4.0; examples → BUSBRA_LICENSE.txt); THIRD_PARTY_DATA.md
+      (per-dataset licence, verbatim citation, derived-file inventory);
+      .zenodo.json/CITATION.cff licence; PROVENANCE §2 chronological.
+      Redistribution check: 3 figures embed GDPH/SYSUCC raw images
+      (gradcam_external_fp, phash_cross_pairs, phash_within_d8_sample) —
+      DECISION PENDING (user), nothing untracked; no per-image reader
+      BI-RADS or BrEaST annotation columns tracked (AUDIT_RESPONSE §J).
 - [ ] P5 — Sync interview script / project summary with corrected report;
       add expansion module B6 (the audit).
 - [ ] P6 — Consistency sweep: every cross-document number checked against
