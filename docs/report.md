@@ -6,7 +6,8 @@
 **線上展示:https://huggingface.co/spaces/happytommy/breast-us-cad**
 
 > **修訂說明(2026-09-07):** 本版依獨立對抗式稽核(docs/AUDIT_2026-09-06.md)
-> 逐句修正。每一事實句皆對應 RESULTS.md、data/external_protocol.md 或 reports/、
+> 逐句修正(P1),並納入 P2 之 POST-HOC 量化(RESULTS.md「Post-hoc analyses
+> responding to the 2026-09-06 audit」)。每一事實句皆對應 RESULTS.md、data/external_protocol.md 或 reports/、
 > models/ 下已提交之 CSV/JSON;無來源之句已刪除,或明確標示為「未記錄之
 > session 內觀察」。逐項對照表見 docs/AUDIT_RESPONSE_2026-09-06.md。
 
@@ -18,7 +19,7 @@
 
 **方法:** 以 BUS-BRA(1,875 張 / 1,064 位病人,病理確診)依官方 patient-level 五折訓練 ViT-B/16,經 hflip TTA 與 temperature scaling,於 pooled out-of-fold 預測上以 sensitivity ≥ 0.90 規則預定 operating point 後凍結,再依 pre-registered protocol 於四個外部世代(BrEaST、去重 BUSI、GDPH、SYSUCC;共 2,454 張)單次驗證。外部世代與訓練集之污染檢查為全對感知雜湊比對(五個集合 1,875/252/379/846/1,559 張,集合內與集合間全部無序配對共 12,056,505 對;d ≤ 8 之候選經目視裁決),結果為「pHash d ≤ 8 無近重複」,而非「零重疊」。其後以四個 protocol amendments 進行部署導向後續研究:site-specific recalibration 學習曲線、跨場域閾值轉移(post-hoc)、ensemble disagreement 之 abstention 分析、以及領域預訓練骨幹(BiomedCLIP 替代)與多來源訓練(leave-one-cohort-out, LOCO)之 pre-registered 比較。
 
-**結果:** 內部指標分為兩個不同的預測器:(a) 單模型、無 TTA 之五折 CV AUC 0.9307 ± 0.0161,各折取該折 validation AUC 最佳之 epoch 之檢查點(即 best-epoch on the reported fold,為樂觀偏差);(b) 五模型 ensemble + TTA + T 之 pooled OOF AUC 0.9254。凍結 operating point(閾值 0.2683)之 sens 0.903 / spec 0.771 係於同一批 OOF 預測上擬合閾值後之 in-sample 值。外部 AUC 0.838–0.934,sensitivity 皆 ≥ 0.918,specificity 降至 0.409–0.630;伴隨良性校準後機率中位數由 0.06 右移至 0.17–0.31(描述性)。判讀者比較:GDPH 模型於 sensitivity 與 specificity 兩軸皆低於兩位判讀者;SYSUCC 模型居兩位判讀者之間;κ(0.22 / 0.51)為判讀者間一致性,不涉及模型。後續研究:10–20 例本地標註即可於中位數上恢復接近 oracle 之 specificity(pre-registered k*),但 k=10 之中位 sensitivity 為 0.83–0.91;post-hoc 之 draw-level 可靠性指標 k_reliable 僅 GDPH 於 k=200 達標,其餘三世代於各自 pre-registered 網格內未達;單調機率校準接本地閾值重選與直接重定閾值為結構性等價(實跑曲線於 k ≤ 30 因擬合失敗回退與同分而有小差異);外部世代彼此借用閾值之 specificity 皆高於訓練集閾值(post-hoc、in-sample 閾值、描述性;GDPH 閾值使跨場域 sens 降至 0.80–0.87);BiomedCLIP 替代骨幹依 pre-registered 判準 **NOT CLAIMED**(分支 A 0/4、分支 B 1/4;外部 AUC 點估計於四世代皆較低);LOCO 多來源訓練達成 pre-registered 判準(分支 A:ΔAUC ≥ +0.01 vs v1 fold-5 單模型於 4/4),但 paired ΔAUC CI 於 BrEaST、SYSUCC 含零,分支 B 2/4 未達,對照為單模型(相對已部署之 ensemble 僅 2/4 世代 ≥ +0.01),held-out sensitivity 0.80–0.96。
+**結果:** 內部指標分為兩個不同的預測器:(a) 單模型、無 TTA 之五折 CV AUC 0.9307 ± 0.0161,各折取該折 validation AUC 最佳之 epoch 之檢查點(best-epoch on the reported fold;POST-HOC 固定 epoch 下 0.9195 ± 0.0164,樂觀量 0.011 ± 0.007);(b) 五模型 ensemble + TTA + T 之 pooled OOF AUC 0.9254。凍結 operating point(閾值 0.2683)之 sens 0.903 / spec 0.771 係於同一批 OOF 預測上擬合閾值後之 in-sample 值(POST-HOC 嵌套 out-of-sample 估計 0.900 ± 0.057 / 0.780 ± 0.132)。外部 AUC 0.838–0.934,sensitivity 皆 ≥ 0.918,specificity 降至 0.409–0.630;伴隨良性校準後機率中位數由 0.06 右移至 0.17–0.31(描述性)。判讀者比較:GDPH 模型於 sensitivity 與 specificity 兩軸皆低於兩位判讀者;SYSUCC 模型居兩位判讀者之間;κ(0.22 / 0.51)為判讀者間一致性,不涉及模型。後續研究:10–20 例本地標註即可於中位數上恢復接近 oracle 之 specificity(pre-registered k*),但 k=10 之中位 sensitivity 為 0.83–0.91;post-hoc 之 draw-level 可靠性指標 k_reliable 僅 GDPH 於 k=200 達標,其餘三世代於各自 pre-registered 網格內未達;單調機率校準接本地閾值重選與直接重定閾值為結構性等價(實跑曲線於 k ≤ 30 因擬合失敗回退與同分而有小差異);外部世代彼此借用閾值之 specificity 皆高於訓練集閾值(post-hoc、in-sample 閾值、描述性;GDPH 閾值使跨場域 sens 降至 0.80–0.87);BiomedCLIP 替代骨幹依 pre-registered 判準 **NOT CLAIMED**(分支 A 0/4、分支 B 1/4;外部 AUC 點估計於四世代皆較低);LOCO 多來源訓練達成 pre-registered 判準(分支 A:ΔAUC ≥ +0.01 vs v1 fold-5 單模型於 4/4),但 paired ΔAUC CI 於 BrEaST、SYSUCC 含零,分支 B 2/4 未達,對照為單模型(相對已部署之 ensemble 僅 2/4 世代 ≥ +0.01),held-out sensitivity 0.80–0.96。
 
 **結論:** 判別力可跨洲際遷移而 operating point 不可(四世代單發驗證)。外部誤判方向為假陽性增加而非漏診;此方向是否「安全」未經危害分析。訓練端修正中,多來源訓練達成其 pre-registered 判準(附上述保留),領域預訓練替代品未達;部署端之本地閾值重選於中位數有效但小樣本下 draw-level 不可靠。**部署之最後一哩為以本地資料設定 operating point**,此為本研究最有支撐之結論。
 
@@ -40,7 +41,7 @@
 ## 2. 材料與方法
 
 ### 2.1 訓練資料
-BUS-BRA(Gómez-Flores et al., *Med Phys* 2024):巴西國家癌症研究所、1,875 張 B-mode 影像、1,064 位病人、病理確診,附 BI-RADS、分割遮罩與官方 patient-level 五折切分(資料集發布之 `5-fold-cv.csv`,存於 git-ignored 之 data/raw/,**不在版本庫內**;每折影像數 376/385/366/365/383)。全程採官方切分並以自動化測試守門。影像層級盛行率 607/1,875 = 32.4%(models/operating_point.json 混淆矩陣 tp+fn)。
+BUS-BRA(Gómez-Flores et al., *Med Phys* 2024;以下資料集描述取自該發表論文):巴西國家癌症研究所(INCA)、四種超音波儀器、1,875 張 B-mode 影像、1,064 位病人、病理確診 722 良性 / 342 惡性病例,附 BI-RADS、分割遮罩與官方 patient-level 五折切分(資料集發布之 `5-fold-cv.csv`,存於 git-ignored 之 data/raw/,**不在版本庫內**;每折影像數 376/385/366/365/383)。全程採官方切分並以自動化測試守門。影像層級盛行率 607/1,875 = 32.4%(models/operating_point.json 混淆矩陣 tp+fn)。
 
 ### 2.2 模型開發(v1)
 前處理:灰階複製三通道、224×224、ImageNet 標準化;訓練增強:水平翻轉、≤10° 平移旋轉、亮度對比。骨幹以 EfficientNet-B0 為 baseline(fold-5 AUC 0.8823;五折 0.891 ± 0.027),於 fold 5 篩選 ConvNeXt-Small(0.9257)與 ViT-B/16(0.9293)後對兩者行完整五折 CV;訓練 AdamW + cosine(ViT 含 3-epoch warmup)、BCE 加類別權重、30 epochs、batch 32,於 Apple M4(MPS)執行。**Epoch 選擇:** 每折保存該折 validation AUC 最高之 epoch 之檢查點(reports/cv_vit_summary.csv `best_epoch` 欄:29/10/18/16/19),而該折之報告 AUC 即該 epoch 於同一折之值——各折 CV AUC 因此為 best-epoch-on-the-reported-fold,屬樂觀偏差;由此五個檢查點產生之 pooled OOF 預測(供 T 與閾值擬合)承襲此偏差。開發過程含 Grad-CAM 品質檢查、燒錄標註稽核(raw-image audit sheet)、外圈 15% occlusion probe,及以 pre-registered AND 規則(pooled OOF AUC ≥ plain − 0.01 且 caliper 鄰近熱區可見改善)測試之 CoarseDropout 實驗(gate 2 未過,棄用)。
@@ -93,10 +94,10 @@ Git tags:`baseline-v1`→`cv-v1`→`frozen-v1`→`external-v1`→`v2-biomedclip`
 ## 3. 結果
 
 ### 3.1 內部驗證與骨幹比較
-五折 CV(單模型、無 TTA、各折 best-epoch 檢查點,見 §2.2):EfficientNet-B0 0.891 ± 0.027;ConvNeXt-Small 0.9304 ± 0.0173 與 ViT-B/16 0.9307 ± 0.0161 統計平手(Δ 0.0002),ViT 因 CPU 推論快 9 倍(40 vs 376 ms)與 Grad-CAM 可用性獲選。可解釋性稽核:ViT 末層 CAM 空白為飽和 logit 之方法 artifact(blocks[-2].norm1 可用);所有檢視影像含燒錄標註;occlusion 中位降幅 < 0.01(伴重尾,~16% 影像降幅 > 0.2,受病灶延伸至邊界混淆)。校準前 ensemble 明顯 overconfident(T = 2.36);校準後中段機率仍殘餘輕度 overconfidence(reliability diagram)。CoarseDropout:CV 0.9329 ± 0.0199、pooled OOF 0.9139 以 0.0008 壓線過 gate 1、gate 2 未過(1/3 改善、1 不變、1 熱圖改善但預測 0.75→0.28)→ 依規則棄用;gate 2 為三張影像之主觀目視判斷。
+五折 CV(單模型、無 TTA、各折 best-epoch 檢查點,見 §2.2):EfficientNet-B0 0.891 ± 0.027;ConvNeXt-Small 0.9304 ± 0.0173 與 ViT-B/16 0.9307 ± 0.0161 統計平手(Δ 0.0002),ViT 因 CPU 推論快 9 倍(40 vs 376 ms)與 Grad-CAM 可用性獲選。可解釋性稽核:ViT 末層 CAM 空白為飽和 logit 之方法 artifact(blocks[-2].norm1 可用);所有檢視影像含燒錄標註;occlusion 中位降幅 < 0.01(伴重尾,~16% 影像降幅 > 0.2,受病灶延伸至邊界混淆)。校準前 ensemble 明顯 overconfident(T = 2.36);校準後中段機率仍殘餘輕度 overconfidence(reliability diagram)。CoarseDropout:CV 0.9329 ± 0.0199、pooled OOF 0.9139 以 0.0008 壓線過 gate 1、gate 2 未過(1/3 改善、1 不變、1 熱圖改善但預測 0.75→0.28)→ 依規則棄用;gate 2 為三張影像之主觀目視判斷。**POST-HOC 量化(2026-09-07,RESULTS.md「Post-hoc analyses」§1、§3):** 五折 best-epoch AUC 0.9307 ± 0.0161 對固定 epoch 18(五個最佳 epoch 之中位數)之 0.9195 ± 0.0164,樂觀量 0.0111 ± 0.0073(對最終 epoch 30 為 0.0071 ± 0.0059),折間排序不變;fold-5 121 張惡性中,校準前 TTA 機率落於 [0.6, 0.95] 者 32 張(26.4%),> 0.95 者 61 張——先前「僅 3 張」之數字無來源且不被重現。
 
 ### 3.2 凍結管線
-TTA:pooled OOF 0.9231→0.9254(採納,未 pre-registered)。T = 2.3644;ECE(15 bins)0.0716→0.0401;NLL 0.4411→0.3237;AUC 不變(assert)。Operating point 0.2683:sens 0.9028(0.874–0.928)/ spec 0.7713(0.745–0.798)/ PPV 0.654 / NPV 0.943;混淆 548/290/59/978。**此 sens/spec 為 in-sample:閾值於同一批 pooled OOF 預測上擬合**(Amendment 2 (l) 對同一運算之稱謂為「in-sample oracle」)。註:ensemble 無無偏內部估計(每張影像對 5 成員中 4 者為 in-fold),外部驗證為其首次考試。
+TTA:pooled OOF 0.9231→0.9254(採納,未 pre-registered)。T = 2.3644;ECE(15 bins)0.0716→0.0401;NLL 0.4411→0.3237;AUC 不變(assert)。Operating point 0.2683:sens 0.9028(0.874–0.928)/ spec 0.7713(0.745–0.798)/ PPV 0.654 / NPV 0.943;混淆 548/290/59/978。**此 sens/spec 為 in-sample:閾值於同一批 pooled OOF 預測上擬合**(Amendment 2 (l) 對同一運算之稱謂為「in-sample oracle」)。**POST-HOC 嵌套估計(2026-09-07,RESULTS.md「Post-hoc analyses」§2):** 以其餘四折選閾值、於第 k 折評估,五個閾值 0.236–0.311(0.2753 ± 0.0354),out-of-sample sens 0.9003 ± 0.0569 / spec 0.7802 ± 0.1315(pooled 決策 0.9012 / 0.7784)——平均值與 in-sample 相近,但 held-out sens 於 3/5 折低於 0.90 設計下限(0.849–0.976),spec 介於 0.550–0.878。註:ensemble 無無偏內部估計(每張影像對 5 成員中 4 者為 in-fold),外部驗證為其首次考試。
 
 ### 3.3 單次外部驗證(表 2)
 
@@ -116,7 +117,7 @@ TTA:pooled OOF 0.9231→0.9254(採納,未 pre-registered)。T = 2.3644;ECE(15 bi
 良性中位校準機率:內部 0.063 → BrEaST 0.306 / BUSI 0.174 / GDPH 0.289 / SYSUCC 0.287;惡性維持 0.680–0.831;良性 ≥ 閾值之比例 0.37–0.59。Specificity 崩落與良性分佈右移同時出現(描述性觀察;無因果檢定)。*未檢定之詮釋:漂移幅度可能與資料集風格差異有關,但本研究未測量任何風格距離。*
 
 ### 3.5 判讀者比較
-GDPH(κ 0.515):模型 0.971/0.453;Reader1 0.976/0.894;Reader2 0.979/0.513——**模型於兩軸皆低於兩位判讀者**;Reader1 之 specificity 遠高於模型(0.89 vs 0.45,點估計;未做任何檢定),Reader2 接近模型之 ROC 曲線。SYSUCC(κ 0.215):模型 0.931/0.474;Reader1 0.913/0.651;Reader2 0.993/0.132——模型 operating point 居兩判讀者之間。κ 為兩位判讀者之間之一致性,不涉及模型。
+GDPH(κ 0.515):模型 0.971/0.453;Reader1 0.976/0.894;Reader2 0.979/0.513——**模型於兩軸皆低於兩位判讀者**;Reader1 之 specificity 遠高於模型(0.89 vs 0.45,點估計;未做任何檢定),Reader2 接近模型之 ROC 曲線。SYSUCC(κ 0.215):模型 0.931/0.474;Reader1 0.913/0.651;Reader2 0.993/0.132——模型 operating point 居兩判讀者之間。κ 為兩位判讀者之間之一致性,不涉及模型。**POST-HOC(2026-09-07,RESULTS.md「Post-hoc analyses」§4,描述性):** 模型於良性影像之假陽性中,被判讀者亦評為 ≥ 4a 之比例:GDPH reader1 34/238 = 0.143(其真陰性中為 0.061)、reader2 152/238 = 0.639(0.305);SYSUCC reader1 81/152 = 0.533(0.146)、reader2 143/152 = 0.941(0.788)——模型假陽性相對真陰性富集判讀者 ≥ 4a 呼叫,但 GDPH 高 specificity 判讀者對模型 86% 之假陽性評為 ≤ 3。
 
 ### 3.6 Grad-CAM(定性、單模型)
 內部 TP 熱區於病灶本體與邊緣;內部 FP 3/4 聚焦真實可疑結構、1/4 顯示殘餘標註敏感;外部 FP 7/8 熱區落於病灶本體(SYSUCC 四張皆低回音分葉狀良性)——與 appearance-driven 之解讀相符,但 CAM 不能量化之。
@@ -159,7 +160,7 @@ U-Net fold-5 Dice 0.902 / IoU 0.833(280/383 > 0.9;失效於陰影/低對比病�
 外部驗證確立 AUC 與 operating point 可攜性之分離,伴隨良性分佈之位置偏移(M2a 顯示僅重估 T 無法恢復,漂移為 logit 空間之位置而非尺度)。後續研究:(1) 部署端——10–20 例本地標註即可於中位數恢復 specificity(以 k=10 中位 sens 0.83–0.91 為代價),但 draw-level 可靠性於 pre-registered 網格內僅 GDPH k=200 達標;本地標籤之價值在閾值定位(單調校準 + 本地閾值 ≡ 閾值重定之結構性等價);(2) 跨場域(post-hoc、描述性)——任一外部閾值轉移至其他世代之 specificity 皆高於內部閾值;*未檢定之詮釋:BUS-BRA 之良性影像相對「乾淨」致閾值系統性偏低*;(3) 訓練端——BiomedCLIP 替代骨幹依判準 NOT CLAIMED;多來源訓練(LOCO)達成分支 A(ΔAUC +0.013 至 +0.056 vs 單模型,2/4 CI 含零)並於各自閾值下 Δspec +0.27–0.30,惟增益之大宗仍為「多場域 validation 產出更佳之起始閾值」,且 sensitivity 可攜性由 v1 之全域 ≥ 0.918 退為 0.80–0.96。**部署之最後一哩仍為以本地資料設定 operating point。**
 
 ### 4.2 失效方向與臨床定位
-所有外部世代 sensitivity ≥ 0.918(v1 凍結閾值),specificity 0.41–0.63:外部誤判為假陽性(37–59% 良性被呼叫)而非漏診。此方向是否「可接受」未經任何危害分析;且 LOCO 模型於其自身閾值下 held-out sens 降至 0.80。與判讀者比較:GDPH 模型於兩軸皆低於兩位判讀者,SYSUCC 居兩者之間;κ 0.22–0.52 為判讀者間一致性,說明一致性工具之需求,不涉及模型表現。*未檢定之詮釋:外部 FP 之 Grad-CAM 熱區落於病灶本體,與「非典型良性外觀」相符;本研究未做逐影像之模型—判讀者一致性分析,故「模型與判讀者被同一批影像誤導」為假說而非結果。* 此比較存在資訊不對等(判讀者見完整檢查,模型僅見單張截圖)。
+所有外部世代 sensitivity ≥ 0.918(v1 凍結閾值),specificity 0.41–0.63:外部誤判為假陽性(37–59% 良性被呼叫)而非漏診。此方向是否「可接受」未經任何危害分析;且 LOCO 模型於其自身閾值下 held-out sens 降至 0.80。與判讀者比較:GDPH 模型於兩軸皆低於兩位判讀者,SYSUCC 居兩者之間;κ 0.22–0.52 為判讀者間一致性,說明一致性工具之需求,不涉及模型表現。*未檢定之詮釋:外部 FP 之 Grad-CAM 熱區落於病灶本體,與「非典型良性外觀」相符;POST-HOC 逐影像交叉表(§3.5)顯示 GDPH reader1 僅對模型 14% 之假陽性評為 ≥ 4a,故「模型與判讀者被同一批影像誤導」對該判讀者不成立,對 reader2 僅部分成立;未做任何檢定。* 此比較存在資訊不對等(判讀者見完整檢查,模型僅見單張截圖)。
 
 ### 4.3 三個 pre-registered 負面結果
 (1) CoarseDropout:gate 2 未過即棄、不迭代(gate 2 為三張影像之主觀判斷,未測任何 robustness 指標);(2) abstention 判準:0/4,依規定不放寬,*事後詮釋*為信號真實(AUROC 0.77–0.86,3/4 世代優於 margin)而判準將轉介計為 sensitivity 損失——修正之途徑為新的 pre-registration;(3) BiomedCLIP 替代骨幹:0/4 與 1/4,NOT CLAIMED。三者皆依註冊判準機械式套用、未於 RESULTS.md 放寬。
@@ -168,10 +169,10 @@ U-Net fold-5 Dice 0.902 / IoU 0.833(280/383 > 0.9;失效於陰影/低對比病�
 SYSUCC 35% 重複與同影像雙標籤、BUSI_WHU 標籤不可驗證:未經稽核之公開資料切分可同時引入 leakage 與 label noise。pHash 稽核成本低廉,宜為標準前置步驟(其限制見 §2.4)。
 
 ### 4.5 限制
-單一國家單一機構之訓練資料;無台灣/NTUH 資料、無 IRB 臨床驗證、非醫療器材;**內部 CV AUC 為各折 best-epoch 值(樂觀偏差),內部 sens/spec 為 in-sample**;TTA 採用未 pre-registered;pre-registration 為內部版本控制、無外部時間戳、歷史曾重寫身分(§2.10);燒錄標註為潛在捷徑(無標註影像之表現預期較低);三世代無病人 ID(image-level bootstrap 與 LOCO val 切分之潛在樂觀);PPV 不可轉移;ensemble 無無偏內部估計;判讀者比較之資訊不對等與評分脈絡未知;中段機率殘餘 overconfidence;USFM 未於原生骨架受測;LOCO 為單模型(對照亦為單模型),early-stop patience 未預先指定;v2 檢查點與 fold 檔未公開;展示系統於非 BUS-BRA 尺寸存在 resize 分派差異(校準機率最大 7×10⁻³、中位 8×10⁻⁴,2/1,421 邊界翻轉)。
+單一國家單一機構之訓練資料;無台灣/NTUH 資料、無 IRB 臨床驗證、非醫療器材;**內部 CV AUC 為各折 best-epoch 值(POST-HOC 量化:固定 epoch 下 0.9195 ± 0.0164,樂觀量 ≈ 0.011),內部 sens/spec 為 in-sample(POST-HOC 嵌套估計 0.900 ± 0.057 / 0.780 ± 0.132,折間變異大)**;TTA 採用未 pre-registered;pre-registration 為內部版本控制、無外部時間戳、歷史曾重寫身分(§2.10);燒錄標註為潛在捷徑(無標註影像之表現預期較低);三世代無病人 ID(image-level bootstrap 與 LOCO val 切分之潛在樂觀);PPV 不可轉移;ensemble 無無偏內部估計;判讀者比較之資訊不對等與評分脈絡未知;中段機率殘餘 overconfidence;USFM 未於原生骨架受測;LOCO 為單模型(對照亦為單模型),early-stop patience 未預先指定;v2 檢查點與 fold 檔未公開;展示系統於非 BUS-BRA 尺寸存在 resize 分派差異(校準機率最大 7×10⁻³、中位 8×10⁻⁴,2/1,421 邊界翻轉)。
 
 ### 4.6 後續工作
-(1) NTUH 回溯性研究(IRB 規劃中),第一階段約 100 例:不動模型、僅設 operating point(起始候選為四個外部 in-sample 閾值 0.331 / 0.376 / 0.385 / 0.448 之任一,須於本地資料上重選)並驗證台灣族群判別力;第二階段 BI-RADS 3/4A 追蹤 upgrade 預測;第三階段超音波腋下淋巴結轉移預測以支持腋下手術降階。(2) Abstention 判準之重新 pre-registration(workflow 層級 sensitivity 與轉介率)。(3) USFM 於原生 BEiT 骨架之比較;LOCO × 領域預訓練之組合。(4) BUSI_WHU 內容層級標籤復原。(5) 多視角/多模態(影像+報告)以縮小與判讀者之資訊差。(6) Provenance:v2 檢查點與 fold 檔公開、Zenodo/OSF 外部時間戳、epoch 選擇偏差之 post-hoc 量化(plan.md P2–P4)。
+(1) NTUH 回溯性研究(IRB 規劃中),第一階段約 100 例:不動模型、僅設 operating point(起始候選為四個外部 in-sample 閾值 0.331 / 0.376 / 0.385 / 0.448 之任一,須於本地資料上重選)並驗證台灣族群判別力;第二階段 BI-RADS 3/4A 追蹤 upgrade 預測;第三階段超音波腋下淋巴結轉移預測以支持腋下手術降階。(2) Abstention 判準之重新 pre-registration(workflow 層級 sensitivity 與轉介率)。(3) USFM 於原生 BEiT 骨架之比較;LOCO × 領域預訓練之組合。(4) BUSI_WHU 內容層級標籤復原。(5) 多視角/多模態(影像+報告)以縮小與判讀者之資訊差。(6) Provenance:v2 檢查點與 fold 檔公開、Zenodo/OSF 外部時間戳、(plan.md P3–P4;epoch 選擇偏差與 in-sample operating point 之 post-hoc 量化已於 P2 完成,見 §3.1、§3.2)。
 
 ---
 

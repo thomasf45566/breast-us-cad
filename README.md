@@ -29,7 +29,9 @@ ensemble.
 | | AUC | Sens | Spec |
 |---|---|---|---|
 | Internal (a): single model, no TTA, 5-fold patient-level CV, best epoch on the reported fold | 0.9307 ± 0.0161 | — | — |
+| Internal (a′, POST-HOC): same runs, val AUC at one fixed epoch (18) | 0.9195 ± 0.0164 | — | — |
 | Internal (b): 5-ckpt ensemble + hflip TTA + T, pooled OOF (n=1875) | 0.9254 | 0.903 † | 0.771 † |
+| Internal (b′, POST-HOC): nested operating point, threshold from the other 4 folds, evaluated per fold | — | 0.900 ± 0.057 | 0.780 ± 0.132 |
 | BrEaST (Poland, n=252) | 0.854 | 0.918 | 0.409 |
 | BUSI cleaned (Egypt, n=379) | 0.934 | 0.957 | 0.630 |
 | GDPH (China, n=810) | 0.915 | 0.971 | 0.453 |
@@ -38,11 +40,15 @@ ensemble.
 Rows (a) and (b) are two different predictors. In (a) each fold's AUC is
 that of the checkpoint saved at the epoch with the best AUC on the same
 held-out fold (`best_epoch` in `reports/cv_vit_summary.csv`), so the CV
-mean is optimistically biased; the pooled OOF predictions in (b) inherit
-those checkpoints. † Sens/spec in (b) are **in-sample**: the frozen
-threshold 0.2683 (sens ≥ 0.90 rule) was fitted on the same calibrated
-pooled-OOF predictions it is evaluated on. External rows: single-shot at
-that frozen threshold, never re-tuned.
+mean is optimistically biased; row (a′) quantifies it post hoc from the
+wandb histories (optimism 0.011 ± 0.007 AUC). The pooled OOF predictions
+in (b) inherit those checkpoints. † Sens/spec in (b) are **in-sample**:
+the frozen threshold 0.2683 (sens ≥ 0.90 rule) was fitted on the same
+calibrated pooled-OOF predictions it is evaluated on; row (b′) is the
+nested out-of-sample estimate (thresholds 0.236–0.311; held-out sens
+misses 0.90 on 3/5 folds). Both POST-HOC rows: RESULTS.md "Post-hoc
+analyses responding to the 2026-09-06 audit". External rows: single-shot
+at that frozen threshold, never re-tuned.
 
 **Key finding:** discrimination transfers reasonably (BUSI and GDPH
 within or near the internal range; BrEaST and SYSUCC lower, both CIs
@@ -182,7 +188,10 @@ downloaded frozen weights is exact.
 - TTA adoption (hflip) was not pre-registered: decided pre-freeze after
   seeing +0.0023 pooled OOF AUC, on the same OOF data later used to fit
   T and the threshold.
-- Planned: v2 checkpoints + fold-file provenance on HF (P3), Zenodo
+- Done (P2, 2026-09-07): post-hoc quantification of the epoch-selection
+  and in-sample operating-point biases; `train.py` now stores the folds
+  actually used in each checkpoint (existing checkpoints carry the raw
+  YAML). Planned: v2 checkpoints + fold-file provenance on HF (P3), Zenodo
   deposition and `docs/PROVENANCE.md` (P4) — see plan.md.
 
 ## Data availability & licenses

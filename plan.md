@@ -15,7 +15,8 @@ Read this at session start. Update the checkboxes when a task completes.
       reported-fold (train.py saves the epoch with the best val AUC on the
       same fold; cv_vit_summary.csv `best_epoch`), i.e. optimistically
       biased; single model, no TTA. Distinct from the ensemble+TTA+T
-      pooled OOF AUC 0.9254. Quantification deferred to P2.
+      pooled OOF AUC 0.9254. Quantified in P2: fixed-epoch mean 0.9195 ±
+      0.0164 (reports/posthoc_epoch_selection.csv).
 - [x] Backbone comparison table + interpretability audit (RESULTS.md)
 - [x] Backbone decision: vit_base_patch16_224 (see standing decisions)
 - [x] Pre-registered CoarseDropout ViT CV: cdrop discarded per pre-registered
@@ -125,10 +126,17 @@ original repo verified untouched). One phase per session, in order:
       traces to RESULTS.md / external_protocol.md / committed artifacts;
       produce docs/AUDIT_RESPONSE_2026-09-06.md item-by-item table.
       Docs only — no changes to RESULTS.md, protocol, reports/, models/, src/.
-- [ ] P2 — Quantify disclosures post hoc: epoch-selection sensitivity,
-      nested out-of-sample operating point, overconfidence counts, optional
-      reader concordance — from committed artifacts + wandb history only;
-      new POST-HOC section in RESULTS.md; train.py stores resolved folds.
+- [x] P2 — Quantify disclosures post hoc (2026-09-07): epoch-selection
+      sensitivity (fixed epoch 18: 0.9195 ± 0.0164 vs best 0.9307 ± 0.0161,
+      optimism 0.0111 ± 0.0073), nested out-of-sample operating point
+      (sens 0.9003 ± 0.0569 / spec 0.7802 ± 0.1315 vs in-sample 0.9028 /
+      0.7713), overconfidence count (fold-5 32/121 in [0.6, 0.95]), reader
+      concordance (GDPH reader1 flags 34/238 model FPs) — from committed
+      artifacts + local wandb datastores only; RESULTS.md "Post-hoc
+      analyses responding to the 2026-09-06 audit" + appended "Errata
+      (2026-09-07)" (append-only, verified 0 removed lines vs 2cbe1da);
+      train.checkpoint_payload stores resolved folds + 3 tests; report
+      §2.1 dataset description restored (source publication).
 - [ ] P3 — Provenance part 1: v2 checkpoints + BiomedCLIP export to HF
       under v2/ with CHECKSUMS.txt; BUS-BRA fold file license check →
       commit CSV or sha256+fetch script; self-check + pytest re-verified.
