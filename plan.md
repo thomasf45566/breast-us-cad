@@ -10,7 +10,12 @@ Read this at session start. Update the checkboxes when a task completes.
 - [x] 5-fold CV effb0: AUC 0.891 ± 0.027 (tag: cv-v1)
 - [x] Backbone screening fold-5: convnext_small 0.9257, vit_b16 0.9293
 - [x] 5-fold CV convnext_small: AUC 0.930 ± 0.017 (summary in reports/cv_convnext_summary.csv)
-- [x] 5-fold CV vit_b16: AUC 0.931 ± 0.016 (comparison table in RESULTS.md)
+- [x] 5-fold CV vit_b16: AUC 0.931 ± 0.016 (comparison table in RESULTS.md).
+      NOTE (audit 2026-09-06): all per-fold CV AUCs are best-epoch-on-the-
+      reported-fold (train.py saves the epoch with the best val AUC on the
+      same fold; cv_vit_summary.csv `best_epoch`), i.e. optimistically
+      biased; single model, no TTA. Distinct from the ensemble+TTA+T
+      pooled OOF AUC 0.9254. Quantification deferred to P2.
 - [x] Backbone comparison table + interpretability audit (RESULTS.md)
 - [x] Backbone decision: vit_base_patch16_224 (see standing decisions)
 - [x] Pre-registered CoarseDropout ViT CV: cdrop discarded per pre-registered
@@ -25,7 +30,8 @@ Read this at session start. Update the checkboxes when a task completes.
       0.9254. models/calibration.json, reports/reliability_oof_vit_tta.png.
 - [x] pick_threshold.py: threshold 0.2683 on calibrated OOF (sens ≥ 0.90,
       max spec). Sens 0.9028 (CI 0.874–0.928), spec 0.7713 (CI 0.745–0.798),
-      PPV 0.654, NPV 0.943; patient-level bootstrap ×2000.
+      PPV 0.654, NPV 0.943; patient-level bootstrap ×2000. IN-SAMPLE:
+      threshold fitted on the same OOF predictions it is evaluated on.
       models/operating_point.json, reports/roc_oof_operating_point.png.
 - [x] FREEZE: tag frozen-v1 — 5 ckpts + hflip TTA + calibration.json
       (T=2.3644) + operating_point.json. NO model changes after this tag.
@@ -45,14 +51,16 @@ Read this at session start. Update the checkboxes when a task completes.
       on-disk 756/171 vs published 560/367, no metadata, DSATNet loader is
       segmentation-only, HF re-release unmappable); full cross-set pHash
       sweep clean (2 d=8 candidates both visually refuted — NO BUS-BRA
-      contamination); secondary BI-RADS reader comparison pre-registered
+      contamination at pHash d ≤ 8 — method cannot exclude d > 8
+      re-scans/crops); secondary BI-RADS reader comparison pre-registered
       (≥4a positive, run only after primary). Self-check re-passed after
       registry changes. Details: data/external_protocol.md Amendment 1.
 
 - [x] External validation — THE RUN (2026-08-29, single-shot, tag
       external-v1): AUC BrEaST 0.8542 / BUSI 0.9339 / GDPH 0.9154 /
-      SYSUCC 0.8380. Sensitivity held ≥ 0.92 on all four at the frozen
-      threshold; specificity dropped to 0.41–0.63 (internal 0.77) —
+      SYSUCC 0.8380. Sensitivity held ≥ 0.918 on all four at the frozen
+      threshold (BrEaST 90/98 = 0.9184); specificity dropped to 0.41–0.63
+      (internal 0.77, in-sample) —
       threshold does not transfer under domain shift. Full table +
       reading in RESULTS.md "External validation (single-shot,
       frozen-v1)"; preds/ROC/CM in reports/external_*. Recorded as-is;
@@ -96,7 +104,11 @@ Read this at session start. Update the checkboxes when a task completes.
       HF PRO). cv2.resize INTER_LINEAR proved platform-unstable (Arm
       KleidiCV HAL locally vs x86) → ported to integer numpy
       (inference.resize_bilinear_frozen), bitwise-equal to local cv2 on
-      all 1,879 BUS-BRA images. Live Space matches local to max delta
+      all 1,875 BUS-BRA images (713 sizes; RESULTS.md's "1,879" double-
+      counts the 4 bundled examples). Parity holds only inside cv2's
+      KleidiCV size-dispatch envelope: 1,421/2,454 external images differ
+      by ≤ 1 gray level (max Δp_cal 7e-3, median 8e-4, 2 flips — see
+      RESULTS.md "Reproducibility notes"). Live Space matches local to max delta
       1.07e-07 (cross-arch BLAS floor; identical at display precision).
       Details in RESULTS.md "Hugging Face Spaces deployment".
 
@@ -107,7 +119,8 @@ Read this at session start. Update the checkboxes when a task completes.
 Independent adversarial audit archived unmodified at docs/AUDIT_2026-09-06.md
 (sha256 b0c07dff...; audit clone + scratchpad overlay deleted 2026-09-07,
 original repo verified untouched). One phase per session, in order:
-- [ ] P1 — Documentation corrections: fix docs/report.md, README.md,
+- [x] P1 — Documentation corrections (2026-09-07, commit "docs: corrections
+      per independent audit 2026-09-06"): fix docs/report.md, README.md,
       CLAUDE.md, app/deploy About text, plan.md so every factual sentence
       traces to RESULTS.md / external_protocol.md / committed artifacts;
       produce docs/AUDIT_RESPONSE_2026-09-06.md item-by-item table.
@@ -280,10 +293,10 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
 - Warm latency on the Space (2 vCPU): ~6.8 s/image. Local fallback:
   `python app/app.py` (0.54 s warm on the M4) — keep it ready in a
   terminal in case conference wifi or HF is down.
-- Live-vs-local sanity: `python scripts/verify_space.py` (expects match
-  at the 1e-5 platform tolerance; bitwise equality across CPU archs is
-  impossible — talking point: KleidiCV resize + BLAS floor, see
-  RESULTS.md deployment section).
+- Live-vs-local sanity: `python scripts/verify_space.py` (recorded live
+  vs local max |Δ| 1.07e-07 on the four examples, RESULTS.md deployment
+  section; bitwise equality across CPU archs is impossible — talking
+  point: KleidiCV resize + BLAS floor).
 - Four examples (calibrated p, threshold 0.2683): benign 16.6% / 22.9%,
   malignant 69.1% / 69.9% — all classify correctly on the live Space.
 
@@ -291,6 +304,9 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
 - TTA ADOPTED (2026-08-29): hflip TTA + 5-model ensemble is the frozen
   inference pipeline — all downstream evaluation, thresholding, external
   validation, and the demo app use it. Numbers in RESULTS.md TTA section.
+  NOT pre-registered: adopted pre-freeze after seeing +0.0023 pooled OOF
+  AUC, on the same OOF data later used to fit T and the threshold
+  (researcher degree of freedom, disclosed in report/README).
 - Patient-level splits only; BUS-BRA official folds
 - BrEaST + BUSI are external-only, single-shot evaluation
 - AUC is the primary metric; operating point from pooled OOF, frozen

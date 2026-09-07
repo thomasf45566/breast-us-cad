@@ -28,10 +28,12 @@ separate U-Net (orientation only) and the heatmap is a single-model
 (fold-5) Grad-CAM visualization — not the ensemble decision path.
 
 **Known limitations.** Calibrated probabilities shift under domain shift:
-on external cohorts, sensitivity held ≥ 0.92 at the frozen threshold but
-specificity dropped from 0.77 (internal) to 0.41–0.63. The operating point
-is calibrated on internal validation only and does not transfer across
-scanners and populations.
+on external cohorts, sensitivity held ≥ 0.918 at the frozen threshold but
+specificity dropped from 0.77 (internal, in-sample) to 0.41–0.63. The
+operating point was fitted on internal out-of-fold predictions only and does
+not transfer across scanners and populations. Preprocessing in this Space
+differs from the validation pipeline on image sizes outside the BUS-BRA
+range (documented; calibrated-probability impact ≤ 0.007).
 
 **Weights:** downloaded at startup from the companion model repo
 ([breast-us-cad-weights](https://huggingface.co/happytommy/breast-us-cad-weights)).

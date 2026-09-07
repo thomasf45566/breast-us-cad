@@ -64,22 +64,26 @@ AUC 0.84–0.93). The example images below are from the BUS-BRA validation fold
 Physics 2024), used under its research license.*
 
 **Known limitations.** Calibrated probabilities shift under domain shift: on
-external cohorts, sensitivity held ≥ 0.92 at the frozen threshold but
-specificity dropped from 0.77 (internal) to 0.41–0.63 — the operating point is
-calibrated on internal validation only and does not transfer across scanners
-and populations. The Grad-CAM heatmap is a single-model visualization, not the
-ensemble decision path, and the lesion contour is a separate segmentation
-model provided for orientation only.
+external cohorts, sensitivity held ≥ 0.918 at the frozen threshold but
+specificity dropped from 0.77 (internal, in-sample) to 0.41–0.63 — the
+operating point was fitted on internal out-of-fold predictions only and does
+not transfer across scanners and populations. The Grad-CAM heatmap is a
+single-model visualization, not the ensemble decision path, and the lesion
+contour is a separate segmentation model provided for orientation only.
+Preprocessing in this demo differs from the validation pipeline on image
+sizes outside the BUS-BRA range (documented; calibrated-probability impact
+≤ 0.007).
 
 **Follow-up (v2 recalibration study).** A post-hoc study on the saved external
 predictions found that re-selecting the decision threshold with only 10–20
-locally labeled images already recovers near-oracle *median* specificity at a
-new site, but draw-to-draw variance stays wide until roughly 100–200 labels.
-The operating threshold is therefore site-dependent by design — the frozen
-internal threshold used in this demo is a research operating point, not one
-that transfers across sites.
+locally labeled images recovers near-oracle *median* specificity at a new
+site, at a median sensitivity of 0.83–0.91 with 10 labels. Draw-to-draw
+variance stays wide across the whole pre-registered grid: a post-hoc
+draw-level reliability bar was reached only on one cohort (GDPH) at 200
+labels and not on the other three. The operating threshold is therefore
+site-dependent by design — the frozen internal threshold used in this demo
+is a research operating point, not one that transfers across sites.
 """
-
 
 def load_pipeline():
     """Load every frozen artifact once, on CPU. Nothing hardcoded."""
