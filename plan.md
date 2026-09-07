@@ -176,8 +176,12 @@ original repo verified untouched). One phase per session, in order:
       (append-only); report/THIRD_PARTY_DATA/AUDIT_RESPONSE updated;
       filename identifiers retained; tag v1.0-audited re-pointed to the
       P4c commit, archive regenerated (sha256 in PROVENANCE §7).
-- [ ] P5 — Sync interview script / project summary with corrected report;
-      add expansion module B6 (the audit).
+- [x] P5 (2026-09-07) — docs/project_summary.md + docs/interview_script.md
+      CREATED NEW (no prior version existed in the repo, Drive, or any
+      session; merge any external draft by hand): every number from the
+      corrected report; mandated wordings for reader comparison,
+      k_reliable, LOCO, BiomedCLIP NOT CLAIMED, internal headline, pHash,
+      ≥ 0.918; expansion module B6 (the independent audit, < 45 s).
 - [ ] P6 — Consistency sweep: every cross-document number checked against
       RESULTS.md → docs/consistency_check.md; push with tags. Also:
       (a) add the same try/except retry loop to verify_space.py's main
