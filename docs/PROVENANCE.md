@@ -14,8 +14,8 @@ externally notarised except where §5 and §7 say so.
 ## 1. Summary
 
 - The repository was **private** throughout development and at audit time
-  (2026-09-06). Whether to publish it is the author's decision and is not
-  changed by this document.
+  (2026-09-06). It is **public as of 2026-09-07** at https://github.com/thomasf45566/breast-us-cad
+  (pushed with tags after the Zenodo deposition below).
 - All protocols and amendments were **internal, version-controlled
   pre-registrations** in `data/external_protocol.md`: each was committed
   before the computation it governs, and the file is append-only. They
@@ -222,6 +222,10 @@ following applies, without exception:
 - Metadata: `CITATION.cff` (version 1.0-audited) and `.zenodo.json`.
 - Tagged commit: `fa193a83aafc264c44a82a5e361900858585add4` (tag `v1.0-audited`, annotated). Re-pointed on 2026-09-07 from 1f196a9 to this commit before any push or deposition; reason: licensing corrections (P4b LICENSE / THIRD_PARTY_DATA.md, P4c removal of GDPH/SYSUCC-image figures). The earlier archive (sha256 fcd270a5…) was never uploaded and is superseded.
 - Archive SHA-256: `bb45b685fa807fa14e83f01271f5256ab4cc933d5c43f53b176dd19b5b182c1e` (`git archive --format=zip --prefix=breast-us-cad-v1.0/ v1.0-audited`; note that an archive cannot contain its own hash, so this line lives in the commit after the tagged one)
-- Zenodo DOI: pending — the author uploads the archive and records the DOI
-  here, in CITATION.cff, .zenodo.json and README.md.
-- Repository visibility: unchanged by this phase (author's decision).
+- Zenodo DOI: **10.5281/zenodo.22630912** (https://doi.org/10.5281/zenodo.22630912), published 2026-09-07; the
+  uploaded file was verified against the local archive (Zenodo reports MD5
+  07a7c1fe…, matching; local sha256 == the value above; size 26,404,667 B).
+- The archive's .zenodo.json predates the ORCID addition (063a25a); the DOI
+  record metadata is authoritative.
+- Repository visibility: public as of 2026-09-07 (https://github.com/thomasf45566/breast-us-cad), pushed with tags
+  after the deposition.

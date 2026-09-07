@@ -49,5 +49,6 @@
     }
   ],
   "notes": "Deposited archive = `git archive` of the tagged commit v1.0-audited (hash and SHA-256 recorded in docs/PROVENANCE.md). Code is Apache-2.0 (LICENSE); documentation and figures authored in the repository are CC BY 4.0; third-party datasets keep their own terms (THIRD_PARTY_DATA.md). Model checkpoints are on Hugging Face, not in the archive.",
-  "license": "apache-2.0"
+  "license": "apache-2.0",
+  "doi": "10.5281/zenodo.22630912"
 }

@@ -10,6 +10,7 @@ title: >-
 version: 1.0-audited
 date-released: "2026-09-07"
 license: Apache-2.0
+doi: 10.5281/zenodo.22630912
 authors:
   - family-names: Wang
     given-names: Thomas
@@ -45,6 +46,9 @@ keywords:
 repository-code: https://github.com/thomasf45566/breast-us-cad
 url: https://huggingface.co/spaces/happytommy/breast-us-cad
 identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22630912
+    description: Zenodo deposition of tag v1.0-audited (archive sha256 bb45b685…)
   - type: url
     value: https://huggingface.co/happytommy/breast-us-cad-weights
     description: Frozen-v1 model weights (root) and v2 research checkpoints (v2/)

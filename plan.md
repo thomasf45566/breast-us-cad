@@ -156,9 +156,10 @@ original repo verified untouched). One phase per session, in order:
       hashes/dates, 2026-08-31 identity rewrite with the full 30-commit
       old→new mapping by tree hash, HF creation timestamps, internal-only
       pre-registration statement, forward OSF commitment for MAMA-MIA and
-      NTUH). Repository visibility unchanged. TODO (user): upload the zip
-      to Zenodo, paste the DOI into CITATION.cff / .zenodo.json /
-      PROVENANCE.md / README.
+      NTUH). DONE 2026-09-07: Zenodo DOI 10.5281/zenodo.22630912 published
+      (tag v1.0-audited @ fa193a8, sha256 bb45b685…), recorded in
+      CITATION.cff / .zenodo.json / PROVENANCE §7 / README; repository
+      public (https://github.com/thomasf45566/breast-us-cad), pushed with tags.
 - [x] P4b — Licensing before publication (2026-09-07): LICENSE
       (Apache-2.0); README Licences section (docs/ + authored figures
       CC BY 4.0; examples → BUSBRA_LICENSE.txt); THIRD_PARTY_DATA.md

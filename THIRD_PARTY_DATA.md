@@ -71,6 +71,10 @@ docs/AUDIT_RESPONSE_2026-09-06.md §J.
 
 - **Source:** dataset released with the HoVer-Trans paper (Google-Drive style release: `GDPH/`, `SYSUCC/`, `BIRADS&FOLD.xlsx`); local copy `data/raw/gdph_sysucc`.
 - **Licence / policy:** **no licence file accompanies the release**; the terms of the original release govern any reuse, and redistribution rights are not established. Treated here as "no redistribution of images or per-image annotations".
+- **Licence evidence (all accessed 2026-09-07):**
+  1. The paper's abstract (arXiv:2205.08390 v2, 15 Jul 2022, https://arxiv.org/abs/2205.08390; journal version DOI 10.1109/TMI.2023.3236011) states verbatim: "We conduct and release an open dataset GDPH&SYSUCC for breast cancer diagnosis in BUS." No licence or terms of use are given.
+  2. The authors' code repository https://github.com/yuhaomo/HoVerTrans (README) distributes the dataset via a OneDrive link (https://1drv.ms/u/s!AgOtqK2ZncKlgoxsmt-UYbEwMyZY2g?e=INNhyK) and asks users of the dataset to cite the paper; the repository contains **no LICENSE file** (root listing: README.md, config.py, hovertrans.py, network.png, requirements.txt, train.py, utils.py, valid.py; GitHub API `license: null`) and states no usage restrictions or permissions.
+  3. The third-party curated index NKI-MedTech-AI/breast-ultrasound-openhub (https://github.com/NKI-MedTech-AI/breast-ultrasound-openhub) lists GDPH&SYSUCC with licence "unknown" and accessibility "public", pointing to the same OneDrive link.
 - **Required citation (verbatim):**
   > Mo, Y., Han, C., Liu, Y., Liu, M., Shi, Z., Lin, J., Zhao, B.,
   > Huang, C., Qiu, B., Cui, Y., Wu, L., Pan, X., Xu, Z., Huang, X.,

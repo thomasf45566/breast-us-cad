@@ -184,10 +184,12 @@ downloaded frozen weights is exact.
   author/committer dates were preserved, tags carried over, and the
   `frozen-v1` annotated tag re-created at the same date (commit 2c24500
   message). Pre-rewrite hashes therefore do not map to current commits.
-- The repository was **private at audit time (2026-09-06)**; the only
-  public artifact, the HF weights repo (created 2026-08-30), postdates
-  the external-v1 commit (2026-08-29). The freeze-before-test ordering
-  currently rests on local, rewritten, self-assigned commit timestamps.
+- The repository was **private at audit time (2026-09-06)** and is public
+  since 2026-09-07 (https://github.com/thomasf45566/breast-us-cad); the only public artifact created during the
+  study, the HF weights repo (2026-08-30), postdates the external-v1
+  commit (2026-08-29). The freeze-before-test ordering therefore rests on
+  local, rewritten, self-assigned commit timestamps; the Zenodo DOI above
+  is the first external timestamp, post hoc for external-v1.
 - Amendment 1 already contained the dedup counts and pHash outcome it
   registers (it precedes all model metrics, not the data audit).
 - TTA adoption (hflip) was not pre-registered: decided pre-freeze after
@@ -237,8 +239,9 @@ bootstraps; pre-registration is internal only (above). Full list in
 
 ## Citation
 
-See [CITATION.cff](CITATION.cff) (version 1.0-audited). Zenodo DOI:
-pending (archive of tag `v1.0-audited` = commit fa193a8, sha256
-`bb45b685fa807fa1…`, full record in [docs/PROVENANCE.md](docs/PROVENANCE.md); the tag
-was re-pointed once before any deposition, for licensing corrections). Manuscript in
-preparation.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22630912.svg)](https://doi.org/10.5281/zenodo.22630912)
+
+Zenodo DOI: [10.5281/zenodo.22630912](https://doi.org/10.5281/zenodo.22630912) — deposition of tag
+`v1.0-audited` (commit fa193a8, archive sha256 `bb45b685…`; full record in
+[docs/PROVENANCE.md](docs/PROVENANCE.md)). Cite via [CITATION.cff](CITATION.cff)
+(version 1.0-audited). Manuscript in preparation.
