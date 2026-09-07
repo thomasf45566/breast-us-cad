@@ -183,8 +183,8 @@ original repo verified untouched). One phase per session, in order:
       k_reliable, LOCO, BiomedCLIP NOT CLAIMED, internal headline, pHash,
       ≥ 0.918; expansion module B6 (the independent audit, < 45 s).
 - [x] P6 (2026-09-07) — Consistency sweep: scripts/consistency_sweep.py →
-      docs/consistency_check.md (162 shared values: 151 verified, 8 derived,
-      3 → 0 unverified after fixes); one mismatch class found and fixed
+      docs/consistency_check.md (156 shared values: 147 verified, 9 derived,
+      0 unverified after tokenizer fixes); one mismatch class found and fixed
       (single-value Space warm latency → 6–9 s range, RESULTS.md Errata);
       verify_space.py retry loop added; pytest 15 passed; both self-checks
       digit-for-digit (external_val byte-identical); pushed with tags. Also:

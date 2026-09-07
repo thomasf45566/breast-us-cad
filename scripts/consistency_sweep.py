@@ -187,8 +187,7 @@ A value is **verified** if it occurs verbatim in a source or a source number rou
 document's precision; **derived** values carry their stated derivation; **UNVERIFIED** values are
 listed for manual adjudication in the section that follows the table.
 
-Shared values: {len(shared)} · verified: {sum(1 for r in rows if '| verified |' in r)} · derived:
-{sum(1 for r in rows if '| derived |' in r)} · unverified: {len(unverified)}
+Shared values: {len(shared)} · verified: {sum(1 for r in rows if '| verified |' in r)} · derived: {sum(1 for r in rows if '| derived |' in r)} · unverified: {len(unverified)}
 
 | value | files:lines | source | status | context (first occurrence) |
 |---|---|---|---|---|
