@@ -1,0 +1,67 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, protocol, or results, please cite it using the
+  metadata below. Research prototype — not a medical device.
+type: software
+title: >-
+  BreastUS-CAD: frozen, pre-registered single-shot external validation of a
+  breast ultrasound benign/malignant classifier, with deployment-oriented
+  follow-up studies and an independent audit trail
+version: 1.0-audited
+date-released: "2026-09-07"
+authors:
+  - family-names: Wang
+    given-names: Thomas
+    name-particle: ""
+    alias: 王表元
+    email: thomasf45566@gmail.com
+    affiliation: >-
+      Department of Surgery, National Taiwan University Hospital, Taipei,
+      Taiwan
+abstract: >-
+  Code, protocols, results and audit trail of BreastUS-CAD; frozen model
+  weights on Hugging Face. A ViT-B/16 classifier trained on BUS-BRA with
+  official patient-level five-fold splits, frozen (tag frozen-v1) and
+  validated single-shot on four external cohorts (BrEaST, Curated BUSI,
+  GDPH, SYSUCC) under an internally version-controlled pre-registered
+  protocol, followed by pre-registered deployment-oriented studies
+  (site-specific recalibration, ensemble-disagreement abstention,
+  domain-pretrained backbone, leave-one-cohort-out multi-source training),
+  an independent adversarial audit (2026-09-06), the item-by-item response,
+  and post-hoc analyses quantifying the disclosed biases. Every number in
+  RESULTS.md recomputes from committed CSV/JSON artifacts. Pre-registration
+  was internal and not externally time-stamped; see docs/PROVENANCE.md.
+keywords:
+  - breast ultrasound
+  - computer-aided diagnosis
+  - external validation
+  - pre-registration
+  - domain shift
+  - calibration
+  - vision transformer
+  - research prototype
+repository-code: https://github.com/thomasf45566/breast-us-cad
+url: https://huggingface.co/spaces/happytommy/breast-us-cad
+identifiers:
+  - type: url
+    value: https://huggingface.co/happytommy/breast-us-cad-weights
+    description: Frozen-v1 model weights (root) and v2 research checkpoints (v2/)
+  - type: url
+    value: https://huggingface.co/spaces/happytommy/breast-us-cad
+    description: Live Gradio demo (research prototype)
+references:
+  - type: article
+    title: "BUS-BRA: A Breast Ultrasound Dataset for Assessing Computer-aided Diagnosis Systems"
+    authors:
+      - family-names: Gómez-Flores
+        given-names: Wilfrido
+      - family-names: Gregorio-Calas
+        given-names: Maria Julia
+      - family-names: Coelho de Albuquerque Pereira
+        given-names: Wagner
+    journal: Medical Physics
+    volume: 51
+    start: 3110
+    end: 3123
+    year: 2024
+    doi: 10.1002/mp.16812

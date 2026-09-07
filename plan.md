@@ -148,10 +148,17 @@ original repo verified untouched). One phase per session, in order:
       (+ BUSBRA_LICENSE.txt); data.resolve_fold_file prefers it, falls
       back to data/raw, sha256-verifies either. Self-check byte-identical;
       pytest green. data/README.md:17 corrected.
-- [ ] P4 — Provenance part 2: Zenodo deposition (CITATION.cff,
-      .zenodo.json, git archive + sha256); docs/PROVENANCE.md (tag
-      timeline, 2026-08-31 identity rewrite, HF timestamps, forward
-      OSF commitment). Visibility decision stays with me.
+- [x] P4 — Provenance part 2 (2026-09-07, prepared; DOI pending):
+      CITATION.cff (version 1.0-audited) + .zenodo.json committed; annotated
+      tag v1.0-audited; `git archive` of that commit →
+      /tmp/breast-us-cad-v1.0.zip, sha256 recorded in docs/PROVENANCE.md
+      "Deposition record"; docs/PROVENANCE.md written (tag timeline with
+      hashes/dates, 2026-08-31 identity rewrite with the full 30-commit
+      old→new mapping by tree hash, HF creation timestamps, internal-only
+      pre-registration statement, forward OSF commitment for MAMA-MIA and
+      NTUH). Repository visibility unchanged. TODO (user): upload the zip
+      to Zenodo, paste the DOI into CITATION.cff / .zenodo.json /
+      PROVENANCE.md / README.
 - [ ] P5 — Sync interview script / project summary with corrected report;
       add expansion module B6 (the audit).
 - [ ] P6 — Consistency sweep: every cross-document number checked against

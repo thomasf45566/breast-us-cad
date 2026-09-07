@@ -198,7 +198,10 @@ downloaded frozen weights is exact.
   actually used in each checkpoint (existing checkpoints carry the raw
   YAML). Done (P3, 2026-09-07): v2 checkpoints published under `v2/` with
   `models/CHECKSUMS.txt`; official fold file committed and hash-verified.
-  Planned: Zenodo deposition and `docs/PROVENANCE.md` (P4) — see plan.md.
+  Done (P4, 2026-09-07): [docs/PROVENANCE.md](docs/PROVENANCE.md) — tag
+  timeline, identity-rewrite evidence (full pre→post commit mapping by tree
+  hash), HF timestamps, forward OSF commitment; CITATION.cff and
+  .zenodo.json prepared; Zenodo DOI pending upload.
 
 ## Data availability & licenses
 
@@ -220,4 +223,7 @@ bootstraps; pre-registration is internal only (above). Full list in
 
 ## Citation
 
-(bibtex placeholder — manuscript in preparation)
+See [CITATION.cff](CITATION.cff) (version 1.0-audited). Zenodo DOI:
+pending (the archive of tag `v1.0-audited` is being deposited; commit hash
+and sha256 in [docs/PROVENANCE.md](docs/PROVENANCE.md)). Manuscript in
+preparation.

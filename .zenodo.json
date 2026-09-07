@@ -1,0 +1,51 @@
+{
+  "title": "BreastUS-CAD: frozen, pre-registered single-shot external validation of a breast ultrasound benign/malignant classifier, with deployment-oriented follow-up studies and an independent audit trail",
+  "version": "1.0-audited",
+  "upload_type": "software",
+  "publication_date": "2026-09-07",
+  "description": "<p>Code, protocols, results and audit trail of BreastUS-CAD; frozen model weights on Hugging Face.</p><p>Research prototype &mdash; not a medical device. A ViT-B/16 classifier trained on the public BUS-BRA dataset with the official patient-level five-fold splits, frozen (git tag <code>frozen-v1</code>) and validated single-shot on four external cohorts (BrEaST, Curated BUSI, GDPH, SYSUCC) under an internally version-controlled pre-registered protocol (<code>data/external_protocol.md</code> + 4 amendments), followed by pre-registered deployment-oriented studies (site-specific recalibration, ensemble-disagreement abstention, domain-pretrained backbone, leave-one-cohort-out multi-source training), an independent adversarial audit (<code>docs/AUDIT_2026-09-06.md</code>), the item-by-item response, and post-hoc analyses quantifying the disclosed biases. Every number in <code>RESULTS.md</code> recomputes from the committed CSV/JSON artifacts. Model checkpoints are not in this archive: frozen-v1 weights (repo root) and v2 research checkpoints (<code>v2/</code>) are on Hugging Face with SHA-256 checksums in <code>models/CHECKSUMS.txt</code>. Pre-registration was internal and not externally time-stamped before this deposition; see <code>docs/PROVENANCE.md</code>.</p>",
+  "creators": [
+    {
+      "name": "Wang, Thomas",
+      "affiliation": "Department of Surgery, National Taiwan University Hospital, Taipei, Taiwan"
+    }
+  ],
+  "keywords": [
+    "breast ultrasound",
+    "computer-aided diagnosis",
+    "external validation",
+    "pre-registration",
+    "domain shift",
+    "calibration",
+    "vision transformer",
+    "research prototype"
+  ],
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "https://huggingface.co/happytommy/breast-us-cad-weights",
+      "relation": "isSupplementedBy",
+      "resource_type": "dataset",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://huggingface.co/spaces/happytommy/breast-us-cad",
+      "relation": "isSupplementedBy",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "10.1002/mp.16812",
+      "relation": "cites",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.8231412",
+      "relation": "cites",
+      "resource_type": "dataset",
+      "scheme": "doi"
+    }
+  ],
+  "notes": "Deposited archive = `git archive` of the tagged commit v1.0-audited (hash and SHA-256 recorded in docs/PROVENANCE.md). No LICENSE file is present in the repository at this version; the licence field is intentionally left for the depositor to set at upload time."
+}
