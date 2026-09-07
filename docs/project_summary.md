@@ -38,7 +38,7 @@ On SYSUCC the model lies between the two readers; on GDPH it is below both. Its 
 - **多來源 LOCO 訓練:** criterion MET via the AUC branch (4/4), but 2/4 paired ΔAUC CIs include zero, the specificity branch failed 2/4, and the gain is largely threshold placement.(ΔAUC +0.013 至 +0.056 vs v1 fold-5 單模型;相對已部署 ensemble 僅 2/4 ≥ +0.01;Δspec +0.27–0.30 於各自閾值下;held-out sens 0.80–0.96。)
 
 ## 展示與部署
-Gradio demo(HF Space happytommy/breast-us-cad):與驗證管線共用同一模型/校準/推論模組,前處理於非 BUS-BRA 尺寸有 ≤ 7×10⁻³ 之校準機率差(已記錄);本機 0.53 s,Space warm 約 6–9 s(三次量測);線上 vs 本機四範例最大差 1.07×10⁻⁷。權重(v1 + v2)與 SHA-256 於 HF;BUS-BRA 官方 fold 檔已提交並於載入時驗證雜湊。
+Gradio demo(HF Space happytommy/breast-us-cad):與驗證管線共用同一模型/校準/推論模組,前處理於非 BUS-BRA 尺寸有 ≤ 7×10⁻³ 之校準機率差(已記錄);本機 0.53 s,Space warm 6–9 s(三次量測 6.15 / 6.8 / 8.6 s,RESULTS.md Errata 2026-09-07);線上 vs 本機四範例最大差 1.07×10⁻⁷。權重(v1 + v2)與 SHA-256 於 HF;BUS-BRA 官方 fold 檔已提交並於載入時驗證雜湊。
 
 ## Provenance 與限制(誠實版)
 Pre-registration 為內部版本控制、無外部時間戳;2026-08-31 曾重寫作者身分(日期與內容保留,對映表見 docs/PROVENANCE.md);HF 權重庫(08-30)晚於 external-v1(08-29),故凍結先於外部評分之時序只有自我認證。TTA 採用未 pre-registered。三個外部 FP/pHash 圖因 GDPH/SYSUCC 無明確授權不隨版本庫散布。獨立稽核(2026-09-06)與逐項回應見 docs/AUDIT_2026-09-06.md、docs/AUDIT_RESPONSE_2026-09-06.md;首個外部時間戳為 Zenodo DOI(2026-09-07)。

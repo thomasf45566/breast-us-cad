@@ -1273,3 +1273,10 @@ to remove zero lines.
   recorded; it can no longer be checked from the distributed repository,
   only from the author's local copy. GDPH/SYSUCC filenames in tracked CSVs
   are retained as identifiers (THIRD_PARTY_DATA.md §4).
+- 2026-09-07 (P6, Space warm latency): line 416 records a single warm median
+  of 6.8 s (2026-08-30). Two further measurements exist: 6.15 s (independent
+  audit, 2026-09-06, docs/AUDIT_2026-09-06.md §6) and 8.62 s (median of 6
+  warm calls by scripts/verify_space.py on 2026-09-07 after the P1 re-push,
+  cpu-basic). All documents now report the warm latency as a range,
+  6–9 s across three measurements (6.15 / 6.8 / 8.6), instead of a single
+  value; the 2026-08-30 number stands as recorded above.

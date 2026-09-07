@@ -25,6 +25,8 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPECTED = json.loads((ROOT / "reports" / "app_example_probs.json").read_text())
 EXAMPLES = sorted((ROOT / "app" / "examples").glob("*.png"))
 COLD_TIMEOUT_S = 1800
+RETRIES = 3          # per-example attempts in the comparison loop
+RETRY_WAIT_S = 10
 
 
 def predict(client: Client, image_path: Path) -> tuple[str, str, float]:
@@ -80,7 +82,18 @@ def main() -> None:
     all_bitwise, all_tol, max_delta = True, True, 0.0
     warm_times = []
     for p in EXAMPLES:
-        raw, cal, dt = predict(client, p)
+        # Same retry as the timing loop below: the first requests after a
+        # Space rebuild can raise a transient upstream AppError (observed
+        # 2026-09-07); retry a few times before giving up on the comparison.
+        for attempt in range(1, RETRIES + 1):
+            try:
+                raw, cal, dt = predict(client, p)
+                break
+            except Exception as e:  # transient file-serving hiccups right after boot
+                if attempt == RETRIES:
+                    raise
+                print(f"  {p.name}: attempt {attempt} failed ({type(e).__name__}); retrying in {RETRY_WAIT_S}s")
+                time.sleep(RETRY_WAIT_S)
         exp = EXPECTED[p.name]
         bitwise = raw == exp["raw"] and cal == exp["cal"]
         delta = max(abs(float(raw) - float(exp["raw"])),

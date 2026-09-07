@@ -182,8 +182,12 @@ original repo verified untouched). One phase per session, in order:
       corrected report; mandated wordings for reader comparison,
       k_reliable, LOCO, BiomedCLIP NOT CLAIMED, internal headline, pHash,
       ≥ 0.918; expansion module B6 (the independent audit, < 45 s).
-- [ ] P6 — Consistency sweep: every cross-document number checked against
-      RESULTS.md → docs/consistency_check.md; push with tags. Also:
+- [x] P6 (2026-09-07) — Consistency sweep: scripts/consistency_sweep.py →
+      docs/consistency_check.md (162 shared values: 151 verified, 8 derived,
+      3 → 0 unverified after fixes); one mismatch class found and fixed
+      (single-value Space warm latency → 6–9 s range, RESULTS.md Errata);
+      verify_space.py retry loop added; pytest 15 passed; both self-checks
+      digit-for-digit (external_val byte-identical); pushed with tags. Also:
       (a) add the same try/except retry loop to verify_space.py's main
       four-example comparison loop (first post-rebuild request raised an
       upstream AppError on 2026-09-07; the extra-timing loop already
@@ -340,7 +344,8 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
 - Cold start (sleeping/restart → first prediction): **9.7 s** — open the
   Space BEFORE the interview starts; a first-ever container build also
   downloads 1.7 GB of weights and takes minutes.
-- Warm latency on the Space (2 vCPU): ~6.8 s/image. Local fallback:
+- Warm latency on the Space (2 vCPU): 6–9 s/image across three
+  measurements (6.15 / 6.8 / 8.6; RESULTS.md Errata 2026-09-07). Local fallback:
   `python app/app.py` (0.54 s warm on the M4) — keep it ready in a
   terminal in case conference wifi or HF is down.
 - Live-vs-local sanity: `python scripts/verify_space.py` (recorded live

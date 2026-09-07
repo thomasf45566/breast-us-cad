@@ -150,7 +150,7 @@ USFM 為 BEiT 式架構(無 absolute pos_embed;相對位置偏置表 + LayerScal
 **判準:分支 A 4/4 → MET(via branch A)。** 同段保留事項:(i) paired ΔAUC CI 僅 BUSI、GDPH 排除零,BrEaST、SYSUCC 含零;(ii) 分支 B 2/4 未達(BUSI 0.847、SYSUCC 0.800 低於 0.85);(iii) 判準之對照為 v1 fold-5 **單模型**;相對已部署之 v1 **ensemble**(external-v1),LOCO ΔAUC 為 +0.0115 / +0.0033 / +0.0301 / +0.0064,僅 GDPH、BrEaST 兩世代 ≥ +0.01;(iv) 註冊之問題為 specificity 崩落,而通過之分支為 AUC;Δspec(+0.27 至 +0.30)四世代 paired CI 皆排除零,但係於各模型不同閾值下比較(閾值定位混淆)。機制(描述性):BrEaST 以閾值定位為主;BUSI 良性中位降至 0.051(全案最低);GDPH 判別力提升最明確(AUC CI 不重疊、唯一 LOCO sens 高於 v1-single 之世代);SYSUCC 良性下移同時拖累惡性(sens 0.800)。Sens 可攜性:val ≈ 0.90 → held-out 0.80–0.96,對照 v1 凍結閾值之全域 ≥ 0.918。
 
 ### 3.12 分割與展示
-U-Net fold-5 Dice 0.902 / IoU 0.833(280/383 > 0.9;失效於陰影/低對比病灶)。展示系統本機 0.53 s;Space 冷啟 9.7 s / warm 6.8 s;重現性註記見 §2.8。
+U-Net fold-5 Dice 0.902 / IoU 0.833(280/383 > 0.9;失效於陰影/低對比病灶)。展示系統本機 0.53 s;Space 冷啟 9.7 s / warm 6–9 s(三次量測 6.15 / 6.8 / 8.6 s,RESULTS.md Errata 2026-09-07);重現性註記見 §2.8。
 
 ---
 
