@@ -1,0 +1,5 @@
+set,image_a,image_b,distance,label_conflict,dedup_action
+sysucc,benign(105).png,benign(107).png,8,False,"keep lexicographically first, drop the other"
+sysucc,benign(188).png,benign(190).png,8,False,"keep lexicographically first, drop the other"
+sysucc,benign(216).png,benign(219).png,8,False,"keep lexicographically first, drop the other"
+sysucc,benign(274).png,malignant(1023).png,8,True,group dropped entirely (label conflict)

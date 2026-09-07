@@ -1255,3 +1255,21 @@ to remove zero lines.
   values (POST-HOC 1 above: fixed-epoch mean 0.9195 ± 0.0164); the
   sens 0.9028 / spec 0.7713 at the frozen threshold are in-sample
   (POST-HOC 2: nested mean 0.9003 ± 0.0569 / 0.7802 ± 0.1315).
+- 2026-09-07 (P4c, redistribution ruling): three figures referenced above
+  embed raw GDPH/SYSUCC images, a release without an explicit licence, and
+  are therefore RETAINED LOCALLY BUT EXCLUDED FROM DISTRIBUTION (untracked;
+  listed in .gitignore): reports/gradcam_external_fp.png (Grad-CAM gallery
+  section, line 275), reports/phash_cross_pairs.png and
+  reports/phash_within_d8_sample.png (protocol (g)/(e), lines 149/111 of
+  data/external_protocol.md). Tracked replacements built from saved
+  artifacts only: reports/gradcam_external_fp_breast.png (same gallery
+  design on the 8 highest-calibrated-prob BrEaST benign false positives,
+  CC BY 4.0; src/explain_breast_fp.py), reports/phash_cross_pairs_table.csv
+  + reports/phash_cross_pairs_busbra_thumb.png (the two d = 8 cross-set
+  candidates with their protocol (g) adjudication; BUS-BRA-side thumbnail
+  only), reports/phash_within_d8_table.csv (the four sampled SYSUCC
+  within-set pairs, distances and dedup action; src/phash_tables.py). The
+  qualitative reading of the GDPH/SYSUCC FP CAMs (lines 300–307) stands as
+  recorded; it can no longer be checked from the distributed repository,
+  only from the author's local copy. GDPH/SYSUCC filenames in tracked CSVs
+  are retained as identifiers (THIRD_PARTY_DATA.md §4).

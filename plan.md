@@ -166,8 +166,15 @@ original repo verified untouched). One phase per session, in order:
       .zenodo.json/CITATION.cff licence; PROVENANCE §2 chronological.
       Redistribution check: 3 figures embed GDPH/SYSUCC raw images
       (gradcam_external_fp, phash_cross_pairs, phash_within_d8_sample) —
-      DECISION PENDING (user), nothing untracked; no per-image reader
-      BI-RADS or BrEaST annotation columns tracked (AUDIT_RESPONSE §J).
+      no per-image reader BI-RADS or BrEaST annotation columns tracked
+      (AUDIT_RESPONSE §J).
+- [x] P4c — Redistribution ruling applied (2026-09-07): the 3 figures
+      untracked + .gitignore (kept locally); replacements from saved
+      artifacts (gradcam_external_fp_breast.png; phash_cross_pairs_table.csv
+      + BUS-BRA thumb; phash_within_d8_table.csv); RESULTS.md Errata entry
+      (append-only); report/THIRD_PARTY_DATA/AUDIT_RESPONSE updated;
+      filename identifiers retained; tag v1.0-audited re-pointed to the
+      P4c commit, archive regenerated (sha256 in PROVENANCE §7).
 - [ ] P5 — Sync interview script / project summary with corrected report;
       add expansion module B6 (the audit).
 - [ ] P6 — Consistency sweep: every cross-document number checked against

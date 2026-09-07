@@ -1,0 +1,3 @@
+set_a,image_a,set_b,image_b,distance,adjudication,thumbnail
+busbra,bus_0999-l.png,sysucc,malignant(81).png,8,visually REFUTED — different scans; no training contamination,phash_cross_pairs_busbra_thumb.png
+gdph,benign(784).png,sysucc,malignant(23).png,8,visually REFUTED — different scans,none (no licence for redistribution)

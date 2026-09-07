@@ -61,7 +61,7 @@ TTA 為原圖與水平翻轉之機率平均;**TTA 之採用未經 pre-registrati
 | SYSUCC | 中山大學腫瘤中心 | 1,013 | 病理報告 | 0.715 |
 
 ### 2.4 資料稽核
-64-bit pHash、d ≤ 8 為候選;集合內候選以連通分量去重(保留字典序首張,標籤衝突群整組剔除),集合間候選以目視裁決(protocol (e)(g))。比對範圍為五個集合(BUS-BRA 1,875、BrEaST 252、BUSI keep-list 379、GDPH 846、SYSUCC 1,559)之集合內與集合間全部無序配對,由集合大小計 C(n,2) 之和加上集合間乘積之和 = 12,056,505 對(先前文件所載「約 970 萬對」無來源,已更正)。結果:SYSUCC 1,559→1,013(移除 507 重複與 39 標籤衝突影像,含同影像雙標籤);GDPH 846→810(34 重複、2 標籤衝突);BUSI 386→379。集合間 d ≤ 8 僅 2 個候選(bus_0999-l ↔ SYSUCC malignant(81);GDPH benign(784) ↔ SYSUCC malignant(23)),目視裁決均為不同掃描;其餘集合對最小距離 ≥ 10。**結論為「pHash d ≤ 8 無近重複」**:此方法無法排除 d > 8 之同病人再掃、裁切或不同幀。Keep-list 於推論前凍結。
+64-bit pHash、d ≤ 8 為候選;集合內候選以連通分量去重(保留字典序首張,標籤衝突群整組剔除),集合間候選以目視裁決(protocol (e)(g))。比對範圍為五個集合(BUS-BRA 1,875、BrEaST 252、BUSI keep-list 379、GDPH 846、SYSUCC 1,559)之集合內與集合間全部無序配對,由集合大小計 C(n,2) 之和加上集合間乘積之和 = 12,056,505 對(先前文件所載「約 970 萬對」無來源,已更正)。結果:SYSUCC 1,559→1,013(移除 507 重複與 39 標籤衝突影像,含同影像雙標籤);GDPH 846→810(34 重複、2 標籤衝突);BUSI 386→379。集合間 d ≤ 8 僅 2 個候選(bus_0999-l ↔ SYSUCC malignant(81);GDPH benign(784) ↔ SYSUCC malignant(23)),目視裁決均為不同掃描(裁決紀錄:reports/phash_cross_pairs_table.csv;含 SYSUCC/GDPH 影像之原始並列圖不隨版本庫散布);其餘集合對最小距離 ≥ 10。**結論為「pHash d ≤ 8 無近重複」**:此方法無法排除 d > 8 之同病人再掃、裁切或不同幀。Keep-list 於推論前凍結。
 
 ### 2.5 單次驗證與品質保證
 Amendment 1 撰寫時已核對 reports/ 內無任何外部預測檔(protocol:81–83);推論碼以 self-check 驗證(fold-5 TTA AUC 0.9234433158791243 逐位重現,reports/external_selfcheck.txt);四世代以單一指令一次評分(`external_val.py --dataset all --confirm`),結果直接入帳(tag `external-v1`),四個預測 CSV 各僅有一個新增 commit、從未修改。*未記錄之 session 內觀察:推論前另行執行之多項唯讀檢查(git 狀態、registry 等)與其「GO」決定未留存於任何已提交檔案,故不作為事實陳述。*
@@ -120,7 +120,7 @@ TTA:pooled OOF 0.9231→0.9254(採納,未 pre-registered)。T = 2.3644;ECE(15 bi
 GDPH(κ 0.515):模型 0.971/0.453;Reader1 0.976/0.894;Reader2 0.979/0.513——**模型於兩軸皆低於兩位判讀者**;Reader1 之 specificity 遠高於模型(0.89 vs 0.45,點估計;未做任何檢定),Reader2 接近模型之 ROC 曲線。SYSUCC(κ 0.215):模型 0.931/0.474;Reader1 0.913/0.651;Reader2 0.993/0.132——模型 operating point 居兩判讀者之間。κ 為兩位判讀者之間之一致性,不涉及模型。**POST-HOC(2026-09-07,RESULTS.md「Post-hoc analyses」§4,描述性):** 模型於良性影像之假陽性中,被判讀者亦評為 ≥ 4a 之比例:GDPH reader1 34/238 = 0.143(其真陰性中為 0.061)、reader2 152/238 = 0.639(0.305);SYSUCC reader1 81/152 = 0.533(0.146)、reader2 143/152 = 0.941(0.788)——模型假陽性相對真陰性富集判讀者 ≥ 4a 呼叫,但 GDPH 高 specificity 判讀者對模型 86% 之假陽性評為 ≤ 3。
 
 ### 3.6 Grad-CAM(定性、單模型)
-內部 TP 熱區於病灶本體與邊緣;內部 FP 3/4 聚焦真實可疑結構、1/4 顯示殘餘標註敏感;外部 FP 7/8 熱區落於病灶本體(SYSUCC 四張皆低回音分葉狀良性)——與 appearance-driven 之解讀相符,但 CAM 不能量化之。
+內部 TP 熱區於病灶本體與邊緣;內部 FP 3/4 聚焦真實可疑結構、1/4 顯示殘餘標註敏感;外部 FP 7/8 熱區落於病灶本體(SYSUCC 四張皆低回音分葉狀良性)——與 appearance-driven 之解讀相符,但 CAM 不能量化之。註(2026-09-07):該 GDPH/SYSUCC 外部 FP 圖庫因資料集無明確授權,不隨版本庫散布(僅作者本機保留);版本庫內改附 BrEaST 良性假陽性前 8 例之同設計圖庫(reports/gradcam_external_fp_breast.png,CC BY 4.0),其閱讀未納入上述 7/8 之陳述。
 
 ### 3.7 Recalibration 學習曲線
 Sanity:k=0 逐位重現 external-v1;oracle 閾值 BrEaST 0.376 / BUSI 0.385 / GDPH 0.448 / SYSUCC 0.331,對應 frozen→oracle specificity:0.409→0.623 / 0.630→0.819 / 0.453→0.775 / 0.474→0.568。Pre-registered k*:GDPH、SYSUCC = 10;BrEaST、BUSI = 20;中位恢復比例近 1.0(GDPH spec 0.453 → k=10 中位 0.827,oracle 0.775)。**Sensitivity 代價:** k=10 之中位 sens 為 BrEaST 0.830 / BUSI 0.846 / GDPH 0.866 / SYSUCC 0.909,較凍結管線之外部 sens(≥ 0.918)為低;判準容許至 0.85。單類別抽樣僅見於 k=10(BrEaST 0.8% / BUSI 0.6% / SYSUCC 2.4% / GDPH 0)。k=10–30 之 95% specificity 帶涵蓋約 0–0.97;**post-hoc k_reliable(2.5 百分位恢復 ≥ 0.5)僅 GDPH 於 k=200 達標,BrEaST、BUSI(網格至 k=100)與 SYSUCC(至 k=200)皆未達**——於 pre-registered 網格內,無任何方法使小樣本重校準達到 draw-level 可靠。方法比較:M2b/M3 與 M1 為結構性等價(單調變換 + 排序空間閾值),實跑曲線於 k ≤ 30 僅因 M2 擬合失敗回退與 Platt 同分而異,k* 亦有差異(BrEaST M1 20 / M2b 10;GDPH M1 10 / M2b 20;SYSUCC M1 10 / M2b 20);M2a sens 最高(0.92–0.95)、帶最窄,但恢復不足(GDPH 0.657 vs oracle 0.775),k* 未達;T 擬合失敗率 k=10 為 7–20%、k ≥ 100 為 0。
@@ -188,11 +188,11 @@ SYSUCC 35% 重複與同影像雙標籤、BUSI_WHU 標籤不可驗證:未經稽�
 | 圖 1 | roc_oof_operating_point.png | 內部 ROC + 凍結工作點 |
 | 圖 2 | prob_shift_external.png | 1×5 機率漂移 |
 | 圖 3 | birads_comparison_gdph.png / _sysucc.png | 模型 vs 判讀者 |
-| 圖 4 | gradcam_gallery_internal.png / gradcam_external_fp.png | 可解釋性 |
+| 圖 4 | gradcam_gallery_internal.png / gradcam_external_fp_breast.png | 可解釋性(外部 FP 圖庫以 BrEaST(CC BY 4.0)呈現;原 GDPH/SYSUCC 版本 gradcam_external_fp.png 因該資料集無明確授權,僅保留於本機、不隨版本庫散布,見 RESULTS.md Errata 2026-09-07) |
 | 圖 5 | v2_recalib_M1_curves.png | 學習曲線 |
 | 圖 6 | v2_recalib_methods.png | 方法比較 + 帶寬 |
 | 圖 7 | v2_cross_site_matrix.png | 跨場域矩陣 |
 | 圖 8 | v2_disagreement_auroc.png / v2_abstention_curves.png | Abstention |
 | 圖 9 | v2_loco_summary.png | LOCO ROC + 分佈 |
 | 圖 10 | seg_examples.png | 分割 |
-| 補充 | reliability_oof_vit_tta.png、phash 證據圖、v2_resize_dispatch_impact.csv | Backup |
+| 補充 | reliability_oof_vit_tta.png、phash 證據表(phash_cross_pairs_table.csv + phash_cross_pairs_busbra_thumb.png、phash_within_d8_table.csv;含 GDPH/SYSUCC 影像之原始配對圖不隨版本庫散布)、v2_resize_dispatch_impact.csv | Backup |

@@ -14,3 +14,9 @@ logs/
 __pycache__/
 .DS_Store
 *.ipynb_checkpoints
+# P4c (2026-09-07): figures that embed raw GDPH/SYSUCC images (dataset without an
+# explicit licence) — retained locally, excluded from distribution; tabular /
+# BrEaST-based replacements are tracked (RESULTS.md Errata, THIRD_PARTY_DATA.md §4)
+reports/gradcam_external_fp.png
+reports/phash_cross_pairs.png
+reports/phash_within_d8_sample.png

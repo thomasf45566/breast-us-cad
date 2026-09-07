@@ -9,14 +9,15 @@ docs/ and the figures under reports/ authored here are CC BY 4.0 (README);
 neither licence extends to the third-party material listed below, which
 stays under its own terms.
 
-Redistribution check of 2026-09-07 (audit-response phase P4b): every
-tracked file under data/, reports/, app/examples/, deploy/examples/ and
-docs/assets/ was inspected. No tracked table reproduces the per-image
-reader BI-RADS columns of GDPH&SYSUCC's `BIRADS&FOLD.xlsx` or any column of
-BrEaST's clinical annotation table beyond the binary benign/malignant
-label; the per-image findings below are figures that embed raw images. Their
-status is "pending decision" until the author rules on them
-(docs/AUDIT_RESPONSE_2026-09-06.md §J).
+Redistribution check of 2026-09-07 (audit-response phase P4b) and ruling
+(P4c): every tracked file under data/, reports/, app/examples/,
+deploy/examples/ and docs/assets/ was inspected. No tracked table
+reproduces the per-image reader BI-RADS columns of GDPH&SYSUCC's
+`BIRADS&FOLD.xlsx` or any column of BrEaST's clinical annotation table
+beyond the binary benign/malignant label. The three figures that embedded
+raw GDPH/SYSUCC images were untracked and replaced (§4); GDPH/SYSUCC
+filename identifiers in tables are retained (§4). Details in
+docs/AUDIT_RESPONSE_2026-09-06.md §J.
 
 ## 1. BUS-BRA (training + internal validation)
 
@@ -78,12 +79,16 @@ status is "pending decision" until the author rules on them
   > in Ultrasound Images," *IEEE Transactions on Medical Imaging*.
   > DOI: 10.1109/TMI.2023.3236011
 - **Derived files tracked here:**
-  - **Figures embedding raw GDPH/SYSUCC images — redistribution status PENDING the author's decision (P4b finding, docs/AUDIT_RESPONSE §J):**
-    `reports/gradcam_external_fp.png` (8 benign images: SYSUCC benign(63), (218), (369), (324); GDPH benign(755), (498), (456), (586), each with a Grad-CAM overlay),
-    `reports/phash_cross_pairs.png` (SYSUCC malignant(81), malignant(23); GDPH benign(784); plus one BUS-BRA image),
-    `reports/phash_within_d8_sample.png` (8 SYSUCC images: benign(105), (107), (188), (190), (216), (219), (274), malignant(1023)).
+  - **Figures that embedded raw GDPH/SYSUCC images — RULING (2026-09-07, P4c): excluded from distribution.**
+    `reports/gradcam_external_fp.png`, `reports/phash_cross_pairs.png` and
+    `reports/phash_within_d8_sample.png` were untracked (`git rm --cached`),
+    added to `.gitignore`, and are retained only on the author's disk.
+    Tracked replacements, built from saved artifacts: `reports/gradcam_external_fp_breast.png`
+    (BrEaST false positives, CC BY 4.0), `reports/phash_cross_pairs_table.csv`
+    + `reports/phash_cross_pairs_busbra_thumb.png` (BUS-BRA-side thumbnail only),
+    `reports/phash_within_d8_table.csv`. Recorded in RESULTS.md Errata.
   - Per-image reader BI-RADS columns from `BIRADS&FOLD.xlsx`: **none tracked** (verified 2026-09-07 over every CSV/JSON header). `reports/posthoc_reader_concordance.csv` and `reports/birads_comparison_*.png` are aggregate only.
-  - Per-image tables with the release's filenames and the class encoded in the filename (`benign(N)`/`malignant(N)`), plus model outputs: `data/splits/gdph_clean.csv`, `data/splits/sysucc_clean.csv`, `reports/external_gdph_preds.csv`, `reports/external_sysucc_preds.csv`, `reports/v2_biomedclip_external_{gdph,sysucc}_preds.csv`, `reports/v2_loco_{gdph,sysucc}_preds.csv`, `reports/v2_members_{gdph,sysucc}.csv`, the `gdph`/`sysucc` rows of `reports/v2_resize_dispatch_impact.csv` and `reports/phash_sweep_hits.csv`. These contain no image pixels and no xlsx annotation; whether filename lists are acceptable under the release's terms is also for the author to rule on.
+  - Per-image tables with the release's filenames and the class encoded in the filename (`benign(N)`/`malignant(N)`), plus model outputs: `data/splits/gdph_clean.csv`, `data/splits/sysucc_clean.csv`, `reports/external_gdph_preds.csv`, `reports/external_sysucc_preds.csv`, `reports/v2_biomedclip_external_{gdph,sysucc}_preds.csv`, `reports/v2_loco_{gdph,sysucc}_preds.csv`, `reports/v2_members_{gdph,sysucc}.csv`, the `gdph`/`sysucc` rows of `reports/v2_resize_dispatch_impact.csv` and `reports/phash_sweep_hits.csv`. **Ruling (2026-09-07, P4c): these identifiers are RETAINED for reproducibility.** They contain no image pixels and no content of the annotation table (`BIRADS&FOLD.xlsx`); the class token in each filename is part of the release's own file naming, not an added annotation. Anyone holding the release can join the tables back to the images; nobody can reconstruct any image or reader rating from them.
   - Aggregate-only: ROC/CM PNGs, `reports/prob_shift_external.png` (histograms), v2 summaries and curves.
 
 ## 5. Pretrained weights used as initialisation (not data)
