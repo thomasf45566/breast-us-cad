@@ -1,5 +1,9 @@
 # Zenodo — new version 1.1-audited (PREPARED 2026-09-12; NOT PUBLISHED)
 
+> **Status (2026-09-12): PUBLISHED** — version DOI 10.5281/zenodo.22725965
+> (concept DOI 10.5281/zenodo.22630911). The checklist below is kept as
+> written; the post-publication steps are recorded in docs/PROVENANCE.md §7.3.
+
 Research prototype — not a medical device. This note is the author's
 checklist for depositing tag `v1.1-audited` as a **new version** of the
 existing Zenodo record (concept DOI 10.5281/zenodo.22630911; v1.0 version

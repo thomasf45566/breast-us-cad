@@ -239,8 +239,11 @@ original repo verified untouched). One phase per session, in order:
       --prefix=breast-us-cad-v1.1/ v1.1-audited` → 26,600,855 bytes, 255
       files, sha256 c61ce4ca8520977bf3f03ede1ca106fa03265ef2aac3bb0a75f1b3862082e381,
       md5 295c278b5c07d8eca5149b925424b977; .git-commit inside the archive
-      verified == the tagged commit. Zenodo upload: NOT DONE (STOP);
-      checklist + v1.0 erratum sentence in docs/zenodo_v1.1_new_version.md.
+      verified == the tagged commit. Zenodo: PUBLISHED 2026-09-12 as
+      version DOI 10.5281/zenodo.22725965 (concept 10.5281/zenodo.22630911);
+      Zenodo-displayed MD5 295c278b… == local archive; new version holds
+      only breast-us-cad-v1.1.zip. DOI recorded in PROVENANCE §7.3, README,
+      CITATION.cff.
 
 ## v2 line — site-specific recalibration study (secondary, post-hoc)
 Strictly post-hoc to external-v1; must never alter any external-v1 number.
@@ -427,3 +430,5 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
   >= (current ViT OOF AUC - 0.01) AND the saliency check shows visibly reduced
   caliper-adjacent heat on malignant TPs. Otherwise discard, no iteration,
   no second variant. Either way, next step is TTA on whichever ViT wins.
+
+Repository frozen at v1.1-audited (2026-09-12). No further audit cycles before the interview.

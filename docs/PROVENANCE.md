@@ -66,7 +66,7 @@ externally notarised except where §5 and §7 say so.
 | P5–P6 (summary, interview script, consistency sweep) | … 4794ad6 | 2026-09-07 – 2026-09-11 | outside the v1.0 archive (14 paths changed after the tag) |
 | independent re-audits archived | f7cbf38 | 2026-09-12 | docs/AUDIT2_claude_2026-09-11.md, docs/AUDIT2_astra_2026-09-11.md, unmodified |
 | P8' corrections | (this document's commit and its successors) | 2026-09-12 | docs/AUDIT2_RESPONSE.md; POST-HOC 5–6; external_val overwrite guard |
-| **`v1.1-audited`** (annotated) | hash in the archive's `.git-commit` | 2026-09-12 | Zenodo new version prepared, not yet published (§7.3) |
+| **`v1.1-audited`** (annotated) | 3865086 (also in the archive's `.git-commit`) | 2026-09-12 | Zenodo deposition 10.5281/zenodo.22725965 (§7.3) |
 
 Git facts at HEAD of this document: 62 commits before the P4 commit, a
 single author/committer identity, author date == committer date on all
@@ -282,7 +282,7 @@ differently:
 - 14 paths changed after the tag (P5, P6, the ORCID); those states are not
   in the v1.0 deposit — the DOI notarises fa193a8 only.
 
-### 7.3 v1.1-audited (prepared 2026-09-12 — NOT yet published)
+### 7.3 v1.1-audited (published 2026-09-12)
 
 - Tag `v1.1-audited` (annotated): the P8' state — both 2026-09-11
   re-audits archived unmodified, the corrections in docs/AUDIT2_RESPONSE.md,
@@ -293,9 +293,17 @@ differently:
   2026-09-12); `docs/zenodo_v1.1_new_version.md` carries the description
   text for the new version and the one-sentence erratum for the v1.0
   description.
-- The deposition is a NEW VERSION of the same concept record; it is
-  uploaded only after the author reviews the archive. The version DOI is
-  recorded here, in CITATION.cff and in README after publication; until
-  then the concept DOI resolves to v1.0.
+- Zenodo version DOI **10.5281/zenodo.22725965** (concept DOI
+  10.5281/zenodo.22630911, which now resolves to this version), published
+  2026-09-12 as a NEW VERSION of the same concept record. Deposited file:
+  `breast-us-cad-v1.1.zip`, 26,600,855 bytes, MD5 as displayed by Zenodo
+  295c278b5c07d8eca5149b925424b977 (equal to the local archive of commit
+  3865086); the new version contains only this file (the inherited v1.0
+  file was removed from the draft before upload). The v1.0 record's files
+  are untouched; its description carries the erratum sentence.
+- This DOI is recorded here, in CITATION.cff and in README in a commit
+  after the tag; the archive itself cannot contain it (§7.1).
+- Repository frozen at v1.1-audited (2026-09-12); no further audit cycles
+  before the interview.
 - Repository visibility: public since 2026-09-07
   (https://github.com/thomasf45566/breast-us-cad), pushed with tags.

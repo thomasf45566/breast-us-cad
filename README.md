@@ -306,14 +306,17 @@ pre-registration is internal only (above). Full list in
 
 ## Citation
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22630912.svg)](https://doi.org/10.5281/zenodo.22630912)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22630911.svg)](https://doi.org/10.5281/zenodo.22630911)
 
-Zenodo DOI: [10.5281/zenodo.22630912](https://doi.org/10.5281/zenodo.22630912) — deposition of tag
-`v1.0-audited` (commit fa193a8; the checksum shown by Zenodo is
-authoritative; full record in [docs/PROVENANCE.md](docs/PROVENANCE.md) §7,
-including the known defect that the v1.0 archive's embedded provenance
-text names the superseded pre-re-point commit). Concept DOI (all
-versions): 10.5281/zenodo.22630911. Tag `v1.1-audited` (2026-09-12) is
-prepared as a new version of the same record; its version DOI is recorded
-in PROVENANCE §7 once published. Cite via [CITATION.cff](CITATION.cff).
-Manuscript in preparation.
+Concept DOI (all versions, resolves to the latest):
+[10.5281/zenodo.22630911](https://doi.org/10.5281/zenodo.22630911) — cite this one.
+Version DOIs:
+- [10.5281/zenodo.22725965](https://doi.org/10.5281/zenodo.22725965) — tag
+  `v1.1-audited` (commit 3865086, 2026-09-12; current; the checksum shown
+  by Zenodo is authoritative; [docs/PROVENANCE.md](docs/PROVENANCE.md) §7.3).
+- [10.5281/zenodo.22630912](https://doi.org/10.5281/zenodo.22630912) — tag
+  `v1.0-audited` (commit fa193a8, 2026-09-07; superseded; PROVENANCE §7.2,
+  including the known defect that the v1.0 archive's embedded provenance
+  text names the superseded pre-re-point commit).
+
+Cite via [CITATION.cff](CITATION.cff). Manuscript in preparation.

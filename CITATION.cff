@@ -54,6 +54,9 @@ identifiers:
     value: 10.5281/zenodo.22630911
     description: Zenodo concept DOI (all versions)
   - type: doi
+    value: 10.5281/zenodo.22725965
+    description: Zenodo deposition of tag v1.1-audited (commit 3865086; current version; checksum as displayed by Zenodo — see docs/PROVENANCE.md §7.3)
+  - type: doi
     value: 10.5281/zenodo.22630912
     description: Zenodo deposition of tag v1.0-audited (commit fa193a8; checksum as displayed by Zenodo; its embedded provenance text names the superseded pre-re-point commit — see docs/PROVENANCE.md §7.2)
   - type: url
