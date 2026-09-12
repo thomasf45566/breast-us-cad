@@ -233,6 +233,14 @@ original repo verified untouched). One phase per session, in order:
       audit. RESULTS.md and protocol append-only (0 removed lines vs
       2cbe1da); no frozen artifact, no completed-study code, no retraining,
       no external inference.
+      ARCHIVE RECORD (post-tag commit; not inside the archive by design):
+      tag v1.1-audited → 3865086a6749c031e35e338b1816a542acff9785
+      (2026-09-12 11:04:20 +0800); `git archive --format=zip
+      --prefix=breast-us-cad-v1.1/ v1.1-audited` → 26,600,855 bytes, 255
+      files, sha256 c61ce4ca8520977bf3f03ede1ca106fa03265ef2aac3bb0a75f1b3862082e381,
+      md5 295c278b5c07d8eca5149b925424b977; .git-commit inside the archive
+      verified == the tagged commit. Zenodo upload: NOT DONE (STOP);
+      checklist + v1.0 erratum sentence in docs/zenodo_v1.1_new_version.md.
 
 ## v2 line — site-specific recalibration study (secondary, post-hoc)
 Strictly post-hoc to external-v1; must never alter any external-v1 number.
