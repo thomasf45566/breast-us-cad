@@ -14,9 +14,12 @@ Read this at session start. Update the checkboxes when a task completes.
       NOTE (audit 2026-09-06): all per-fold CV AUCs are best-epoch-on-the-
       reported-fold (train.py saves the epoch with the best val AUC on the
       same fold; cv_vit_summary.csv `best_epoch`), i.e. optimistically
-      biased; single model, no TTA. Distinct from the ensemble+TTA+T
-      pooled OOF AUC 0.9254. Quantified in P2: fixed-epoch mean 0.9195 ±
-      0.0164 (reports/posthoc_epoch_selection.csv).
+      biased; single model, no TTA. Distinct from the pooled OOF AUC
+      0.9254 (ONE held-out checkpoint per image + TTA + T — NOT the
+      deployed ensemble, which has no unbiased internal estimate; P8'
+      POST-HOC 5). P2: fixed-epoch mean 0.9195 ± 0.0164 is a sensitivity
+      to epoch selection, not an unbiased optimism estimate
+      (reports/posthoc_epoch_selection.csv).
 - [x] Backbone comparison table + interpretability audit (RESULTS.md)
 - [x] Backbone decision: vit_base_patch16_224 (see standing decisions)
 - [x] Pre-registered CoarseDropout ViT CV: cdrop discarded per pre-registered
@@ -30,7 +33,10 @@ Read this at session start. Update the checkboxes when a task completes.
       ECE 0.0716 → 0.0401 (15 bins), NLL 0.4411 → 0.3237, AUC unchanged
       0.9254. models/calibration.json, reports/reliability_oof_vit_tta.png.
 - [x] pick_threshold.py: threshold 0.2683 on calibrated OOF (sens ≥ 0.90,
-      max spec). Sens 0.9028 (CI 0.874–0.928), spec 0.7713 (CI 0.745–0.798),
+      max spec; RULE AS IMPLEMENTED = highest sens ≥ 0.90 point among
+      sklearn roc_curve drop_intermediate=True operating points — the
+      exhaustive rule gives 0.26878, one image apart, same spec; frozen
+      value retained; P8' POST-HOC 6). Sens 0.9028 (CI 0.874–0.928), spec 0.7713 (CI 0.745–0.798),
       PPV 0.654, NPV 0.943; patient-level bootstrap ×2000. IN-SAMPLE:
       threshold fitted on the same OOF predictions it is evaluated on.
       models/operating_point.json, reports/roc_oof_operating_point.png.
@@ -128,9 +134,11 @@ original repo verified untouched). One phase per session, in order:
       Docs only — no changes to RESULTS.md, protocol, reports/, models/, src/.
 - [x] P2 — Quantify disclosures post hoc (2026-09-07): epoch-selection
       sensitivity (fixed epoch 18: 0.9195 ± 0.0164 vs best 0.9307 ± 0.0161,
-      optimism 0.0111 ± 0.0073), nested out-of-sample operating point
-      (sens 0.9003 ± 0.0569 / spec 0.7802 ± 0.1315 vs in-sample 0.9028 /
-      0.7713), overconfidence count (fold-5 32/121 in [0.6, 0.95]), reader
+      difference 0.0111 ± 0.0073 — a sensitivity, not an unbiased optimism
+      estimate; fold ranking DOES change, P8' erratum), leave-fold-out
+      threshold sensitivity on the fixed OOF artifact (sens 0.9003 ± 0.0569 /
+      spec 0.7802 ± 0.1315 vs in-sample 0.9028 / 0.7713 — NOT a nested
+      model evaluation, checkpoints were trained on the outer fold; P8'), overconfidence count (fold-5 32/121 in [0.6, 0.95]), reader
       concordance (GDPH reader1 flags 34/238 model FPs) — from committed
       artifacts + local wandb datastores only; RESULTS.md "Post-hoc
       analyses responding to the 2026-09-06 audit" + appended "Errata
@@ -148,7 +156,7 @@ original repo verified untouched). One phase per session, in order:
       (+ BUSBRA_LICENSE.txt); data.resolve_fold_file prefers it, falls
       back to data/raw, sha256-verifies either. Self-check byte-identical;
       pytest green. data/README.md:17 corrected.
-- [x] P4 — Provenance part 2 (2026-09-07, prepared; DOI pending):
+- [x] P4 — Provenance part 2 (2026-09-07):
       CITATION.cff (version 1.0-audited) + .zenodo.json committed; annotated
       tag v1.0-audited; `git archive` of that commit →
       /tmp/breast-us-cad-v1.0.zip, sha256 recorded in docs/PROVENANCE.md
@@ -194,8 +202,37 @@ original repo verified untouched). One phase per session, in order:
       catches it); (b) report Space warm latency as a range 6–9 s across
       three measurements (RESULTS 6.8 s, audit 6.15 s, 2026-09-07 8.62 s)
       instead of a single value.
-- [ ] P7 — Re-audit in a fresh clone (same audit prompt + resolution
-      section), archive AUDIT2 reports into docs/.
+- [x] P7 — Re-audit in a fresh clone (2026-09-11, two independent
+      re-auditors, same prompt + resolution section): archived unmodified
+      at docs/AUDIT2_claude_2026-09-11.md (sha256 2caabdab…) and
+      docs/AUDIT2_astra_2026-09-11.md (sha256 c8f56cbc…), commit f7cbf38
+      alone. Claude: overall PASS on numbers, major on doc drift + Zenodo
+      self-description; Astra: FAIL-major on claims as written (ensemble
+      label, threshold rule, P2 wording, 76 FNs, reader info).
+- [x] P8' (2026-09-12) — final sync per BOTH re-audits, docs + tooling +
+      two cheap analyses only: (A) predictor label fixed everywhere;
+      src/posthoc_predictor_shift.py (POST-HOC 5: cohort effect ≫ predictor
+      effect; fold-5 single is the least specific member on all four
+      cohorts); src/posthoc_threshold_rule.py (POST-HOC 6: exhaustive thr
+      0.26878 vs frozen 0.26832, one image; 2432/11000 M1 draws change,
+      k* unchanged; negative-slope Platt 12/4/3/16 at k=10); pick_threshold
+      and posthoc_nested_threshold docstrings; 76 FNs / 統計平手 / T diffs
+      0.09,0.14 / 0.235 / 0.567 / max 0.0072; v2 image-level slices stated;
+      reader-information sentence replaced (Mo et al. §IV-C, §V-C);
+      enforcement wording (Am.1 10 files; --confirm intent-only; scoped
+      recomputation claim). (B) report synced to P3/P4; README DOI line;
+      inference.py 1875; RESULTS:483 erratum; deploy_hf.py never touches
+      src/; Space re-pushed (sha 7d41f22, verify_space max Δ 1.07e-07, warm
+      median 6.27 s); consistency_sweep context-aware (148 verified / 0
+      unverified under the stricter rule). (C) external_val.py refuses
+      existing outputs unless --overwrite (+4 tests, 19 total). (D)
+      .gitattributes export-subst + .git-commit; PROVENANCE §7 rewritten;
+      tag v1.1-audited; archive built and .git-commit verified; Zenodo
+      new-version metadata prepared (docs/zenodo_v1.1_new_version.md) —
+      STOPPED BEFORE PUBLISH. (E) docs/AUDIT2_RESPONSE.md, one table per
+      audit. RESULTS.md and protocol append-only (0 removed lines vs
+      2cbe1da); no frozen artifact, no completed-study code, no retraining,
+      no external inference.
 
 ## v2 line — site-specific recalibration study (secondary, post-hoc)
 Strictly post-hoc to external-v1; must never alter any external-v1 number.
@@ -216,7 +253,9 @@ section "v2: Site-specific recalibration".
       against committed CSV): M2 refit-T (calibrate.py LBFGS; non-positive-T
       draws fall back to frozen, 7–20% at k=10 → 0% at k≥100) with (a)
       frozen thr / (b) local rule; M3 Platt + local rule. Findings: M2b/M3
-      ≡ M1 (monotone maps + local rule pick the same rank boundary); M2a
+      ≡ M1 for POSITIVE-slope monotone maps (+ local rule pick the same
+      rank boundary; negative-slope Platt draws 12/4/3/16 at k=10 are the
+      exception, P8'); M2a
       keeps sens highest but never reaches k* (shift is location, not
       scale); POST-HOC k_reliable (2.5th-pct recovery ≥ 0.5) reached only
       GDPH k=200 — no method is draw-level reliable at small k. Labeled
@@ -344,8 +383,9 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
 - Cold start (sleeping/restart → first prediction): **9.7 s** — open the
   Space BEFORE the interview starts; a first-ever container build also
   downloads 1.7 GB of weights and takes minutes.
-- Warm latency on the Space (2 vCPU): 6–9 s/image across three
-  measurements (6.15 / 6.8 / 8.6; RESULTS.md Errata 2026-09-07). Local fallback:
+- Warm latency on the Space (2 vCPU): about 5–9 s/image — six measured
+  medians 4.8–8.6 s (6.8 / 6.15 / 8.62 / 7.18 / 4.79 / 6.27; RESULTS.md
+  Errata 2026-09-07 and 2026-09-12). Local fallback:
   `python app/app.py` (0.54 s warm on the M4) — keep it ready in a
   terminal in case conference wifi or HF is down.
 - Live-vs-local sanity: `python scripts/verify_space.py` (recorded live
@@ -362,7 +402,9 @@ RESULTS.md sections "v2: Domain-pretrained backbone (Q2)" and
   NOT pre-registered: adopted pre-freeze after seeing +0.0023 pooled OOF
   AUC, on the same OOF data later used to fit T and the threshold
   (researcher degree of freedom, disclosed in report/README).
-- Patient-level splits only; BUS-BRA official folds
+- Patient-level splits only for BUS-BRA (official folds); v2 LOCO external
+  85/15 slices are image-level per Amendment 4 (t) — say so wherever v2 is
+  described
 - BrEaST + BUSI are external-only, single-shot evaluation
 - AUC is the primary metric; operating point from pooled OOF, frozen
 - Numbers live in RESULTS.md; every result maps to a commit

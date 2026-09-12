@@ -1,7 +1,9 @@
 # Provenance of the BreastUS-CAD repository
 
-Written 2026-09-07 (audit-response phase P4). Research prototype — not a
-medical device. This document records, as plainly as possible, what the
+Written 2026-09-07 (audit-response phase P4); §1, §4, §5 and §7 revised
+2026-09-12 (P8', after the two independent re-audits of 2026-09-11,
+docs/AUDIT2_claude_2026-09-11.md and docs/AUDIT2_astra_2026-09-11.md).
+Research prototype — not a medical device. This document records, as plainly as possible, what the
 repository's history can and cannot prove about the order of events
 behind the pre-registered external validation, so that a reader does not
 have to reconstruct it from git and the audit (docs/AUDIT_2026-09-06.md §3).
@@ -17,17 +19,22 @@ externally notarised except where §5 and §7 say so.
   (2026-09-06). It is **public as of 2026-09-07** at https://github.com/thomasf45566/breast-us-cad
   (pushed with tags after the Zenodo deposition below).
 - All protocols and amendments were **internal, version-controlled
-  pre-registrations** in `data/external_protocol.md`: each was committed
-  before the computation it governs, and the file is append-only. They
-  were **not externally time-stamped** (no OSF/Zenodo/other registry
-  entry) before the runs.
+  pre-registrations** in `data/external_protocol.md`, and the file is
+  append-only. Amendments 2/3/4 were each committed alone before the
+  computation they govern; the base protocol was committed after the
+  freeze and before the external run; Amendment 1 was committed together
+  with the keep-lists and pHash artifacts it registers (436ab56, 10 files),
+  i.e. after the data audit it describes and before any model metric on
+  GDPH/SYSUCC. They were **not externally time-stamped** (no
+  OSF/Zenodo/other registry entry) before the runs.
 - On 2026-08-31 the author/committer identity of every earlier commit was
   rewritten with `git filter-branch`. Author and committer dates, trees
   and messages were preserved; §3 gives the complete pre→post mapping.
-- The only public artifact created during the study, the Hugging Face
-  weights repository, was created on 2026-08-30 04:25:49Z, i.e. **after**
-  the external-v1 commit (2026-08-29 15:14:26Z). It therefore cannot
-  corroborate that the freeze preceded the external scoring.
+- The public artifacts created during the study — the Hugging Face
+  weights repository (created 2026-08-30 04:25:49Z) and the Hugging Face
+  Space (2026-08-30 09:24:53Z) — both postdate the external-v1 commit
+  (2026-08-29 15:14:26Z). Neither can corroborate that the freeze preceded
+  the external scoring.
 - Consequently the freeze-before-test ordering rests on local, rewritten,
   self-assigned commit timestamps plus file mtimes and wandb metadata
   (all internally consistent, none third-party). This is a permanent
@@ -55,7 +62,11 @@ externally notarised except where §5 and §7 say so.
 | P1 documentation corrections | 5652f0a | 2026-09-07 10:59:35 | docs/AUDIT_RESPONSE_2026-09-06.md |
 | P2 post-hoc analyses + errata | 35bdb43, f74647f | 2026-09-07 11:11:39, 11:13:21 | RESULTS.md append-only (0 lines removed vs 2cbe1da) |
 | P3 provenance part 1 | 67915b0 | 2026-09-07 12:12:38 | v2 weights on HF under v2/, CHECKSUMS.txt, fold file committed |
-| **`v1.0-audited`** (annotated; this deposition; re-pointed once, §7) | fa193a8 | 2026-09-07 | Zenodo archive, sha256 in §7 |
+| **`v1.0-audited`** (annotated, tagger 13:05:16; re-pointed once, §7) | fa193a8 | 2026-09-07 13:05:16 | Zenodo deposition 10.5281/zenodo.22630912 (§7.2) |
+| P5–P6 (summary, interview script, consistency sweep) | … 4794ad6 | 2026-09-07 – 2026-09-11 | outside the v1.0 archive (14 paths changed after the tag) |
+| independent re-audits archived | f7cbf38 | 2026-09-12 | docs/AUDIT2_claude_2026-09-11.md, docs/AUDIT2_astra_2026-09-11.md, unmodified |
+| P8' corrections | (this document's commit and its successors) | 2026-09-12 | docs/AUDIT2_RESPONSE.md; POST-HOC 5–6; external_val overwrite guard |
+| **`v1.1-audited`** (annotated) | hash in the archive's `.git-commit` | 2026-09-12 | Zenodo new version prepared, not yet published (§7.3) |
 
 Git facts at HEAD of this document: 62 commits before the P4 commit, a
 single author/committer identity, author date == committer date on all
@@ -151,18 +162,28 @@ which are third-party either.
 ## 4. Pre-registration: internal only
 
 - `data/external_protocol.md` was written before any external inference
-  (a16a64f, 18:49) and amended four times; each amendment was committed
-  alone before the computation it governs (§2). The file is append-only:
-  every amendment commit removes 0 lines, and `RESULTS.md`'s external-v1
-  section was never edited (`git diff 2cbe1da HEAD -- RESULTS.md` removes
-  0 lines; the P2 errata were appended, not inserted).
+  (a16a64f, 18:49 — after the freeze f167665 at 18:38) and amended four
+  times; Amendments 2/3/4 were each committed alone before the computation
+  they govern, Amendment 1 with its 10 data-audit artifacts (§2). The file
+  is append-only: every amendment commit removes 0 lines, and
+  `RESULTS.md`'s external-v1 section was never edited (`git diff 2cbe1da
+  HEAD -- RESULTS.md` removes 0 lines; the P2 and P8' errata were appended,
+  not inserted). A post-hoc compliance appendix was appended to the
+  protocol on 2026-09-12 (deviations between the registered text and the
+  implementation, all previously undeclared ones included).
 - **No external timestamp exists for any of this before the Zenodo
-  deposition of §7.** The ordering protocol → freeze → single run rests on
-  the local commit dates (rewritten once, §3), the `--confirm` single-run
-  guard in `src/external_val.py`, the one-adding-commit history of the
-  prediction CSVs, and the wandb metadata. An adversary with the author's
-  access could have produced all of these after the fact; the repository
-  offers internal consistency, not proof.
+  deposition of §7.** The ordering freeze → protocol → single run
+  (f167665 18:38:34 → a16a64f 18:49:09 → 2cbe1da 23:14:26, all
+  2026-08-29 +08) rests on the local commit dates (rewritten once, §3), the
+  one-adding-commit history of the prediction CSVs, and the wandb metadata.
+  `--confirm` in `src/external_val.py` is an intent flag: it authorizes
+  execution and, at the time of the run, did NOT refuse existing outputs
+  (a repeated command would have overwritten the four CSVs in place; the
+  git history shows this never happened in any committed state, and cannot
+  show what happened in uncommitted states). An output-exists refusal
+  (`--overwrite` required) was added on 2026-09-12 as post-hoc enforcement.
+  An adversary with the author's access could have produced all of these
+  after the fact; the repository offers internal consistency, not proof.
 - Amendment 1 is a pre-registration for model metrics only: at the time
   it was committed it already contained the dedup counts and the pHash
   outcome it registers (the data audit had been run first).
@@ -178,17 +199,20 @@ which are third-party either.
 |---|---|---|
 | external-v1 commit 2cbe1da (for comparison; local git clock) | 2026-08-29 15:14:26 | 2026-08-29 23:14:26 |
 | weights repo `happytommy/breast-us-cad-weights` created | 2026-08-30 04:25:49 | 12:25:49 |
-| first checkpoint uploads (cv_vit_fold2–4) | 2026-08-30 04:28:36 – 04:31:27 | 12:28 – 12:31 |
+| first checkpoint uploads (cv_vit_fold1–4) | 2026-08-30 04:27:26 – 04:31:27 | 12:27 – 12:31 |
 | cv_vit_fold5, seg_unet_effb0, calibration.json, operating_point.json | 2026-08-30 07:12:50 – 07:13:06 | 15:12 – 15:13 |
 | Space `happytommy/breast-us-cad` created | 2026-08-30 09:24:53 | 17:24:53 |
-| Space last push (P1 About-text correction), sha b7878b3 | 2026-09-07 03:27:26 | 11:27:26 |
+| Space push (P1 About-text correction), sha b7878b3 | 2026-09-07 03:27:26 | 11:27:26 |
 | weights repo commit 5ca5ba0: v2/ artifacts + CHECKSUMS.txt + card | 2026-09-07 04:11:35 | 12:11:35 |
+| Space push (P8': inference.py with `hf_repo_path` and the 1,875 docstring fix, About text, licence sentence — the P3/P4b changes had never been pushed, so the live Space ran the P1 files until now), sha 7d41f22 | 2026-09-12 (HF commit time) | — |
 
 The five frozen-v1 checkpoints uploaded on 2026-08-30 have the SHA-256
 values recorded in `models/CHECKSUMS.txt` (verified against the HF LFS
-metadata on 2026-09-07, 28/28 files). This proves the weights that exist
-today are the ones uploaded on 2026-08-30 — about 13 hours after the
-external-v1 commit — not that they existed before the external run.
+metadata on 2026-09-07, 28/28 files; re-verified 28/28 by both re-audits).
+This proves the weights that exist today are the ones uploaded on
+2026-08-30 — 13 hours (fold1–4) to 16 hours (fold5, the segmentation
+model and the two JSONs) after the external-v1 commit — not that they
+existed before the external run.
 
 ## 6. Forward commitment
 
@@ -212,20 +236,66 @@ following applies, without exception:
 
 ## 7. Deposition record (Zenodo)
 
-- Archive: `git archive` of the annotated tag `v1.0-audited` (this commit;
-  hash below), written to `/tmp/breast-us-cad-v1.0.zip`. The archive
-  contains the tracked files only: code, protocols, RESULTS.md, reports/
-  CSV/JSON artifacts and figures, docs/ (audit, response, report, this
-  file), the committed fold file and keep-lists, `models/CHECKSUMS.txt`
-  and the two v1 JSONs. Checkpoints are not in the archive; they are on
-  Hugging Face with the checksums in `models/CHECKSUMS.txt`.
-- Metadata: `CITATION.cff` (version 1.0-audited) and `.zenodo.json`.
-- Tagged commit: `fa193a83aafc264c44a82a5e361900858585add4` (tag `v1.0-audited`, annotated). Re-pointed on 2026-09-07 from 1f196a9 to this commit before any push or deposition; reason: licensing corrections (P4b LICENSE / THIRD_PARTY_DATA.md, P4c removal of GDPH/SYSUCC-image figures). The earlier archive (sha256 fcd270a5…) was never uploaded and is superseded.
-- Archive SHA-256: `bb45b685fa807fa14e83f01271f5256ab4cc933d5c43f53b176dd19b5b182c1e` (`git archive --format=zip --prefix=breast-us-cad-v1.0/ v1.0-audited`; note that an archive cannot contain its own hash, so this line lives in the commit after the tagged one)
-- Zenodo DOI: **10.5281/zenodo.22630912** (https://doi.org/10.5281/zenodo.22630912), published 2026-09-07; the
-  uploaded file was verified against the local archive (Zenodo reports MD5
-  07a7c1fe…, matching; local sha256 == the value above; size 26,404,667 B).
-- The archive's .zenodo.json predates the ORCID addition (063a25a); the DOI
-  record metadata is authoritative.
-- Repository visibility: public as of 2026-09-07 (https://github.com/thomasf45566/breast-us-cad), pushed with tags
-  after the deposition.
+### 7.1 How an archive identifies itself (changed 2026-09-12)
+
+The v1.0 archive's own copy of this file, its README and its CITATION.cff
+named a superseded commit (1f196a9), a superseded archive hash (fcd270a5…)
+and "DOI pending": they were written before the tag was re-pointed, and
+both 2026-09-11 re-audits flagged that the deposited file contradicts its
+own provenance text. From v1.1 on the archive describes itself
+differently:
+
+- `.gitattributes` marks `.git-commit` with `export-subst`, so every
+  `git archive` of a tag expands the file to the archived commit's full
+  hash and committer date (in the working tree it holds the unexpanded
+  `$Format:…$` placeholder). Check: `git rev-parse <tag>^{commit}` must
+  equal the first line of `.git-commit` inside the archive.
+- **This document does not state any archive checksum.** An archive cannot
+  contain its own hash. The authoritative checksum of a deposited file is
+  the one Zenodo computes and displays for that file (MD5 in the record's
+  file list; the record API returns it too). Anyone can regenerate the
+  archive and compare:
+
+      git archive --format=zip --prefix=breast-us-cad-<version>/ <tag>
+
+  (`git archive` is reproducible byte-for-byte for a given tag; the v1.0
+  deposit was verified bit-identical to `git archive` of fa193a8 by both
+  re-audits.)
+
+### 7.2 v1.0-audited (published 2026-09-07)
+
+- Tag `v1.0-audited` → `fa193a83aafc264c44a82a5e361900858585add4`
+  (annotated, tag object 2e7da4d, tagger 2026-09-07 13:05:16; re-pointed
+  once from 1f196a9 before any push or deposition, for the P4b/P4c
+  licensing corrections; the earlier archive was never uploaded).
+- Zenodo DOI **10.5281/zenodo.22630912** (concept DOI 10.5281/zenodo.22630911),
+  created 2026-09-07T07:30:33Z; one file, `breast-us-cad-v1.0.zip`,
+  26,404,667 B; checksum as displayed on the record.
+- **Known defect of that deposit (cannot be edited in place):** its
+  embedded `docs/PROVENANCE.md` §7, `README.md` and `CITATION.cff` describe
+  the archive as commit 1f196a9 with archive SHA-256 fcd270a5… and "DOI
+  pending". The file is in fact the archive of fa193a8. The erratum is
+  recorded in the description of the v1.1 version of the record
+  (docs/zenodo_v1.1_new_version.md) and in docs/AUDIT2_RESPONSE.md.
+- The archive's `.zenodo.json` predates the ORCID addition (063a25a); the
+  DOI record metadata is authoritative.
+- 14 paths changed after the tag (P5, P6, the ORCID); those states are not
+  in the v1.0 deposit — the DOI notarises fa193a8 only.
+
+### 7.3 v1.1-audited (prepared 2026-09-12 — NOT yet published)
+
+- Tag `v1.1-audited` (annotated): the P8' state — both 2026-09-11
+  re-audits archived unmodified, the corrections in docs/AUDIT2_RESPONSE.md,
+  POST-HOC 5–6, the external_val overwrite guard, the protocol compliance
+  appendix, this section. Commit hash: `.git-commit` inside the archive;
+  `git rev-parse v1.1-audited^{commit}` in the repository.
+- Metadata: `CITATION.cff` and `.zenodo.json` (version 1.1-audited,
+  2026-09-12); `docs/zenodo_v1.1_new_version.md` carries the description
+  text for the new version and the one-sentence erratum for the v1.0
+  description.
+- The deposition is a NEW VERSION of the same concept record; it is
+  uploaded only after the author reviews the archive. The version DOI is
+  recorded here, in CITATION.cff and in README after publication; until
+  then the concept DOI resolves to v1.0.
+- Repository visibility: public since 2026-09-07
+  (https://github.com/thomasf45566/breast-us-cad), pushed with tags.

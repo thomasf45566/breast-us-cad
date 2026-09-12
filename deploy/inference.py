@@ -150,7 +150,7 @@ def resize_bilinear_frozen(rgb: np.ndarray, out: int = IMG_SIZE) -> np.ndarray:
     were produced with): 16-bit fixed-point center-aligned coordinates,
     fraction truncated to 8 bits after a +2^7 pre-round, vertical lerp
     with round-half-up to u8, then horizontal. Verified bitwise-identical
-    to that cv2.resize on every BUS-BRA image (1879 images, 713 distinct
+    to that cv2.resize on every BUS-BRA image (1875 images, 713 distinct
     sizes) and all bundled examples; unlike cv2.resize, it produces the
     same bits on every platform (cv2's INTER_LINEAR differs between ARM
     and x86 builds, which is why this port exists). CAVEAT (2026-08-31):

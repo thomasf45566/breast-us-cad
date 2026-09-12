@@ -7,8 +7,11 @@ warm latency, runs the four bundled examples through the live Space, and
 compares the full-precision probabilities (embedded in the result card as an
 HTML comment) with reports/app_example_probs.json recorded locally.
 
-Usage: python scripts/verify_space.py [--cold]
-       --cold: restart the Space first to measure a true cold start
+Usage: python scripts/verify_space.py [--cold] [--space <user>/breast-us-cad]
+       --cold:  restart the Space first to measure a true cold start
+       --space: the Space to query (default: <your HF username>/breast-us-cad,
+                which needs a logged-in HF account; third parties pass
+                --space happytommy/breast-us-cad, which runs anonymously)
 """
 
 import argparse

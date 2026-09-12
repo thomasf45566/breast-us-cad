@@ -33,7 +33,8 @@ specificity dropped from 0.77 (internal, in-sample) to 0.41–0.63. The
 operating point was fitted on internal out-of-fold predictions only and does
 not transfer across scanners and populations. Preprocessing in this Space
 differs from the validation pipeline on image sizes outside the BUS-BRA
-range (documented; calibrated-probability impact ≤ 0.007).
+range (documented; measured calibrated-probability impact max 0.0072,
+median 0.0008, on the external validation images).
 
 **Weights:** downloaded at startup from the companion model repo
 ([breast-us-cad-weights](https://huggingface.co/happytommy/breast-us-cad-weights)).

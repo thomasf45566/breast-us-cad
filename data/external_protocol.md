@@ -522,3 +522,95 @@ v2_biomedclip_{calibration,operating_point}.json, and rule (v) reads
 "BiomedCLIP" wherever it says "USFM". No third option remains. Declared
 BEFORE any v2 training (no training run, smoke or otherwise, has been
 launched at the time of this note).
+
+---
+
+# Post-hoc notes on protocol compliance (appended 2026-09-12; append-only, no line above edited)
+
+Recorded after the two independent re-audits of 2026-09-11
+(docs/AUDIT2_claude_2026-09-11.md, docs/AUDIT2_astra_2026-09-11.md;
+response in docs/AUDIT2_RESPONSE.md). None of these notes changes any
+registered rule, criterion, result or artifact; each states a discrepancy
+between the text above and what was implemented, enforced or distributed.
+
+1. **"Highest threshold achieving sens ≥ 0.90" — base protocol, (k), (t),
+   pick_threshold.py.** As implemented, the candidate thresholds are the
+   operating points returned by sklearn.metrics.roc_curve with its default
+   drop_intermediate=True, which drops collinear ROC points; the selected
+   threshold is the highest sens ≥ 0.90 point among those. Exhaustively,
+   the highest qualifying score on the pooled OOF is 0.26878 (one image
+   different, identical specificity) vs the frozen 0.26832, which is
+   retained as frozen. On the four full-cohort oracles the two rules differ
+   on BrEaST (0.37553 vs 0.37983, one image) and SYSUCC (0.33136 vs
+   0.33504, four images) and coincide on BUSI/GDPH. Re-running the 11,000
+   M1 draws with the exhaustive rule changes 2,432 selected thresholds
+   (259/372/604/1,197 per cohort, none at k=10) with k* unchanged
+   (20/20/10/10). Wherever "the frozen rule" is cited in results it means
+   the routine as implemented (src/posthoc_threshold_rule.py; RESULTS.md
+   POST-HOC 6).
+2. **(l) summaries.** Registered: "median and IQR (and 5th–95th percentile
+   band)". Implemented: median and 2.5th/97.5th percentiles (a 95% band,
+   wider than registered), no IQR column. Presentational deviation; no
+   criterion depends on the band.
+3. **(k) M3.** Platt scaling is order-preserving only for a positive slope;
+   the unconstrained fits produced negative slopes on 12/4/3/16 draws
+   (BrEaST/BUSI/GDPH/SYSUCC) at k=10 and 1 (SYSUCC) at k=20, 0 at k ≥ 30.
+   The "structural equivalence" of M2b/M3 with M1 stated in RESULTS.md holds
+   for positive-slope transforms only.
+4. **(k) M2 fallback.** The non-positive-T fallback to the frozen pipeline
+   (fit_failed) is a run-time addition not registered above (already
+   declared in RESULTS.md; 7–20% of k=10 draws).
+5. **(t) LOCO.** Early-stopping patience 7 was not specified above (declared
+   in RESULTS.md and the report). The 85/15 external slices are image-level
+   as stated in (t); they are not persisted in any artifact and are
+   reproducible only by re-running the seeded code (src/v2_data.py). The
+   hold-out-GDPH training was launched twice at the same commit (wandb
+   k896krp6 aborted at epoch 3; 3jn4cicy 19 min later produced the
+   checkpoint); the held-out cohort is untouched during --train, so this is
+   a restart, not a peek, but it was unrecorded until 2026-09-12.
+6. **(d) and (p) presentation.** "One RESULTS.md section per dataset" was
+   implemented as one section with a four-row table; the single registered
+   Amendment 3 figure was split into two PNGs (already declared).
+7. **(h) stray value.** The stray 'c' sits in the reader2 column (SYSUCC
+   benign(274)), not reader1 as written above; the image is dedup-dropped,
+   so the exclusion is vacuous (already recorded in RESULTS.md).
+8. **(g) adjudication figure.** reports/phash_cross_pairs.png, cited above
+   as the evidence, is no longer distributed (P4c, 2026-09-07: it embeds
+   GDPH/SYSUCC images released without an explicit licence); the
+   distributed evidence is reports/phash_cross_pairs_table.csv +
+   reports/phash_cross_pairs_busbra_thumb.png. One re-auditor repeated the
+   visual adjudication from the raw images with the same conclusion.
+   "No training contamination" above means: no visually confirmed
+   cross-set near-duplicate at pHash d ≤ 8 — a finite screen that cannot
+   exclude same-patient re-scans or crops at d > 8. "35% duplicates"
+   (SYSUCC) counts 507 duplicate images plus 39 label-conflict images.
+9. **(d) single run — enforcement.** src/external_val.py's --confirm was an
+   intent flag only: it authorized execution and never refused an existing
+   output, so a repeated command would have overwritten the CSVs in place.
+   The four v1 prediction CSVs have one adding commit each and were never
+   modified (git history), which is the evidence for single-shot. A refusal
+   of existing outputs (--overwrite required) was added on 2026-09-12 as
+   post-hoc enforcement; it did not exist at the time of the run.
+10. **(u) "patient-level folds, data/splits/*.csv".** When Amendment 4 was
+    written the BUS-BRA folds were not in data/splits (they were in
+    git-ignored data/raw); the official file was committed there on
+    2026-09-07 (data/splits/busbra_official_5fold.csv, sha256-verified).
+11. **(r) and the internal reference.** The pooled OOF used for T, the
+    threshold and every "internal" reference number is ONE held-out
+    checkpoint per image + hflip TTA, not the deployed ensemble (as (r)
+    states); T and the threshold were therefore fitted on one predictor
+    and applied to another externally. RESULTS.md POST-HOC 5 separates the
+    predictor-change and cohort-change components of the internal→external
+    shift (cohort component ≫ predictor component).
+12. **(u) v2 BiomedCLIP operating point.** The frozen threshold
+    0.20070531964302063 applied to the committed
+    reports/v2_biomedclip_oof_preds.csv (float32) gives 546/358/61/910,
+    sens 0.8995; the freeze script picked it on in-memory float64
+    probabilities where the confusion is 547/358/60/910, sens 0.9012. One
+    image at the float32 round-trip boundary; the JSON and the NOT CLAIMED
+    verdict are unchanged.
+13. **Amendment 1 registration.** Amendment 1 was committed together with
+    the keep-lists and pHash artifacts it registers (436ab56, 10 files) —
+    after the data audit it describes, before any model metric on
+    GDPH/SYSUCC. Amendments 2/3/4 were each committed alone before the
+    computation they govern.

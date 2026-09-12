@@ -9,9 +9,17 @@ prob, decision threshold from models/operating_point.json. Preprocessing is
 exactly the BUS-BRA val path (grayscale -> 3ch, resize 224, ImageNet norm).
 
 The external run happens ONCE; --confirm is required so it cannot start by
-accident. --self-check exercises the same code path on BUS-BRA fold-5 with
-only the fold-5 checkpoint and must reproduce the recorded TTA AUC
-digit-for-digit (reports/tta_vit_summary.csv) before any external run.
+accident. --confirm is an intent flag only: it authorizes execution, it
+never checked for existing outputs. POST-HOC ENFORCEMENT ADDITION
+(2026-09-12, re-audit 2026-09-11 §4): the script now REFUSES to run a
+cohort whose prediction CSV reports/external_{name}_preds.csv already
+exists unless --overwrite is passed explicitly; the refusal happens before
+any inference. This guard did not exist when external-v1 was produced
+(2026-08-29); the git history of the four v1 CSVs (one adding commit each,
+never modified) is the evidence for that run, not this flag. --self-check
+exercises the same code path on BUS-BRA fold-5 with only the fold-5
+checkpoint and must reproduce the recorded TTA AUC digit-for-digit
+(reports/tta_vit_summary.csv) before any external run.
 
 Cohorts (see DATASETS registry): breast, busi, gdph, sysucc — GDPH and
 SYSUCC always reported separately; busi_whu EXCLUDED (amendment 1(f)).
@@ -130,7 +138,26 @@ def patient_bootstrap(df, probs, thr, n_boot=N_BOOT, seed=BOOT_SEED) -> dict:
     }
 
 
-def run_external(name: str, df: pd.DataFrame, cfg: dict, patient_level: bool) -> None:
+def preds_path_for(name: str, reports_dir: Path = Path("reports")) -> Path:
+    return reports_dir / f"external_{name}_preds.csv"
+
+
+def refuse_existing_output(name: str, overwrite: bool, reports_dir: Path = Path("reports")) -> Path:
+    """Single-shot guard (post-hoc addition, 2026-09-12): the cohort's
+    prediction CSV must not already exist unless --overwrite was given.
+    Returns the output path; raises SystemExit before any inference."""
+    path = preds_path_for(name, reports_dir)
+    if path.exists() and not overwrite:
+        raise SystemExit(
+            f"REFUSED: {path} already exists — the external run is SINGLE-SHOT "
+            f"(data/external_protocol.md (d)). Re-running would overwrite the recorded "
+            f"result. Pass --overwrite only if that is genuinely intended and say so in RESULTS.md."
+        )
+    return path
+
+
+def run_external(name: str, df: pd.DataFrame, cfg: dict, patient_level: bool, overwrite: bool = False) -> None:
+    preds_path = refuse_existing_output(name, overwrite)
     calib = json.loads(CALIBRATION_JSON.read_text())
     op = json.loads(OPERATING_POINT_JSON.read_text())
     thr = op["threshold"]
@@ -146,8 +173,7 @@ def run_external(name: str, df: pd.DataFrame, cfg: dict, patient_level: bool) ->
     prevalence = labels.mean()
     boot_kind = "patient-level" if patient_level else "IMAGE-level (no patient IDs published)"
 
-    reports_dir = Path("reports")
-    preds_path = reports_dir / f"external_{name}_preds.csv"
+    reports_dir = preds_path.parent
     pd.DataFrame(
         {
             "image_path": df["image_path"].values,
@@ -210,7 +236,14 @@ def main() -> None:
     parser.add_argument(
         "--confirm",
         action="store_true",
-        help="required for external datasets: the external run is SINGLE-SHOT",
+        help="required for external datasets: the external run is SINGLE-SHOT "
+             "(intent flag; existing outputs are refused separately)",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="allow overwriting an EXISTING reports/external_<name>_preds.csv "
+             "(refused otherwise; post-hoc enforcement addition 2026-09-12)",
     )
     args = parser.parse_args()
     cfg = yaml.safe_load(Path("configs/vit.yaml").read_text())
@@ -225,9 +258,12 @@ def main() -> None:
             "external validation is SINGLE-SHOT (data/external_protocol.md); "
             "re-run with --confirm only when the one real run is intended"
         )
-    for name, (builder, patient_level) in DATASETS.items():
-        if args.dataset in (name, "all"):
-            run_external(name, builder(), cfg, patient_level=patient_level)
+    selected = [n for n in DATASETS if args.dataset in (n, "all")]
+    for name in selected:  # refuse BEFORE any cohort is scored, not mid-run
+        refuse_existing_output(name, args.overwrite)
+    for name in selected:
+        builder, patient_level = DATASETS[name]
+        run_external(name, builder(), cfg, patient_level=patient_level, overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

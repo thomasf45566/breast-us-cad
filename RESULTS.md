@@ -1280,3 +1280,262 @@ to remove zero lines.
   cpu-basic). All documents now report the warm latency as a range,
   6–9 s across three measurements (6.15 / 6.8 / 8.6), instead of a single
   value; the 2026-08-30 number stands as recorded above.
+
+## Post-hoc analyses responding to the 2026-09-11 re-audits
+
+**POST-HOC — not pre-registered.** Run 2026-09-12 (plan.md P8') from
+committed artifacts only: no inference, no retraining, no change to any
+frozen model, calibration, threshold or committed result file. The two
+independent re-audits are archived unmodified at
+docs/AUDIT2_claude_2026-09-11.md and docs/AUDIT2_astra_2026-09-11.md; the
+item-by-item response is docs/AUDIT2_RESPONSE.md. Reproduction asserts
+named below are executed by the scripts before anything is written.
+
+### POST-HOC 5 — Predictor change vs cohort change in the internal→external shift (Astra §2.1, §7)
+
+Script: src/posthoc_predictor_shift.py · CSVs:
+reports/posthoc_predictor_shift.csv, reports/posthoc_predictor_shift_members.csv
+· inputs: reports/oof_vit_preds.csv, reports/v2_members_{cohort}.csv
+(Amendment 3 (n) member probabilities), reports/external_{cohort}_preds.csv,
+models/calibration.json, models/operating_point.json — frozen T and
+threshold applied unchanged. Asserts: the pooled-OOF row reproduces
+models/operating_point.json (548/290/59/978, AUC 0.9254); the ensemble
+rebuilt from the members with the frozen reduction order reproduces the
+external-v1 decisions on 252/379/810/1013 images (max raw gap 3e-8); the
+fold-5 single-model rows reproduce reports/v2_loco_summary.csv.
+
+Why: every "internal reference" number in this file (pooled OOF AUC 0.9254,
+benign median 0.0625, sens 0.9028 / spec 0.7713 at 0.2683) describes ONE
+HELD-OUT CHECKPOINT PER IMAGE + hflip TTA + T — not the deployed
+5-checkpoint ensemble, which has four in-fold members for every internal
+image and therefore no unbiased internal estimate (line 169–171). T and
+the threshold were fitted on that single-checkpoint distribution and
+applied to the ensemble externally, so an internal→external comparison
+changes the predictor as well as the cohort. This table separates the two.
+
+| cohort | predictor | n | AUC | benign median p_cal | sens | spec |
+|---|---|---|---|---|---|---|
+| internal (BUS-BRA, pooled OOF) | one held-out ckpt per image + TTA (the file's internal reference) | 1875 | 0.9254 | 0.0625 | 0.9028 | 0.7713 |
+| internal (BUS-BRA fold 5 OOF) | fold-5 single ckpt + TTA | 383 | 0.9234 | 0.0273 | 0.8926 | 0.8168 |
+| BrEaST | fold-5 single ckpt + TTA | 252 | 0.8467 | 0.2789 | 0.9388 | 0.4740 |
+| BrEaST | 5-ckpt ensemble + TTA (deployed; external-v1) | 252 | 0.8542 | 0.3061 | 0.9184 | 0.4091 |
+| BUSI | fold-5 single ckpt + TTA | 379 | 0.9069 | 0.1501 | 0.9387 | 0.6065 |
+| BUSI | 5-ckpt ensemble + TTA (deployed; external-v1) | 379 | 0.9339 | 0.1739 | 0.9571 | 0.6296 |
+| GDPH | fold-5 single ckpt + TTA | 810 | 0.8899 | 0.3393 | 0.9520 | 0.4115 |
+| GDPH | 5-ckpt ensemble + TTA (deployed; external-v1) | 810 | 0.9154 | 0.2894 | 0.9707 | 0.4529 |
+| SYSUCC | fold-5 single ckpt + TTA | 1013 | 0.8319 | 0.3178 | 0.9337 | 0.4498 |
+| SYSUCC | 5-ckpt ensemble + TTA (deployed; external-v1) | 1013 | 0.8380 | 0.2869 | 0.9309 | 0.4740 |
+
+Per-member specificity / benign median at 0.2683 (m1 … m5, then the
+ensemble), reports/posthoc_predictor_shift_members.csv: BrEaST spec
+0.584 / 0.494 / 0.526 / 0.578 / 0.474 → 0.409, benign median 0.208 / 0.272
+/ 0.210 / 0.229 / 0.279 → 0.306; BUSI 0.833 / 0.713 / 0.787 / 0.787 / 0.606
+→ 0.630, 0.046 / 0.153 / 0.039 / 0.098 / 0.150 → 0.174; GDPH 0.644 / 0.524
+/ 0.729 / 0.605 / 0.411 → 0.453, 0.125 / 0.258 / 0.082 / 0.206 / 0.339 →
+0.289; SYSUCC 0.668 / 0.543 / 0.592 / 0.633 / 0.450 → 0.474, 0.109 / 0.237
+/ 0.132 / 0.174 / 0.318 → 0.287.
+
+Reading (factual): with the predictor held fixed (fold-5 single checkpoint
++ TTA), moving from internal fold-5 OOF to the external cohorts raises the
+benign median calibrated probability from 0.027 to 0.150–0.339 and lowers
+specificity from 0.817 to 0.41–0.61 (cohort-change component: benign
+median +0.12 to +0.31, spec −0.21 to −0.41). On the same external cohort,
+replacing that single checkpoint by the deployed 5-checkpoint ensemble
+moves the benign median by −0.050 to +0.027 and specificity by −0.065 to
++0.041 (predictor-change component; the ensemble is less specific than
+fold 5 on BrEaST and more specific on BUSI/GDPH/SYSUCC). The cohort
+component is an order of magnitude larger than the predictor component on
+every cohort, so the qualitative external-v1 reading (specificity collapse
+under domain shift) survives the predictor change — but the internal
+reference row (benign median 0.0625, spec 0.7713) is neither the ensemble
+nor the fold-5 model and should not be read as a same-predictor baseline
+for any external number. Two further facts: fold 5 is the least specific of
+the five single checkpoints on all four external cohorts, so the Amendment
+4 (t) comparator is the most pessimistic single member; and the ensemble's
+specificity lies at or below the least specific member on BrEaST and within
+0.02–0.04 of it elsewhere (averaging five members does not average their
+specificities at a fixed threshold).
+
+### POST-HOC 6 — Threshold rule as implemented; M1 counterfactual; Platt slopes (Astra §2.5)
+
+Script: src/posthoc_threshold_rule.py · CSVs: reports/posthoc_threshold_rule.csv,
+reports/posthoc_threshold_rule_M1.csv, reports/posthoc_platt_slopes.csv ·
+inputs: reports/oof_vit_preds.csv, reports/external_*_preds.csv,
+reports/v2_recalib_M1_draws.csv (read only), models/*.json.
+
+**6a — the rule.** pick_threshold.pick_operating_point takes "the highest
+threshold with sens ≥ 0.90" AMONG THE OPERATING POINTS RETURNED BY
+sklearn.metrics.roc_curve WITH ITS DEFAULT drop_intermediate=True, which
+drops collinear ROC points. The exhaustive rule — the highest observed
+score with sens ≥ 0.90, i.e. the ⌈0.9·n_pos⌉-th largest positive score
+(cross-checked against roc_curve(drop_intermediate=False)) — differs on the
+pooled OOF and on two of the four external oracles. Specificity is
+identical in every case; the difference is which borderline positive(s)
+sit above the threshold. The frozen 0.26832 is RETAINED as frozen; every
+"frozen rule" citation in this file means the routine as implemented.
+
+| data | thr routine (frozen) | thr exhaustive | tp/fp/fn/tn routine → exhaustive | sens routine → exhaustive | spec | images differing |
+|---|---|---|---|---|---|---|
+| internal pooled OOF (n=1875) | 0.26832 | 0.26878 | 548/290/59/978 → 547/290/60/978 | 0.9028 → 0.9012 | 0.7713 | 1 |
+| BrEaST full-cohort oracle | 0.37553 | 0.37983 | 90/58/8/96 → 89/58/9/96 | 0.9184 → 0.9082 | 0.6234 | 1 |
+| BUSI full-cohort oracle | 0.38508 | 0.38508 | 147/39/16/177 (same) | 0.9018 | 0.8194 | 0 |
+| GDPH full-cohort oracle | 0.44840 | 0.44840 | 338/98/37/337 (same) | 0.9013 | 0.7747 | 0 |
+| SYSUCC full-cohort oracle | 0.33136 | 0.33504 | 656/125/68/164 → 652/125/72/164 | 0.9061 → 0.9006 | 0.5675 | 4 |
+
+**6b — Amendment 2 M1 counterfactual.** The 11,000 committed M1 draws
+(same seeds, same k-sets) re-run with the exhaustive rule; the committed
+reports/v2_recalib_M1_{draws,summary}.csv are unchanged. Thresholds change
+on 2,432/11,000 draws — BrEaST 259, BUSI 372, GDPH 604, SYSUCC 1,197 — and
+on none of the k=10 draws (at k=10 roc_curve drops nothing). Largest
+single-draw held-out change: spec 0.393 / 0.213 / 0.272 / 0.521, sens
+0.284 / 0.281 / 0.290 / 0.234 (BrEaST / BUSI / GDPH / SYSUCC; maxima across
+draws, not typical effects). Medians move by ≤ 0.013 spec and ≤ 0.019 sens
+on BrEaST/BUSI/GDPH and by up to +0.041 spec / −0.019 sens on SYSUCC
+(k=20). **k\* is unchanged under the exhaustive rule: GDPH 10, SYSUCC 10,
+BrEaST 20, BUSI 20.** Per-(cohort, k) counts and medians under both rules
+are in reports/posthoc_threshold_rule_M1.csv.
+
+**6c — M3 Platt slopes.** The "structural equivalence" of M2b/M3 with M1
+(lines 535–542) holds for POSITIVE-slope monotone transforms only.
+Refitting every k-set's unconstrained Platt fit (same draws): negative
+slope — a rank-reversing map — on 12 / 4 / 3 / 16 draws at k=10 (BrEaST /
+BUSI / GDPH / SYSUCC), 1 draw at k=20 (SYSUCC), 0 at k ≥ 30. Those draws
+are not explained by fit-failure fallback or ties; they are the third
+source of M3–M1 departures at small k.
+
+## Errata (2026-09-12)
+
+Appended after the two re-audits of 2026-09-11. No line above the
+"Errata (2026-09-07)" heading has been edited; `git diff 2cbe1da HEAD --
+RESULTS.md` still removes zero lines. Each entry quotes the line as it
+stands and states what it should say.
+
+- lines 32–33: 'convnext_small and vit_b16 are statistically
+  indistinguishable on AUC' → 'the CV means differ by 0.0002; no
+  equivalence test was performed' (Astra §7).
+- line 126: "T ≈ 2.36 means the ensemble's raw probabilities were
+  substantially overconfident" → the pooled-OOF probabilities that T was
+  fitted on are ONE held-out checkpoint per image + TTA, not the
+  ensemble's (POST-HOC 5).
+- lines 165–167, 190–191, 221 (and the same numbers wherever "internal
+  reference" appears): pooled OOF AUC 0.9254, benign median 0.0625, sens
+  0.9028 / spec 0.7713 describe one held-out checkpoint per image + hflip
+  TTA + T. The deployed 5-checkpoint ensemble has no unbiased internal
+  estimate (lines 169–171 say so); T and the threshold were fitted on the
+  single-checkpoint distribution and applied to the ensemble externally,
+  so the internal→external operating-point comparison changes the
+  predictor as well as the cohort — POST-HOC 5 separates the components.
+  models/operating_point.json `probability_space` ("hflip-TTA ensemble
+  prob") and the title of reports/roc_oof_operating_point.png carry the
+  same mislabel; both are frozen artifacts and are not edited.
+- lines 142, 163–164, 441, 1136–1137 and every "highest threshold with
+  sens ≥ 0.90": as implemented, the highest such point AMONG sklearn
+  roc_curve(drop_intermediate=True) operating points; the exhaustive
+  highest qualifying score is 0.26878 (one image; identical specificity);
+  the frozen 0.26832 stands (POST-HOC 6a). src/pick_threshold.py's
+  docstring now says so; the JSON is unchanged.
+- lines 441–447 (M1) and Amendment 2 (k): the "frozen rule" used inside
+  the 11,000 draws is the routine above; the exhaustive rule would change
+  2,432 selected thresholds with k\* unchanged (POST-HOC 6b).
+- line 483: 'bands only become usable at k ≈ 100–200' → unsupported as
+  written: the POST-HOC draw-level bar (k_reliable, 2.5th-percentile
+  recovery ≥ 0.5, lines 509–512) is reached only on GDPH at k=200 and not
+  reached on BrEaST/BUSI (grid to k=100) or SYSUCC (to k=200), lines
+  516–531. The sentence should read 'the POST-HOC k_reliable bar is met
+  only on GDPH at k=200' (Claude §2 item 2.7, new item 6).
+- lines 467 and 487: '0.568' → 0.567 (164/289 = 0.5675, rounds down;
+  Astra §2.5 item 4).
+- lines 535–542: 'M2b and M3 are M1 in disguise … monotone transforms …
+  differences at k ≤ 30 are only the M2 fit-failure fallbacks and Platt
+  ties' → holds for POSITIVE-slope transforms; unconstrained Platt fits
+  had negative slope (rank reversal) on 12/4/3/16 draws at k=10 and 1 at
+  SYSUCC k=20 (POST-HOC 6c), a third source of departure.
+- lines 584–585 and 595: 'within 0.03 / 0.04 of the internal row' is the
+  M2-row SPECIFICITY difference; the temperatures 2.27 (BrEaST) and 2.23
+  (SYSUCC) differ from the internal 2.3644 by 0.09 and 0.14. docs/report.md
+  §3.8 had mis-stated the latter as 0.03–0.04 (corrected).
+- line 1126: 'the fold ranking is unchanged' → FALSE: at the best epoch
+  the ranking is 1 > 2 > 5 > 3 > 4 (0.9526 / 0.9411 / 0.9272 / 0.9193 /
+  0.9132); at epoch 18 it is 1 > 2 > 3 > 5 > 4 (0.9419 / 0.9283 / 0.9193 /
+  0.9069 / 0.9012) — folds 3 and 5 swap (table lines 1117–1121; Astra
+  §2.2). lines 1128–1130 'if anything, slightly understated' → not
+  established: fold 3's zero is by construction and says nothing about
+  the direction of the mean.
+- lines 1102–1130 (POST-HOC 1) and the word 'optimism' in lines 1115,
+  1122, 1124: the 0.0111 ± 0.0073 is the sensitivity of the reported CV
+  AUC to epoch selection, with the fixed epoch (18) chosen post hoc as
+  the median of the five best epochs from the same validation histories;
+  it is not an unbiased estimate of optimism (Astra §2.2, §7).
+- lines 1132–1161 (POST-HOC 2, 'Nested (out-of-sample) internal operating
+  point'): → 'leave-fold-out threshold sensitivity on the fixed OOF
+  artifact'. Only the threshold-fitting rows are held out; the OOF scores
+  on folds ≠ k come from checkpoints TRAINED on fold k, and the fold-k
+  checkpoint was selected at its best-val-AUC epoch on fold k; there is
+  no outer retraining loop, so this is not a nested out-of-sample model
+  evaluation (Astra §2.2, §7). src/posthoc_nested_threshold.py's
+  docstring now says so; the file and CSV names are kept for continuity.
+  line 1157: '0.236' → 0.235 (0.23545, rounds down).
+- lines 379–381: 'deploy/ … is the Space repo verbatim' → true on
+  2026-08-30 and again since the 2026-09-12 re-push (Space sha 7d41f22);
+  false between P3 (2026-09-07 12:12) and 2026-09-12: the live Space ran
+  the P1 inference.py (no hf_repo_path, the "1879" docstring) and the P1
+  README (no licence sentence) because the P3/P4b changes were never
+  pushed (Claude §6(e)). verify_space.py after the re-push: max |Δ|
+  1.07e-07 on the four examples, warm median 6.27 s.
+- line 403 (already errata'd 2026-09-07): src/inference.py:153 and
+  deploy/inference.py:153 carried the same '1879' until 2026-09-12 (now
+  1875); the live Space shipped it until the same re-push.
+- line 416 and Errata 2026-09-07 (warm latency 'range 6–9 s across three
+  measurements'): three further warm medians exist — 7.18 s (Claude
+  re-audit, 2026-09-11), 4.79 s (Astra re-audit, 2026-09-11, post-first-call
+  median of three) and 6.27 s (P8' re-push, 2026-09-12) — six measured
+  medians 4.8–8.6 s; documents now say 'about 5–9 s'.
+- lines 807–811 (Q2b operating point 'sens 0.9012 … PPV 0.6044'): the
+  stored threshold 0.20070531964302063 applied to the committed
+  reports/v2_biomedclip_oof_preds.csv (float32 probabilities) gives
+  546/358/61/910, sens 0.8995; the freeze script picked it on in-memory
+  float64 probabilities where the confusion is 547/358/60/910. One image
+  at the float32 round-trip boundary; models/v2_biomedclip_operating_point.json
+  is a frozen artifact and is not edited; the Q2 verdict (NOT CLAIMED) is
+  unaffected (Claude §2).
+- lines 935–940 (LOCO run 3, GDPH): the training was launched twice at
+  commit eeca3fc — wandb k896krp6 aborted at epoch 3 (val AUC 0.8948, no
+  summary) and 3jn4cicy 19 min later produced the checkpoint. The
+  held-out cohort is untouched during --train (restart, not a peek), but
+  the aborted attempt was unrecorded (Claude §1(d)).
+- lines 875, 882–884 (LOCO): the 85/15 external slices are image-level
+  (stated) and are NOT persisted in any artifact; they are reproducible
+  only by re-running the seeded code (src/v2_data.py; tests assert
+  determinism) (Claude §1(e)).
+- lines 176–178, 208–210 ('ONE run … no second run'): true by git
+  history (one adding commit per CSV, never modified). The script's
+  --confirm was an intent flag and did not refuse existing outputs at the
+  time; an output-exists refusal (--overwrite required) was added on
+  2026-09-12 as post-hoc enforcement (Astra §4).
+- lines 300–307 (external FP CAM tally '7/8'): a qualitative tally on the
+  eight selected images, not a localisation measurement; the figure is
+  not distributed (Errata 2026-09-07), so the tally cannot be checked
+  from the repository. Stands as recorded, labelled as such.
+- lines 193–194 ('BUSI and GDPH within or near the internal range'): the
+  'internal range' was undefined; the pooled OOF 0.9254 is a point
+  estimate of a different predictor. Descriptive: the BrEaST and SYSUCC
+  external AUC CIs lie below 0.9254, the BUSI and GDPH CIs contain it
+  (Claude §7).
+- lines 195–198 and 227–233 (external-v1 reading): 'sensitivity stays ≥
+  0.90' is correct (0.918–0.971; 76 false negatives across the four
+  cohorts: 8/7/11/50), and the errors are predominantly, not exclusively,
+  false positives (561). The report/README sentence 'false positives, not
+  missed cancers' was wrong and is corrected (Astra §2.3, §7).
+- data/external_protocol.md (h) and line 240–244: already recorded — the
+  stray 'c' is in the reader2 column.
+- Reader information (docs/report.md §4.2, not this file): the sentence
+  'readers had the full examination' had no source; the HoVer-Trans
+  release does not document whether the reader columns come from
+  clinical reads or the paper's single-image reader study (Mo et al.
+  §IV-C, §V-C) — corrected in the report.
+- lines 387–389 (self-check 'byte-identical output'): holds on the MPS path
+  the artifacts were produced with. A CPU run reproduces the AUC
+  0.9234433158791243 but flags 155/383 images at the threshold instead of
+  156 (docs/AUDIT2_astra_2026-09-11.md §6): device/batch reductions can
+  move one borderline decision, so 'byte-identical' is a statement about
+  the tested device, not about every runtime.

@@ -8,6 +8,23 @@ those achieving sensitivity >= 0.90, and reports sens/spec/PPV/NPV with 95%
 patient-level bootstrap CIs (resample patients, 2000 iterations). Saves
 models/operating_point.json and an ROC slide asset with the point marked.
 
+RULE AS IMPLEMENTED (documented 2026-09-12, re-audit 2026-09-11 §2.5):
+the candidate thresholds are the operating points returned by
+sklearn.metrics.roc_curve with its DEFAULT drop_intermediate=True, which
+drops collinear ROC points. The selected threshold is therefore the
+highest sens >= 0.90 point AMONG THOSE, not necessarily the highest
+observed score with sens >= 0.90. On the pooled OOF the two differ:
+routine 0.26832 (548/290/59/978) vs exhaustive 0.26878 (547/290/60/978)
+— one image, identical specificity. The frozen 0.26832 is RETAINED as
+frozen; src/posthoc_threshold_rule.py quantifies the difference here, on
+the four external oracles, and across the 11,000 Amendment 2 M1 draws.
+Every "highest threshold" statement in the documents means this routine.
+
+The pooled-OOF input is ONE HELD-OUT CHECKPOINT PER IMAGE (+ hflip TTA),
+not the deployed 5-checkpoint ensemble (see RESULTS.md "POST-HOC 5"); the
+"ensemble" wording in the JSON's probability_space field and the figure
+title is historical and is not edited (frozen artifact).
+
 Usage: python src/pick_threshold.py
 """
 
@@ -34,8 +51,14 @@ BOOT_SEED = 42
 
 
 def pick_operating_point(labels: np.ndarray, probs: np.ndarray) -> float:
-    """Highest threshold with sensitivity >= SENS_FLOOR (=> max specificity)."""
-    fpr, tpr, thresholds = roc_curve(labels, probs)
+    """Highest threshold with sensitivity >= SENS_FLOOR (=> max specificity)
+    AMONG the operating points of sklearn's roc_curve(drop_intermediate=True).
+
+    Frozen routine — do not change. Because roc_curve drops collinear ROC
+    points by default, this is not always the highest observed score with
+    sens >= SENS_FLOOR (module docstring; src/posthoc_threshold_rule.py).
+    """
+    fpr, tpr, thresholds = roc_curve(labels, probs)  # default drop_intermediate=True (frozen behaviour)
     ok = tpr >= SENS_FLOOR
     if not ok.any():
         raise RuntimeError(f"No threshold reaches sensitivity >= {SENS_FLOOR}")

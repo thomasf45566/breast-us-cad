@@ -7,10 +7,11 @@ title: >-
   BreastUS-CAD: frozen, pre-registered single-shot external validation of a
   breast ultrasound benign/malignant classifier, with deployment-oriented
   follow-up studies and an independent audit trail
-version: 1.0-audited
-date-released: "2026-09-07"
+version: 1.1-audited
+date-released: "2026-09-12"
 license: Apache-2.0
-doi: 10.5281/zenodo.22630912
+# concept DOI (resolves to the latest version); version DOIs are listed under identifiers
+doi: 10.5281/zenodo.22630911
 authors:
   - family-names: Wang
     given-names: Thomas
@@ -30,10 +31,13 @@ abstract: >-
   protocol, followed by pre-registered deployment-oriented studies
   (site-specific recalibration, ensemble-disagreement abstention,
   domain-pretrained backbone, leave-one-cohort-out multi-source training),
-  an independent adversarial audit (2026-09-06), the item-by-item response,
-  and post-hoc analyses quantifying the disclosed biases. Every number in
-  RESULTS.md recomputes from committed CSV/JSON artifacts. Pre-registration
-  was internal and not externally time-stamped; see docs/PROVENANCE.md.
+  an independent adversarial audit (2026-09-06) and two independent
+  re-audits (2026-09-11), the item-by-item responses, and post-hoc analyses
+  quantifying the disclosed biases. The result tables in RESULTS.md
+  recompute from committed CSV/JSON artifacts (wandb-derived and latency
+  numbers do not). The internal reference numbers describe one held-out
+  checkpoint per image, not the deployed ensemble. Pre-registration was
+  internal and not externally time-stamped; see docs/PROVENANCE.md.
 keywords:
   - breast ultrasound
   - computer-aided diagnosis
@@ -47,8 +51,11 @@ repository-code: https://github.com/thomasf45566/breast-us-cad
 url: https://huggingface.co/spaces/happytommy/breast-us-cad
 identifiers:
   - type: doi
+    value: 10.5281/zenodo.22630911
+    description: Zenodo concept DOI (all versions)
+  - type: doi
     value: 10.5281/zenodo.22630912
-    description: Zenodo deposition of tag v1.0-audited (archive sha256 bb45b685…)
+    description: Zenodo deposition of tag v1.0-audited (commit fa193a8; checksum as displayed by Zenodo; its embedded provenance text names the superseded pre-re-point commit — see docs/PROVENANCE.md §7.2)
   - type: url
     value: https://huggingface.co/happytommy/breast-us-cad-weights
     description: Frozen-v1 model weights (root) and v2 research checkpoints (v2/)

@@ -71,8 +71,8 @@ not transfer across scanners and populations. The Grad-CAM heatmap is a
 single-model visualization, not the ensemble decision path, and the lesion
 contour is a separate segmentation model provided for orientation only.
 Preprocessing in this demo differs from the validation pipeline on image
-sizes outside the BUS-BRA range (documented; calibrated-probability impact
-≤ 0.007).
+sizes outside the BUS-BRA range (documented; measured calibrated-probability
+impact max 0.0072, median 0.0008, on the external validation images).
 
 **Follow-up (v2 recalibration study).** A post-hoc study on the saved external
 predictions found that re-selecting the decision threshold with only 10–20
